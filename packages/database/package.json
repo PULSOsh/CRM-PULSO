@@ -8,7 +8,8 @@
     "./schema": "./src/schema.ts",
     "./demo": "./src/demo-data.ts",
     "./audit": "./src/audit.ts",
-    "./counters": "./src/counters.ts"
+    "./counters": "./src/counters.ts",
+    "./tokens": "./src/tokens.ts"
   },
   "scripts": {
     "db:generate": "drizzle-kit generate",

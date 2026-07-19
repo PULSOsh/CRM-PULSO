@@ -153,6 +153,16 @@ Decisão registrada em `docs/decisoes-tecnicas.md`: em vez de desenhar de uma ve
 
 Leads, Contatos/Empresas, Oportunidades (Kanban) e Produtos têm CRUD real, persistente, testado ponta a ponta (35 testes E2E, chromium + mobile). Falta apenas Prospecção (schema já existe desde a Fase 2, sem UI ainda) — fica para quando o fluxo de pré-pipeline for priorizado; não bloqueia o restante do roadmap porque leads já cobrem a entrada manual/pública de oportunidades.
 
+## Fase 4 — briefing persistente (concluída em 19/07/2026)
+
+- Schema novo: `briefing_templates` (perguntas versionadas em JSONB) + `briefings` ganhou `templateId`, `questionsSnapshot` (cópia imutável das perguntas no momento do envio — alterar o template depois não afeta briefings já enviados), `startedAt`, `analyzedAt`.
+- Helper reutilizável `packages/database/src/tokens.ts` (`generatePublicToken`/`hashPublicToken`/`generateSlug`) — será reaproveitado nas Fases 5 e 6 para links públicos de proposta e assinatura.
+- Template padrão semeado (9 perguntas cobrindo objetivo, público, referências, diferenciais, conteúdo pronto, prazo, orçamento, resultados desejados, observações) com todos os tipos suportados: texto, textarea, seleção, múltipla escolha, sim/não, data, moeda e link.
+- Fluxo interno (`/app/comercial/briefings`): gerar link (busca de oportunidade, produto opcional) — o link com token só é mostrado uma vez, nunca fica recuperável depois (token salvo como hash); pular briefing com justificativa obrigatória e auditada, restrito a produtos marcados `allowBriefingSkip`; regenerar link (revoga o anterior); marcar como analisado; arquivar.
+- Página pública (`/briefing/[slug]?token=...`): valida token contra o hash salvo, autosave por campo (`onBlur`), barra de progresso calculada a partir das perguntas obrigatórias respondidas, conclusão bloqueada até todas as obrigatórias estarem preenchidas, tela final de agradecimento.
+- Conclusão do briefing: idempotente, cria tarefa interna "Analisar briefing", registra atividade na oportunidade, avança a etapa do pipeline para "Briefing recebido" (e "Briefing solicitado" ao criar) por nome — sem acoplar a um pipeline específico.
+- Testes E2E (`apps/web/e2e/briefings.spec.ts`) cobrindo o ciclo completo **sem sessão interna** na parte pública (limpa cookies antes de simular o cliente): gera link → cliente responde e conclui → aparece concluído no painel → marca como analisado.
+
 ### Não iniciado
 
 - Prospecção (schema pronto, CRUD pendente).

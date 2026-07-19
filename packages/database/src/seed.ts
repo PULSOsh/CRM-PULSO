@@ -1,6 +1,23 @@
 import "dotenv/config";
+import { eq } from "drizzle-orm";
 import { db, pool } from "./index";
-import { pipelineStages, pipelines, products } from "./schema";
+import { briefingTemplates, pipelineStages, pipelines, products, type BriefingQuestion } from "./schema";
+
+const defaultBriefingQuestions: BriefingQuestion[] = [
+  { id: "objetivo", type: "textarea", label: "Qual o principal objetivo deste projeto?", required: true },
+  { id: "publico", type: "textarea", label: "Quem é o público-alvo?", required: true },
+  { id: "referencias", type: "link", label: "Link de referências (sites, redes sociais, concorrentes)", required: false },
+  { id: "diferenciais", type: "textarea", label: "Quais são os diferenciais do seu negócio?", required: true },
+  { id: "conteudo_pronto", type: "boolean", label: "Você já tem textos, fotos e logo prontos?", required: true },
+  { id: "prazo_desejado", type: "date", label: "Existe um prazo desejado para conclusão?", required: false },
+  { id: "orcamento_aproximado", type: "currency", label: "Orçamento aproximado disponível (opcional)", required: false },
+  {
+    id: "resultados_importantes", type: "multiselect", required: true,
+    label: "Quais resultados são mais importantes?",
+    options: ["Gerar contatos", "Apresentar serviços", "Transmitir confiança", "Facilitar agendamentos", "Vender online", "Educar o público"]
+  },
+  { id: "observacoes", type: "textarea", label: "Outras observações importantes", required: false }
+];
 
 const mainStages = [
   "Novo lead",
@@ -60,6 +77,11 @@ async function seed() {
       })),
     )
     .onConflictDoNothing();
+
+  const [existingTemplate] = await db.select({ id: briefingTemplates.id }).from(briefingTemplates).where(eq(briefingTemplates.isDefault, true)).limit(1);
+  if (!existingTemplate) {
+    await db.insert(briefingTemplates).values({ name: "Briefing padrão", version: 1, questions: defaultBriefingQuestions, isDefault: true });
+  }
 
   console.log("Seed concluído.");
 }

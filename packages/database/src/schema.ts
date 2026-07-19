@@ -243,20 +243,43 @@ export const products = pgTable("products", {
   ...timestamps,
 });
 
+export type BriefingQuestion = {
+  id: string;
+  type: "text" | "textarea" | "select" | "multiselect" | "boolean" | "date" | "currency" | "link";
+  label: string;
+  helpText?: string;
+  required: boolean;
+  options?: string[];
+};
+
+export const briefingTemplates = pgTable("briefing_templates", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  version: integer("version").default(1).notNull(),
+  questions: jsonb("questions").$type<BriefingQuestion[]>().notNull(),
+  isDefault: boolean("is_default").default(false).notNull(),
+  status: recordStatus("status").default("active").notNull(),
+  ...timestamps,
+});
+
 export const briefings = pgTable("briefings", {
   id: uuid("id").defaultRandom().primaryKey(),
   code: varchar("code", { length: 32 }).notNull().unique(),
   opportunityId: uuid("opportunity_id").notNull().references(() => opportunities.id, { onDelete: "cascade" }),
   productId: uuid("product_id").references(() => products.id),
+  templateId: uuid("template_id").references(() => briefingTemplates.id),
+  questionsSnapshot: jsonb("questions_snapshot").$type<BriefingQuestion[]>(),
   status: text("status").default("draft").notNull(),
   templateVersion: integer("template_version").default(1).notNull(),
   publicSlug: text("public_slug").notNull(),
   publicTokenHash: text("public_token_hash").notNull(),
   responses: jsonb("responses").$type<Record<string, unknown>>().default({}),
   progress: integer("progress").default(0).notNull(),
+  startedAt: timestamp("started_at", { withTimezone: true }),
   skippedAt: timestamp("skipped_at", { withTimezone: true }),
   skipReason: text("skip_reason"),
   completedAt: timestamp("completed_at", { withTimezone: true }),
+  analyzedAt: timestamp("analyzed_at", { withTimezone: true }),
   ...timestamps,
 }, (table) => [uniqueIndex("briefing_public_slug_unique").on(table.publicSlug)]);
 

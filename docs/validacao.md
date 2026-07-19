@@ -113,3 +113,20 @@ Bugs de teste (seletor ambíguo, já esperado dado o padrão que se repete): `ge
 Bug de produto real: checkbox desmarcada (`allowBriefingSkip`) manda `null` via `FormData.get()`, não `undefined` — `z.string().optional()` só aceita `undefined` e rejeitava com "Invalid input: expected string, received null". Corrigido para `z.string().nullish()`. Vale conferir os outros formulários com checkbox no futuro (nenhum outro existe ainda nesta base).
 
 **Fase 3 fechada.** 35 testes E2E cobrindo lead→oportunidade→contato/empresa→produto, todos reais (banco Postgres de verdade, sem mocks).
+
+## Validação Fase 4 — Briefing persistente (19/07/2026)
+
+| Comando | Resultado |
+|---|---|
+| `npm run check` (após limpar `.next`) | ✅ 48 rotas, 0 erros |
+| `npm run lint` | ✅ mesmo warning cosmético |
+| `npm run db:generate` / `db:migrate` / `db:seed` | ✅ migração `0003_rapid_iron_lad.sql`, template padrão semeado |
+| `npx playwright test` (suíte completa, chromium + mobile) | ✅ **40/41** na primeira passada (1 flake em `contatos.spec.ts` no chromium, reproduzido isolado com 5/5 verde — disco da VPS ocasionalmente lento, não é bug de produto) |
+
+Bugs reais encontrados e corrigidos durante a validação:
+1. **Label não associado ao campo** na página pública do briefing (`<label>` sem `htmlFor`/`id` correspondente) — falha de acessibilidade real, não só de teste; qualquer leitor de tela teria o mesmo problema que o Playwright teve para localizar o campo. Corrigido associando cada `label` ao seu input via `id`/`htmlFor`.
+2. **Multiselect só reagia a clique no quadradinho**, não na linha inteira — `onClick` estava no `<span>` interno em vez do `<label>` que envolve a opção inteira. Corrigido.
+3. **Tela de "concluído" nunca aparecia**: ao chamar uma Server Action diretamente (não via `<form action>`) de dentro de um Client Component, o Next.js revalida a rota automaticamente após a ação — isso troca a árvore de componentes pela saída atual do Server Component (`page.tsx`), descartando qualquer estado local tipo `useState(completed)` que dependesse de "acabei de concluir agora". Corrigido removendo o estado local redundante e deixando o próprio `page.tsx` decidir a tela com base no `status` real do banco — mais simples e mais robusto (funciona igual em conexão lenta, recarregamento, etc.).
+4. Erro bobo introduzido durante o fix #3: removi o import do ícone `Check` do lucide-react sem notar que ainda era usado no multiselect — `next dev` (modo desenvolvimento) não bloqueia nisso, só quebra em runtime no navegador; `tsc --noEmit` pega isso na hora. Lição registrada: sempre rodar `npm run typecheck` depois de qualquer edição, antes de gastar tempo rodando Playwright.
+
+Reafirma o padrão dos bugs de teste (seletor ambíguo por badge/texto repetido) — já não vale mais a pena listar item a item, o padrão é conhecido: sempre preferir `{ exact: true }` ou `.first()` quando o texto pode aparecer em mais de um lugar da tela.

@@ -442,3 +442,15 @@ export const counters = pgTable("counters", {
   year: integer("year").notNull(),
   value: integer("value").default(0).notNull(),
 }, (table) => [primaryKey({ columns: [table.namespace, table.year] })]);
+
+/** Linha única (id fixo "singleton") com dados institucionais preenchidos no onboarding. */
+export const appSettings = pgTable("app_settings", {
+  id: text("id").primaryKey().default("singleton"),
+  workspaceName: text("workspace_name"),
+  legalName: text("legal_name"),
+  document: varchar("document", { length: 32 }),
+  logoUrl: text("logo_url"),
+  monthlyRevenueGoal: numeric("monthly_revenue_goal", { precision: 14, scale: 2 }),
+  onboardingCompletedAt: timestamp("onboarding_completed_at", { withTimezone: true }),
+  ...timestamps,
+});

@@ -1,15 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { ChevronLeft, LifeBuoy } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { ChevronLeft, LifeBuoy, LogOut } from "lucide-react";
 import { useState } from "react";
 import { navigation } from "@/lib/nav";
+import { authClient } from "@/lib/auth-client";
 import { PulsoLogo } from "./logo";
 
-export function Sidebar() {
+export function Sidebar({ user }: { user: { name: string; email: string } }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const initial = (user.name || user.email || "?").charAt(0).toUpperCase();
+
+  async function handleLogout() {
+    await authClient.signOut();
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <aside className={`hidden h-screen shrink-0 border-r border-[var(--line)] bg-[var(--surface)] lg:sticky lg:top-0 lg:flex lg:flex-col ${collapsed ? "w-[82px]" : "w-[274px]"} transition-[width] duration-200`}>
@@ -43,9 +52,12 @@ export function Sidebar() {
         <button className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--muted-strong)] hover:bg-[var(--soft)] ${collapsed ? "justify-center" : ""}`}>
           <LifeBuoy className="size-[18px]" />{!collapsed && <span>Central de ajuda</span>}
         </button>
+        <button onClick={handleLogout} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--muted-strong)] hover:bg-[var(--soft)] ${collapsed ? "justify-center" : ""}`}>
+          <LogOut className="size-[18px]" />{!collapsed && <span>Sair</span>}
+        </button>
         <div className={`mt-2 flex items-center gap-3 rounded-xl bg-[var(--soft)] p-3 ${collapsed ? "justify-center" : ""}`}>
-          <div className="grid size-9 shrink-0 place-items-center rounded-full bg-[var(--signal)] text-xs font-black text-white">G</div>
-          {!collapsed && <div className="min-w-0"><p className="truncate text-sm font-bold">Gustavo</p><p className="truncate text-xs text-[var(--muted)]">Administrador</p></div>}
+          <div className="grid size-9 shrink-0 place-items-center rounded-full bg-[var(--signal)] text-xs font-black text-white">{initial}</div>
+          {!collapsed && <div className="min-w-0"><p className="truncate text-sm font-bold">{user.name}</p><p className="truncate text-xs text-[var(--muted)]">Administrador</p></div>}
         </div>
       </div>
     </aside>

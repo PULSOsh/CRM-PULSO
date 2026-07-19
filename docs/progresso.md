@@ -62,7 +62,6 @@
 
 ## Parcial
 
-- Autenticação está configurada, mas ainda precisa de telas de login, onboarding e criação controlada do administrador.
 - Schema cobre o núcleo, mas faltam tabelas complementares listadas em `banco-de-dados.md`.
 - Páginas de módulos usam dados demonstrativos.
 - PDF possui contrato de interface e placeholder; renderização real via Chromium ainda precisa ser ligada.
@@ -99,9 +98,19 @@
 - Repositório Git local inicializado com commit base da fundação recebida.
 - Decisão de ambiente registrada em `docs/decisoes-tecnicas.md`.
 
+## Fase 1 — autenticação e onboarding (concluída em 19/07/2026)
+
+- Better Auth concluído: login interno real (`/login`), recuperação de senha (`/esqueci-senha`, `/redefinir-senha` via `authClient.requestPasswordReset`/`resetPassword`), logout, listagem de sessões e "sair de todos os dispositivos" (`/app/configuracoes/seguranca`).
+- Middleware (`apps/web/src/middleware.ts`) protege todas as rotas `/app/**`, redirecionando para `/login?redirect=...` quando não há sessão. `(crm)/app/layout.tsx` faz uma segunda verificação real de sessão no servidor (defesa em profundidade) e injeta o usuário autenticado na Sidebar (nome, inicial, logout).
+- Onboarding controlado em `/onboarding` (3 etapas): (1) criação do administrador único — só é possível enquanto a tabela `user` estiver vazia, usa `auth.$context.internalAdapter` diretamente (não a rota pública de sign-up, que fica desativada em produção) para respeitar a regra "administrador interno único"; (2) dados institucionais da PULSO e meta de receita mensal, persistidos em `app_settings` (tabela nova, singleton); (3) revisão informativa de integrações (todas com fluxo manual/"pular" por padrão) e conclusão, que marca `onboarding_completed_at`.
+- Rate limit habilitado (`auth.ts`): 5 tentativas/60s em `/sign-in/email`, 3/60s em `/forget-password`, 20/60s geral.
+- Auditoria automática de `auth.admin_created`, `onboarding.completed`, `auth.login_success`, `auth.login_failed` e `auth.logout` via hook `after` do Better Auth, gravando em `audit_events` (`packages/database/src/audit.ts`).
+- Template de e-mail de redefinição de senha adicionado (`packages/email`), enviado pelo provider de desenvolvimento (log no console) — SMTP/Resend reais ficam para a Fase 10 (integrações).
+- Testes E2E de onboarding/login/logout (`apps/web/e2e/auth.spec.ts`) e smoke test atualizado para refletir o novo bloqueio de rota (`apps/web/e2e/smoke.spec.ts`).
+
 ## Próxima sequência recomendada
 
-1. Onboarding e autenticação.
+1. Banco e domínio: expandir schema (templates, itens de proposta, projetos/operação, financeiro completo, plataforma) — Fase 2.
 2. CRUD de contatos, empresas, pipelines e oportunidades.
 3. Briefing persistente.
 4. Proposta versionada.

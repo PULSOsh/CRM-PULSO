@@ -1,9 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-test("abre a central de hoje", async ({ page }) => {
+test("rota interna exige login", async ({ page }) => {
   await page.goto("/app/hoje");
-  await expect(page.getByRole("heading", { name: "Central de hoje" })).toBeVisible();
-  await expect(page.getByText("O CRM funciona sem integrações")).toBeVisible();
+  await expect(page).toHaveURL(/\/login\?redirect=%2Fapp%2Fhoje/);
 });
 
 test("abre proposta pública", async ({ page }) => {

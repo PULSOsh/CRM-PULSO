@@ -96,6 +96,16 @@ export const emailTemplates = {
       buttonLabel: "Abrir proposta",
       buttonUrl: url,
     }),
+  passwordReset: (name: string, url: string) =>
+    renderPulsoEmail({
+      preview: "Redefinição de senha solicitada.",
+      eyebrow: "Segurança",
+      title: `Olá, ${name}. Redefina sua senha`,
+      body: "Recebemos uma solicitação para redefinir sua senha de acesso ao PULSO CRM. Se você não fez essa solicitação, ignore este e-mail com segurança.",
+      buttonLabel: "Redefinir senha",
+      buttonUrl: url,
+      secondaryText: "Este link expira em algumas horas por segurança.",
+    }),
   paymentReminder: (name: string, amount: string, dueDate: string, url: string) =>
     renderPulsoEmail({
       preview: "Lembrete de vencimento.",

@@ -3,7 +3,7 @@ import {
   CircleDollarSign, ClipboardCheck, ContactRound, FileCheck2, FileText,
   FolderOpen, Headphones, House, Landmark, LayoutDashboard, ListTodo,
   MessageSquareText, Package, PanelsTopLeft, ReceiptText, Search,
-  Settings2, ShieldCheck, Sparkles, Target, UsersRound, WalletCards
+  Settings2, ShieldCheck, Sparkles, Target, UsersRound, WalletCards, Lock
 } from "lucide-react";
 
 export const navigation = [
@@ -44,7 +44,8 @@ export const navigation = [
   ]},
   { title: "Configurações", items: [
     { label: "Integrações", href: "/app/configuracoes/integracoes", icon: Sparkles },
-    { label: "Configurações gerais", href: "/app/configuracoes/geral", icon: Settings2 }
+    { label: "Configurações gerais", href: "/app/configuracoes/geral", icon: Settings2 },
+    { label: "Segurança", href: "/app/configuracoes/seguranca", icon: Lock }
   ]}
 ];
 

@@ -34,3 +34,23 @@ Executado na VPS `pulso@191.96.251.124` (ver `docs/operacao.md` para o motivo do
 | Navegação real (`/app/hoje`, `/app/comercial/oportunidades`) | ✅ HTTP 200 |
 
 Não executados ainda nesta fase: `npm run test:e2e` (Playwright — sem cenários reais até a Fase 1+ existir fluxo autenticado), `npm audit fix` (adiado para não introduzir mudanças de dependência não justificadas antes da Fase 0 fechar).
+
+## Validação Fase 1 (19/07/2026)
+
+| Comando | Resultado |
+|---|---|
+| `npm run typecheck` | ✅ 0 erros |
+| `npm run lint` | ✅ 0 erros, 1 warning cosmético (mesmo de antes) |
+| `npm run test` | ✅ 1/1 |
+| `npm run db:generate` | ✅ migração `0001_fine_ezekiel_stane.sql` (tabela `app_settings`) |
+| `npm run db:migrate` | ✅ aplicada |
+| `npm run build` | ✅ 39 rotas, todas as `/app/**` agora dinâmicas (checam sessão no servidor) |
+| `npx playwright install --with-deps chromium` | ✅ |
+| `npx playwright test` (chromium) | ✅ 6/6 — onboarding completo, login correto, login incorreto (mostra erro), logout + bloqueio de rota |
+| `npx playwright test` (mobile, emulação Chromium/Pixel 7) | ⚠️ 5/6 — 1 teste esbarrou no rate limit de login (5 tentativas/60s) por rodar logo após a suíte chromium na mesma janela; comportamento correto do rate limiter, não é bug de produto. WebKit real não foi instalado (exigiria dezenas de libs de sistema via `sudo apt-get` numa VPS de produção compartilhada — ver `docs/decisoes-tecnicas.md`) |
+| Verificação direta no banco (`audit_events`) | ✅ `auth.admin_created`, `onboarding.completed`, `auth.login_success` ×2, `auth.login_failed` ×3, `auth.logout` ×1 registrados com hash, ator e timestamp corretos |
+
+Bugs encontrados e corrigidos durante a validação (não teóricos — só apareceram testando de verdade):
+1. `authClient.forgetPassword` não existe nesta versão do better-auth (1.6.23); o método correto é `requestPasswordReset` (descoberto via inspeção de tipos, não documentação).
+2. `NEXT_PUBLIC_APP_URL` fixo no `auth-client.ts` quebrava login quando a página era acessada por um host diferente do configurado (cross-origin same-server) — corrigido para usar a origem atual do navegador (sem `baseURL` fixo no client).
+3. Better Auth rejeitava `trustedOrigins` não listados explicitamente — adicionado `trustedOrigins` derivado de `BETTER_AUTH_URL`/`APP_URL` + variantes `localhost`/`127.0.0.1` fora de produção.

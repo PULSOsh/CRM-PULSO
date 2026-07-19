@@ -1,0 +1,444 @@
+import {
+  boolean,
+  date,
+  index,
+  integer,
+  jsonb,
+  numeric,
+  pgEnum,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
+
+const timestamps = {
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+};
+
+export const recordStatus = pgEnum("record_status", ["active", "archived", "trashed"]);
+export const opportunityStatus = pgEnum("opportunity_status", ["open", "won", "lost"]);
+export const projectStatus = pgEnum("project_status", ["planned", "active", "waiting", "completed", "cancelled"]);
+export const financialStatus = pgEnum("financial_status", ["pending", "partial", "paid", "overdue", "cancelled", "refunded"]);
+export const visibility = pgEnum("visibility", ["internal", "client"]);
+export const priority = pgEnum("priority", ["low", "normal", "high", "urgent"]);
+
+export const user = pgTable("user", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: boolean("email_verified").default(false).notNull(),
+  image: text("image"),
+  role: text("role").default("admin").notNull(),
+  ...timestamps,
+});
+
+export const session = pgTable("session", {
+  id: text("id").primaryKey(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  token: text("token").notNull().unique(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  ...timestamps,
+});
+
+export const account = pgTable("account", {
+  id: text("id").primaryKey(),
+  accountId: text("account_id").notNull(),
+  providerId: text("provider_id").notNull(),
+  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  idToken: text("id_token"),
+  accessTokenExpiresAt: timestamp("access_token_expires_at", { withTimezone: true }),
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { withTimezone: true }),
+  scope: text("scope"),
+  password: text("password"),
+  ...timestamps,
+});
+
+export const verification = pgTable("verification", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  ...timestamps,
+});
+
+export const companies = pgTable("companies", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  code: varchar("code", { length: 32 }).notNull().unique(),
+  legalName: text("legal_name"),
+  tradeName: text("trade_name").notNull(),
+  document: varchar("document", { length: 32 }),
+  segment: text("segment"),
+  website: text("website"),
+  instagram: text("instagram"),
+  address: jsonb("address").$type<Record<string, string>>().default({}),
+  tags: text("tags").array().default([]),
+  notes: text("notes"),
+  status: recordStatus("status").default("active").notNull(),
+  trashedAt: timestamp("trashed_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("companies_document_unique").on(table.document),
+  index("companies_trade_name_idx").on(table.tradeName),
+]);
+
+export const contacts = pgTable("contacts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  code: varchar("code", { length: 32 }).notNull().unique(),
+  name: text("name").notNull(),
+  email: text("email"),
+  phone: varchar("phone", { length: 32 }),
+  document: varchar("document", { length: 32 }),
+  role: text("role"),
+  city: text("city"),
+  instagram: text("instagram"),
+  preferredChannel: text("preferred_channel"),
+  origin: text("origin"),
+  tags: text("tags").array().default([]),
+  customFields: jsonb("custom_fields").$type<Record<string, unknown>>().default({}),
+  notes: text("notes"),
+  status: recordStatus("status").default("active").notNull(),
+  trashedAt: timestamp("trashed_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [
+  index("contacts_name_idx").on(table.name),
+  index("contacts_email_idx").on(table.email),
+  index("contacts_phone_idx").on(table.phone),
+]);
+
+export const companyContacts = pgTable("company_contacts", {
+  companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+  contactId: uuid("contact_id").notNull().references(() => contacts.id, { onDelete: "cascade" }),
+  isPrimary: boolean("is_primary").default(false).notNull(),
+  relationshipRole: text("relationship_role"),
+  ...timestamps,
+}, (table) => [primaryKey({ columns: [table.companyId, table.contactId] })]);
+
+export const pipelines = pgTable("pipelines", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  kind: text("kind").default("sales").notNull(),
+  isDefault: boolean("is_default").default(false).notNull(),
+  status: recordStatus("status").default("active").notNull(),
+  ...timestamps,
+});
+
+export const pipelineStages = pgTable("pipeline_stages", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  pipelineId: uuid("pipeline_id").notNull().references(() => pipelines.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  position: integer("position").notNull(),
+  defaultProbability: integer("default_probability").default(0).notNull(),
+  automationConfig: jsonb("automation_config").$type<Record<string, unknown>>().default({}),
+  ...timestamps,
+}, (table) => [uniqueIndex("pipeline_stage_position_unique").on(table.pipelineId, table.position)]);
+
+export const opportunities = pgTable("opportunities", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  code: varchar("code", { length: 32 }).notNull().unique(),
+  title: text("title").notNull(),
+  contactId: uuid("contact_id").references(() => contacts.id),
+  companyId: uuid("company_id").references(() => companies.id),
+  pipelineId: uuid("pipeline_id").notNull().references(() => pipelines.id),
+  stageId: uuid("stage_id").notNull().references(() => pipelineStages.id),
+  status: opportunityStatus("status").default("open").notNull(),
+  source: text("source"),
+  expectedValue: numeric("expected_value", { precision: 14, scale: 2 }).default("0").notNull(),
+  probability: integer("probability").default(0).notNull(),
+  nextActionAt: timestamp("next_action_at", { withTimezone: true }),
+  lostReason: text("lost_reason"),
+  customFields: jsonb("custom_fields").$type<Record<string, unknown>>().default({}),
+  ...timestamps,
+}, (table) => [
+  index("opportunities_pipeline_stage_idx").on(table.pipelineId, table.stageId),
+  index("opportunities_next_action_idx").on(table.nextActionAt),
+]);
+
+export const products = pgTable("products", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  code: varchar("code", { length: 32 }).notNull().unique(),
+  name: text("name").notNull(),
+  category: text("category").notNull(),
+  description: text("description"),
+  basePrice: numeric("base_price", { precision: 14, scale: 2 }).notNull(),
+  billingType: text("billing_type").default("one_time").notNull(),
+  estimatedHours: numeric("estimated_hours", { precision: 10, scale: 2 }).default("0").notNull(),
+  estimatedCost: numeric("estimated_cost", { precision: 14, scale: 2 }).default("0").notNull(),
+  minimumMargin: numeric("minimum_margin", { precision: 5, scale: 2 }).default("0").notNull(),
+  allowBriefingSkip: boolean("allow_briefing_skip").default(false).notNull(),
+  configuration: jsonb("configuration").$type<Record<string, unknown>>().default({}),
+  status: recordStatus("status").default("active").notNull(),
+  ...timestamps,
+});
+
+export const briefings = pgTable("briefings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  code: varchar("code", { length: 32 }).notNull().unique(),
+  opportunityId: uuid("opportunity_id").notNull().references(() => opportunities.id, { onDelete: "cascade" }),
+  productId: uuid("product_id").references(() => products.id),
+  status: text("status").default("draft").notNull(),
+  templateVersion: integer("template_version").default(1).notNull(),
+  publicSlug: text("public_slug").notNull(),
+  publicTokenHash: text("public_token_hash").notNull(),
+  responses: jsonb("responses").$type<Record<string, unknown>>().default({}),
+  progress: integer("progress").default(0).notNull(),
+  skippedAt: timestamp("skipped_at", { withTimezone: true }),
+  skipReason: text("skip_reason"),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [uniqueIndex("briefing_public_slug_unique").on(table.publicSlug)]);
+
+export const proposals = pgTable("proposals", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  code: varchar("code", { length: 32 }).notNull().unique(),
+  opportunityId: uuid("opportunity_id").notNull().references(() => opportunities.id, { onDelete: "cascade" }),
+  status: text("status").default("draft").notNull(),
+  publicSlug: text("public_slug").notNull(),
+  publicTokenHash: text("public_token_hash").notNull(),
+  validUntil: date("valid_until"),
+  acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [uniqueIndex("proposal_public_slug_unique").on(table.publicSlug)]);
+
+export const proposalVersions = pgTable("proposal_versions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  proposalId: uuid("proposal_id").notNull().references(() => proposals.id, { onDelete: "cascade" }),
+  version: integer("version").notNull(),
+  content: jsonb("content").$type<Record<string, unknown>>().notNull(),
+  subtotal: numeric("subtotal", { precision: 14, scale: 2 }).notNull(),
+  discount: numeric("discount", { precision: 14, scale: 2 }).default("0").notNull(),
+  fees: numeric("fees", { precision: 14, scale: 2 }).default("0").notNull(),
+  total: numeric("total", { precision: 14, scale: 2 }).notNull(),
+  snapshotHash: text("snapshot_hash").notNull(),
+  publishedAt: timestamp("published_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [uniqueIndex("proposal_version_unique").on(table.proposalId, table.version)]);
+
+export const contracts = pgTable("contracts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  code: varchar("code", { length: 32 }).notNull().unique(),
+  proposalVersionId: uuid("proposal_version_id").notNull().references(() => proposalVersions.id),
+  status: text("status").default("draft").notNull(),
+  provider: text("provider").default("internal").notNull(),
+  externalId: text("external_id"),
+  content: jsonb("content").$type<Record<string, unknown>>().notNull(),
+  documentHash: text("document_hash"),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
+  signedAt: timestamp("signed_at", { withTimezone: true }),
+  ...timestamps,
+});
+
+export const projects = pgTable("projects", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  code: varchar("code", { length: 32 }).notNull().unique(),
+  name: text("name").notNull(),
+  companyId: uuid("company_id").references(() => companies.id),
+  contactId: uuid("contact_id").references(() => contacts.id),
+  opportunityId: uuid("opportunity_id").references(() => opportunities.id),
+  contractId: uuid("contract_id").references(() => contracts.id),
+  status: projectStatus("status").default("planned").notNull(),
+  progress: integer("progress").default(0).notNull(),
+  startsAt: date("starts_at"),
+  dueAt: date("due_at"),
+  deliveredAt: timestamp("delivered_at", { withTimezone: true }),
+  warrantyEndsAt: date("warranty_ends_at"),
+  estimatedHours: numeric("estimated_hours", { precision: 10, scale: 2 }).default("0").notNull(),
+  budget: numeric("budget", { precision: 14, scale: 2 }).default("0").notNull(),
+  ...timestamps,
+});
+
+export const tasks = pgTable("tasks", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  status: text("status").default("todo").notNull(),
+  priority: priority("priority").default("normal").notNull(),
+  dueAt: timestamp("due_at", { withTimezone: true }),
+  reminderAt: timestamp("reminder_at", { withTimezone: true }),
+  entityType: text("entity_type"),
+  entityId: uuid("entity_id"),
+  googleEventId: text("google_event_id"),
+  ...timestamps,
+}, (table) => [
+  index("tasks_due_at_idx").on(table.dueAt),
+  index("tasks_entity_idx").on(table.entityType, table.entityId),
+]);
+
+export const files = pgTable("files", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  originalName: text("original_name").notNull(),
+  storageKey: text("storage_key").notNull().unique(),
+  mimeType: text("mime_type").notNull(),
+  sizeBytes: integer("size_bytes").notNull(),
+  sha256: text("sha256").notNull(),
+  visibility: visibility("visibility").default("internal").notNull(),
+  entityType: text("entity_type"),
+  entityId: uuid("entity_id"),
+  trashedAt: timestamp("trashed_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [
+  index("files_sha256_idx").on(table.sha256),
+  index("files_entity_idx").on(table.entityType, table.entityId),
+]);
+
+export const approvals = pgTable("approvals", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  fileId: uuid("file_id").references(() => files.id),
+  title: text("title").notNull(),
+  instructions: text("instructions"),
+  status: text("status").default("pending").notNull(),
+  round: integer("round").default(1).notNull(),
+  dueAt: timestamp("due_at", { withTimezone: true }),
+  decidedAt: timestamp("decided_at", { withTimezone: true }),
+  decisionComment: text("decision_comment"),
+  ...timestamps,
+});
+
+export const timeEntries = pgTable("time_entries", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  projectId: uuid("project_id").references(() => projects.id),
+  taskId: uuid("task_id").references(() => tasks.id),
+  description: text("description").notNull(),
+  startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+  endedAt: timestamp("ended_at", { withTimezone: true }),
+  durationMinutes: integer("duration_minutes").default(0).notNull(),
+  billable: boolean("billable").default(true).notNull(),
+  hourlyCost: numeric("hourly_cost", { precision: 14, scale: 2 }).default("0").notNull(),
+  ...timestamps,
+});
+
+export const tickets = pgTable("tickets", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  code: varchar("code", { length: 32 }).notNull().unique(),
+  companyId: uuid("company_id").references(() => companies.id),
+  projectId: uuid("project_id").references(() => projects.id),
+  contractId: uuid("contract_id").references(() => contracts.id),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  category: text("category"),
+  priority: priority("priority").default("normal").notNull(),
+  status: text("status").default("new").notNull(),
+  coverage: text("coverage").default("one_off").notNull(),
+  responseDueAt: timestamp("response_due_at", { withTimezone: true }),
+  resolutionDueAt: timestamp("resolution_due_at", { withTimezone: true }),
+  ...timestamps,
+});
+
+export const financialAccounts = pgTable("financial_accounts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  scope: text("scope").notNull(),
+  name: text("name").notNull(),
+  type: text("type").notNull(),
+  openingBalance: numeric("opening_balance", { precision: 14, scale: 2 }).default("0").notNull(),
+  status: recordStatus("status").default("active").notNull(),
+  ...timestamps,
+});
+
+export const financialEntries = pgTable("financial_entries", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  code: varchar("code", { length: 32 }).notNull().unique(),
+  scope: text("scope").notNull(),
+  direction: text("direction").notNull(),
+  type: text("type").notNull(),
+  description: text("description").notNull(),
+  category: text("category"),
+  accountId: uuid("account_id").references(() => financialAccounts.id),
+  contactId: uuid("contact_id").references(() => contacts.id),
+  companyId: uuid("company_id").references(() => companies.id),
+  projectId: uuid("project_id").references(() => projects.id),
+  amountExpected: numeric("amount_expected", { precision: 14, scale: 2 }).notNull(),
+  amountActual: numeric("amount_actual", { precision: 14, scale: 2 }).default("0").notNull(),
+  competenceDate: date("competence_date").notNull(),
+  dueDate: date("due_date"),
+  paidAt: timestamp("paid_at", { withTimezone: true }),
+  status: financialStatus("status").default("pending").notNull(),
+  paymentMethod: text("payment_method"),
+  provider: text("provider").default("manual").notNull(),
+  externalId: text("external_id"),
+  metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}),
+  ...timestamps,
+}, (table) => [
+  index("financial_scope_due_idx").on(table.scope, table.dueDate),
+  index("financial_project_idx").on(table.projectId),
+]);
+
+export const portalUsers = pgTable("portal_users", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+  contactId: uuid("contact_id").references(() => contacts.id),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  passwordHash: text("password_hash"),
+  status: text("status").default("invited").notNull(),
+  lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [uniqueIndex("portal_user_company_email_unique").on(table.companyId, table.email)]);
+
+export const portalPermissions = pgTable("portal_permissions", {
+  portalUserId: uuid("portal_user_id").notNull().references(() => portalUsers.id, { onDelete: "cascade" }),
+  projectId: uuid("project_id").references(() => projects.id, { onDelete: "cascade" }),
+  role: text("role").notNull(),
+  permissions: text("permissions").array().default([]),
+  ...timestamps,
+}, (table) => [primaryKey({ columns: [table.portalUserId, table.role] })]);
+
+export const activities = pgTable("activities", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  entityType: text("entity_type").notNull(),
+  entityId: uuid("entity_id").notNull(),
+  type: text("type").notNull(),
+  channel: text("channel"),
+  summary: text("summary").notNull(),
+  details: jsonb("details").$type<Record<string, unknown>>().default({}),
+  occurredAt: timestamp("occurred_at", { withTimezone: true }).defaultNow().notNull(),
+  createdBy: text("created_by").default("system").notNull(),
+  ...timestamps,
+}, (table) => [
+  index("activities_entity_idx").on(table.entityType, table.entityId),
+  index("activities_occurred_at_idx").on(table.occurredAt),
+]);
+
+export const auditEvents = pgTable("audit_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  actorType: text("actor_type").notNull(),
+  actorId: text("actor_id"),
+  action: text("action").notNull(),
+  entityType: text("entity_type").notNull(),
+  entityId: text("entity_id").notNull(),
+  before: jsonb("before").$type<Record<string, unknown>>(),
+  after: jsonb("after").$type<Record<string, unknown>>(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  hash: text("hash").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("audit_entity_idx").on(table.entityType, table.entityId),
+  index("audit_created_at_idx").on(table.createdAt),
+]);
+
+export const integrationSettings = pgTable("integration_settings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  key: text("key").notNull().unique(),
+  provider: text("provider").notNull(),
+  enabled: boolean("enabled").default(false).notNull(),
+  status: text("status").default("not_configured").notNull(),
+  encryptedConfiguration: text("encrypted_configuration"),
+  lastTestAt: timestamp("last_test_at", { withTimezone: true }),
+  lastError: text("last_error"),
+  ...timestamps,
+});
+
+export const counters = pgTable("counters", {
+  namespace: text("namespace").notNull(),
+  year: integer("year").notNull(),
+  value: integer("value").default(0).notNull(),
+}, (table) => [primaryKey({ columns: [table.namespace, table.year] })]);

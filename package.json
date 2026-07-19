@@ -1,0 +1,22 @@
+{
+  "name": "pulso-crm",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "npm run dev -w @pulso/web",
+    "build": "npm run build -w @pulso/web",
+    "start": "npm run start -w @pulso/web",
+    "lint": "npm run lint -w @pulso/web",
+    "typecheck": "npm run typecheck -w @pulso/web",
+    "test": "npm run test -w @pulso/web",
+    "test:e2e": "npm run test:e2e -w @pulso/web",
+    "db:generate": "npm run db:generate -w @pulso/database",
+    "db:migrate": "npm run db:migrate -w @pulso/database",
+    "db:studio": "npm run db:studio -w @pulso/database",
+    "db:seed": "npm run db:seed -w @pulso/database",
+    "check": "npm run typecheck && npm run test && npm run build"
+  },
+  "engines": {"node": ">=20.9"}
+}

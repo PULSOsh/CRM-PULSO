@@ -41,6 +41,16 @@ Complementarmente, `auth.ts` no servidor ganhou `trustedOrigins` incluindo `BETT
 
 `devices["iPhone 13"]` usa o motor WebKit por padrão. Instalá-lo na VPS exigiria `sudo apt-get install` de ~15 bibliotecas de sistema (libwebp, libmanette, libenchant, etc.) numa máquina de produção compartilhada com outros serviços — risco desproporcional ao benefício nesta fase. Trocado para `devices["Pixel 7"]` (viewport e user-agent mobile, motor Chromium, já instalado). Se a fidelidade real do Safari/iOS se tornar necessária (ex.: bug específico de WebKit), reavaliar instalando WebKit num ambiente de CI isolado, não nesta VPS.
 
+## 19/07/2026 — Schema expandido sob demanda, não em lote antecipado
+
+A seção 7 do prompt mestre lista ~80 tabelas (identidade/portal, templates/documentos, projetos/operação, financeiro empresa/pessoal, plataforma) como escopo da "Fase 2 — banco e domínio", antes de qualquer CRUD começar.
+
+**Decisão:** o schema cresce junto com cada funcionalidade que realmente vai usá-lo, não antecipadamente. Ao iniciar a Fase 3 (CRM comercial), a única lacuna real bloqueando o trabalho era a ausência de `leads` e `prospecting_lists`/`prospecting_items` — o resto do que a seção 7 pede (templates de proposta, signatários, etapas de projeto, contas a pagar, webhooks recebidos, chaves de idempotência, consentimento LGPD, etc.) não tem nenhuma tela ou fluxo consumindo ainda.
+
+**Por quê:** desenhar dezenas de tabelas para funcionalidade que não existe é abstração prematura — na prática, o formato exato de cada tabela só fica claro quando a regra de negócio correspondente é implementada e testada de verdade (ex.: só ao construir propostas versionadas vai ficar claro se `proposal_items` precisa de uma coluna de desconto por item ou só um desconto agregado). Migrações incrementais, uma por funcionalidade, com nome descritivo, são mais fáceis de revisar e de reverter do que uma migração gigante especulativa.
+
+**Como isso não vira desculpa para pular tabela**: cada fase do roadmap (`docs/progresso.md` § "Próxima sequência recomendada") lista explicitamente quais entidades de `docs/banco-de-dados.md` § "Próximas tabelas a implementar" ela cobre, e a tabela só é considerada implementada quando tem migração aplicada **e** CRUD/fluxo real usando ela — nunca schema "para o futuro" sem consumidor.
+
 ## 19/07/2026 — Aviso "middleware deprecated" do Next.js 16 (não corrigido ainda)
 
 O Next.js 16.2 avisa que o arquivo `middleware.ts` será renomeado para `proxy.ts` numa convenção futura (`https://nextjs.org/docs/messages/middleware-to-proxy`). Ainda funciona normalmente (é só aviso, não erro), então não foi migrado agora para não introduzir risco fora do escopo da Fase 1. Pendência de baixo risco para revisar numa fase de polimento (Fase 11).

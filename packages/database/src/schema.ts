@@ -21,6 +21,10 @@ const timestamps = {
 };
 
 export const recordStatus = pgEnum("record_status", ["active", "archived", "trashed"]);
+export const leadStatus = pgEnum("lead_status", ["new", "contacted", "qualifying", "qualified", "disqualified", "converted"]);
+export const prospectingItemStatus = pgEnum("prospecting_item_status", [
+  "not_researched", "researched", "ready", "contacted", "waiting_reply", "follow_up", "replied", "qualified", "not_interested", "no_response", "converted"
+]);
 export const opportunityStatus = pgEnum("opportunity_status", ["open", "won", "lost"]);
 export const projectStatus = pgEnum("project_status", ["planned", "active", "waiting", "completed", "cancelled"]);
 export const financialStatus = pgEnum("financial_status", ["pending", "partial", "paid", "overdue", "cancelled", "refunded"]);
@@ -112,6 +116,66 @@ export const contacts = pgTable("contacts", {
   index("contacts_name_idx").on(table.name),
   index("contacts_email_idx").on(table.email),
   index("contacts_phone_idx").on(table.phone),
+]);
+
+export const leads = pgTable("leads", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  code: varchar("code", { length: 32 }).notNull().unique(),
+  name: text("name").notNull(),
+  email: text("email"),
+  phone: varchar("phone", { length: 32 }),
+  document: varchar("document", { length: 32 }),
+  companyName: text("company_name"),
+  service: text("service"),
+  source: text("source"),
+  channel: text("channel"),
+  message: text("message"),
+  status: leadStatus("status").default("new").notNull(),
+  contactId: uuid("contact_id").references(() => contacts.id),
+  companyId: uuid("company_id").references(() => companies.id),
+  opportunityId: uuid("opportunity_id").references(() => opportunities.id),
+  nextActionAt: timestamp("next_action_at", { withTimezone: true }),
+  disqualifiedReason: text("disqualified_reason"),
+  utm: jsonb("utm").$type<Record<string, string>>().default({}),
+  convertedAt: timestamp("converted_at", { withTimezone: true }),
+  trashedAt: timestamp("trashed_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [
+  index("leads_status_idx").on(table.status),
+  index("leads_next_action_idx").on(table.nextActionAt),
+  index("leads_email_idx").on(table.email),
+  index("leads_phone_idx").on(table.phone),
+]);
+
+export const prospectingLists = pgTable("prospecting_lists", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  code: varchar("code", { length: 32 }).notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description"),
+  status: recordStatus("status").default("active").notNull(),
+  ...timestamps,
+});
+
+export const prospectingItems = pgTable("prospecting_items", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  listId: uuid("list_id").notNull().references(() => prospectingLists.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  companyName: text("company_name"),
+  phone: varchar("phone", { length: 32 }),
+  email: text("email"),
+  instagram: text("instagram"),
+  website: text("website"),
+  segment: text("segment"),
+  status: prospectingItemStatus("status").default("not_researched").notNull(),
+  notes: text("notes"),
+  contactId: uuid("contact_id").references(() => contacts.id),
+  companyId: uuid("company_id").references(() => companies.id),
+  leadId: uuid("lead_id").references(() => leads.id),
+  lastContactAt: timestamp("last_contact_at", { withTimezone: true }),
+  nextActionAt: timestamp("next_action_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [
+  index("prospecting_items_list_status_idx").on(table.listId, table.status),
 ]);
 
 export const companyContacts = pgTable("company_contacts", {

@@ -54,3 +54,24 @@ Bugs encontrados e corrigidos durante a validação (não teóricos — só apar
 1. `authClient.forgetPassword` não existe nesta versão do better-auth (1.6.23); o método correto é `requestPasswordReset` (descoberto via inspeção de tipos, não documentação).
 2. `NEXT_PUBLIC_APP_URL` fixo no `auth-client.ts` quebrava login quando a página era acessada por um host diferente do configurado (cross-origin same-server) — corrigido para usar a origem atual do navegador (sem `baseURL` fixo no client).
 3. Better Auth rejeitava `trustedOrigins` não listados explicitamente — adicionado `trustedOrigins` derivado de `BETTER_AUTH_URL`/`APP_URL` + variantes `localhost`/`127.0.0.1` fora de produção.
+
+## Validação Fase 2/3 parcial — Leads (19/07/2026)
+
+| Comando | Resultado |
+|---|---|
+| `npm run typecheck` | ✅ 0 erros |
+| `npm run lint` | ✅ 0 erros, mesmo warning cosmético |
+| `npm run test` | ✅ 1/1 |
+| `npm run db:generate` | ✅ migração `0002_shiny_groot.sql` (`leads`, `prospecting_lists`, `prospecting_items`) |
+| `npm run db:migrate` | ✅ aplicada |
+| `npm run build` | ✅ 40 rotas |
+| `POST /api/public/forms/lead` (curl, fora de sessão) | ✅ persistiu de verdade — `LEAD-2026-0001` confirmado direto no Postgres |
+| `npx playwright test` (chromium + mobile) | ✅ **15/15** — setup de autenticação compartilhada, login (certo/errado), logout, leads (criar/buscar/mudar status/converter), smoke |
+
+Bugs reais encontrados e corrigidos durante a validação (não teóricos):
+1. **Página de detalhe não atualizava após mudar status.** O update chegava no banco (confirmado via `psql`) mas a Server Component não revalidava. Causa: `<form action={...}>` chamando uma Server Action via `.bind()` não dispara o refresh automático do App Router de forma confiável nesse caso — corrigido com `revalidatePath()` explícito em toda mutação de `leads/actions.ts`.
+2. **Nome do lead na listagem não era clicável** (só o ícone de seta era link) — corrigido envolvendo o nome em `<Link>`, mais descobrível.
+3. **Suíte E2E esgotava o rate limit de login (5/60s)** ao rodar duas suítes de browser (chromium + mobile), cada uma logando várias vezes. Corrigido com o padrão oficial do Playwright: projeto `setup` loga uma vez e salva `storageState`; specs que testam o próprio login/logout sobrescrevem para estado deslogado. Reduz de ~8 tentativas de login por execução completa para 3.
+4. **Logout não existia no mobile.** A Sidebar (onde ficava o botão "Sair") é `hidden` abaixo do breakpoint `lg`, e o menu inferior mobile não tinha equivalente — usuário em um celular não tinha como sair da conta pela interface. Corrigido adicionando um botão de logout na Topbar (visível em todas as telas, `lg:hidden` apenas para não duplicar na desktop).
+
+Migração de estrutura ainda não feita (aviso não-bloqueante do Next 16): `middleware.ts` → `proxy.ts`. Ver `docs/decisoes-tecnicas.md`.

@@ -1,15 +1,24 @@
 "use client";
 
-import { Bell, Command, EyeOff, Menu, Moon, Search } from "lucide-react";
+import { Bell, Command, EyeOff, LogOut, Menu, Moon, Search } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 import { PulsoLogo } from "./logo";
 
 export function Topbar() {
+  const router = useRouter();
   const [privateMode, setPrivateMode] = useState(false);
   const [dark, setDark] = useState(false);
 
   useEffect(() => { document.documentElement.dataset.theme = dark ? "dark" : "light"; }, [dark]);
   useEffect(() => { document.documentElement.dataset.private = privateMode ? "true" : "false"; }, [privateMode]);
+
+  async function handleLogout() {
+    await authClient.signOut();
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-[var(--line)] bg-[color:var(--paper)/.9] px-4 backdrop-blur md:px-6">
@@ -26,6 +35,10 @@ export function Topbar() {
         <Moon className={`size-4 ${dark ? "text-[var(--signal)]" : ""}`} />
       </button>
       <button className="relative grid size-9 place-items-center rounded-xl border border-[var(--line)] bg-[var(--surface)]"><Bell className="size-4" /><span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-[var(--signal)]" /></button>
+      {/* Sidebar (desktop) já tem "Sair"; no mobile ela fica oculta, então o logout precisa estar aqui também. */}
+      <button onClick={handleLogout} aria-label="Sair" className="grid size-9 place-items-center rounded-xl border border-[var(--line)] bg-[var(--surface)] lg:hidden">
+        <LogOut className="size-4" />
+      </button>
     </header>
   );
 }

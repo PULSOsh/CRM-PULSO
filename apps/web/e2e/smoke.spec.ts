@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
 
+// Precisa começar deslogado para testar o bloqueio — sobrescreve o storageState autenticado padrão.
+test.use({ storageState: { cookies: [], origins: [] } });
+
 test("rota interna exige login", async ({ page }) => {
   await page.goto("/app/hoje");
   await expect(page).toHaveURL(/\/login\?redirect=%2Fapp%2Fhoje/);

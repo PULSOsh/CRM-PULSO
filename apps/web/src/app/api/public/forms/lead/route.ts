@@ -1,3 +1,7 @@
+import { formatRecordCode } from "@/lib/code";
+import { db, schema } from "@pulso/database";
+import { recordAuditEvent } from "@pulso/database/audit";
+import { nextSequence } from "@pulso/database/counters";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -24,11 +28,39 @@ export async function POST(request: Request) {
     );
   }
 
+  // Honeypot: bots preenchem campos ocultos. Responde como sucesso sem persistir nada.
   if (parsed.data.website) return NextResponse.json({ ok: true, protocol: "ignored" });
+
+  const year = new Date().getFullYear();
+  const sequence = await nextSequence("lead", year);
+  const code = formatRecordCode("lead", year, sequence);
+
+  const [lead] = await db.insert(schema.leads).values({
+    code,
+    name: parsed.data.name,
+    email: parsed.data.email || null,
+    phone: parsed.data.phone,
+    companyName: parsed.data.company || null,
+    service: parsed.data.service || null,
+    source: "site",
+    message: parsed.data.message || null,
+    status: "new",
+    utm: parsed.data.utm ?? {}
+  }).returning();
+
+  await recordAuditEvent({
+    actorType: "anonymous",
+    action: "lead.created_public",
+    entityType: "lead",
+    entityId: lead.id,
+    after: { code: lead.code },
+    ipAddress: request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip"),
+    userAgent: request.headers.get("user-agent")
+  });
 
   return NextResponse.json({
     ok: true,
-    protocol: `LEAD-${new Date().getFullYear()}-PREVIEW`,
+    protocol: lead.code,
     next: "O registro será encaminhado para qualificação."
   }, { status: 201 });
 }

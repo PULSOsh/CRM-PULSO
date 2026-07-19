@@ -108,18 +108,45 @@
 - Template de e-mail de redefinição de senha adicionado (`packages/email`), enviado pelo provider de desenvolvimento (log no console) — SMTP/Resend reais ficam para a Fase 10 (integrações).
 - Testes E2E de onboarding/login/logout (`apps/web/e2e/auth.spec.ts`) e smoke test atualizado para refletir o novo bloqueio de rota (`apps/web/e2e/smoke.spec.ts`).
 
+## Fase 2 (em andamento) — banco e domínio, expandido sob demanda
+
+Decisão registrada em `docs/decisoes-tecnicas.md`: em vez de desenhar de uma vez todas as tabelas especulativas da seção 7 do prompt mestre, o schema cresce conforme cada fase realmente precisa (evita abstração prematura para funcionalidade ainda não construída). Adicionado até agora:
+
+- `leads`: entidade própria anterior à oportunidade, com status (`new`→`contacted`→`qualifying`→`qualified`/`disqualified`/`converted`), origem, UTM, vínculo com contato/empresa/oportunidade quando convertido.
+- `prospecting_lists` / `prospecting_items`: suporte à pré-pipeline de prospecção (ainda sem CRUD ligado — próximo passo).
+- `app_settings` (Fase 1) e helper `nextSequence()` (`packages/database/src/counters.ts`) para códigos sequenciais atômicos (`LEAD-2026-0001`, `CTT-2026-0001`, etc., via `INSERT..ON CONFLICT` na tabela `counters`).
+
+## Fase 3 (em andamento) — CRM comercial persistente
+
+### Leads — completo
+
+- Listagem real com busca (nome/e-mail/telefone/empresa), filtro por status e por "sem próxima ação", paginação (`/app/comercial/leads`).
+- Criação manual (`/app/comercial/leads/novo`) e captura pública real (`POST /api/public/forms/lead`, com honeypot, agora persiste em vez de simular).
+- Detalhe (`/app/comercial/leads/[id]`): dados de contato, histórico de atividades, transições de status (contatado → qualificando → qualificado), desqualificação com motivo obrigatório, conversão em oportunidade (cria/reaproveita contato por e-mail/telefone, cria oportunidade na primeira etapa do pipeline padrão, marca o lead como convertido).
+- Lixeira lógica (`trashedAt`), auditoria em todas as mutações, `revalidatePath` explícito após cada Server Action (necessário — o refresh automático do App Router não cobre esse caso de uso).
+- Testes E2E (`apps/web/e2e/leads.spec.ts`): criar, buscar, mudar status, converter — 100% verde em chromium e mobile.
+
+### Próximas entidades (não iniciadas)
+
+- Contatos e empresas.
+- Oportunidades (lista real + Kanban + detalhe — hoje só a lista é demo).
+- Produtos e serviços.
+- Prospecção (schema pronto, CRUD pendente).
+
 ## Próxima sequência recomendada
 
-1. Banco e domínio: expandir schema (templates, itens de proposta, projetos/operação, financeiro completo, plataforma) — Fase 2.
-2. CRUD de contatos, empresas, pipelines e oportunidades.
-3. Briefing persistente.
-4. Proposta versionada.
-5. Contrato interno.
-6. Financeiro manual.
-7. Projeto, tarefas, arquivos e aprovações.
-8. Portal.
-9. Suporte e recorrência.
-10. Relatórios, integrações e produção.
+1. Contatos e empresas (CRUD completo, vínculo N:N).
+2. Oportunidades (Kanban, pipelines, motivo de perda, próxima ação obrigatória).
+3. Produtos e serviços.
+4. Prospecção.
+5. Briefing persistente.
+6. Proposta versionada.
+7. Contrato interno.
+8. Financeiro manual.
+9. Projeto, tarefas, arquivos e aprovações.
+10. Portal.
+11. Suporte e recorrência.
+12. Relatórios, integrações e produção.
 
 ## Definição honesta
 

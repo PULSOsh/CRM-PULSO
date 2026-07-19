@@ -1,5 +1,8 @@
 const prefixes = {
   lead: "LEAD",
+  contact: "CTT",
+  company: "EMP",
+  prospectingList: "PROSP",
   opportunity: "OPP",
   briefing: "BRF",
   proposal: "PROP",

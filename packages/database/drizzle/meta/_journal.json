@@ -15,6 +15,13 @@
       "when": 1784496192473,
       "tag": "0001_fine_ezekiel_stane",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784497175183,
+      "tag": "0002_shiny_groot",
+      "breakpoints": true
     }
   ]
 }

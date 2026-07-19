@@ -142,9 +142,19 @@ Decisão registrada em `docs/decisoes-tecnicas.md`: em vez de desenhar de uma ve
 - Testes E2E (`apps/web/e2e/oportunidades.spec.ts`): criação com validação HTML5 de campo obrigatório, aparição no board, mudança de etapa, perda com motivo — 100% verde em chromium e mobile.
 - Histórico de movimentação de etapa registrado via `activities` (não uma tabela dedicada — decisão consistente com "schema sob demanda").
 
-### Próximas entidades (não iniciadas)
+### Produtos e serviços — completo
 
-- Produtos e serviços.
+- Catálogo (`/app/comercial/produtos`) com busca, filtro por categoria (derivado dos produtos existentes) e distinção visual ativo/arquivado.
+- Criar, editar, arquivar/reativar, duplicar (gera código único `-COPIA`, `-COPIA2`, ...).
+- Código único validado tanto na criação quanto na edição.
+- Testes E2E (`apps/web/e2e/produtos.spec.ts`): lista o seed, cria, bloqueia código duplicado, arquiva, duplica — 100% verde em chromium e mobile.
+
+### Fase 3 — status final: CRM comercial persistente concluído
+
+Leads, Contatos/Empresas, Oportunidades (Kanban) e Produtos têm CRUD real, persistente, testado ponta a ponta (35 testes E2E, chromium + mobile). Falta apenas Prospecção (schema já existe desde a Fase 2, sem UI ainda) — fica para quando o fluxo de pré-pipeline for priorizado; não bloqueia o restante do roadmap porque leads já cobrem a entrada manual/pública de oportunidades.
+
+### Não iniciado
+
 - Prospecção (schema pronto, CRUD pendente).
 
 ## Próxima sequência recomendada

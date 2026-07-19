@@ -101,3 +101,15 @@ Bugs de teste corrigidos durante a validação (nenhum bug de produto desta vez)
 Bug de produto real encontrado e corrigido: `onClick` passado diretamente a uma `<div>` dentro de um Server Component (`page.tsx` do board) — React 19/Next 16 rejeita isso em runtime ("Event handlers cannot be passed to Client Component props"), quebrando a página inteira ao renderizar qualquer card. O `<select>` do componente cliente (`stage-select.tsx`) já fazia `stopPropagation()` sozinho, então a `div` com `onClick` era redundante além de inválida — removida.
 
 Bugs de teste (seletor ambíguo, já esperado dado o padrão que se repete): `getByText(...)` sem `{ exact: true }` colidindo com textos parecidos em badge + histórico de atividades.
+
+## Validação Fase 3 (fechamento) — Produtos (19/07/2026)
+
+| Comando | Resultado |
+|---|---|
+| `npm run check` (após limpar `.next` — ver `docs/operacao.md`) | ✅ 46 rotas, 0 erros |
+| `npm run lint` | ✅ mesmo warning cosmético |
+| `npx playwright test` (suíte completa) | ✅ **35/35** (chromium + mobile) |
+
+Bug de produto real: checkbox desmarcada (`allowBriefingSkip`) manda `null` via `FormData.get()`, não `undefined` — `z.string().optional()` só aceita `undefined` e rejeitava com "Invalid input: expected string, received null". Corrigido para `z.string().nullish()`. Vale conferir os outros formulários com checkbox no futuro (nenhum outro existe ainda nesta base).
+
+**Fase 3 fechada.** 35 testes E2E cobrindo lead→oportunidade→contato/empresa→produto, todos reais (banco Postgres de verdade, sem mocks).

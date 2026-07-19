@@ -126,9 +126,16 @@ Decisão registrada em `docs/decisoes-tecnicas.md`: em vez de desenhar de uma ve
 - Lixeira lógica (`trashedAt`), auditoria em todas as mutações, `revalidatePath` explícito após cada Server Action (necessário — o refresh automático do App Router não cobre esse caso de uso).
 - Testes E2E (`apps/web/e2e/leads.spec.ts`): criar, buscar, mudar status, converter — 100% verde em chromium e mobile.
 
+### Contatos e empresas — completo
+
+- Uma tela (`/app/comercial/contatos`) com abas Contatos/Empresas, cada uma com busca e paginação real.
+- Criação, edição inline e lixeira lógica para ambas as entidades.
+- Vínculo N:N contato↔empresa: buscar contato existente e vincular a uma empresa, desvincular, ver empresas vinculadas na tela do contato e vice-versa.
+- Detecção de duplicidade por e-mail/telefone (contato) e documento (empresa) antes de criar — bloqueia e linka para o registro existente. Mesclagem (merge) de duplicados ainda não implementada.
+- Testes E2E (`apps/web/e2e/contatos.spec.ts`): criar/editar contato, bloquear duplicado, criar empresa e vincular contato, buscar — 100% verde em chromium e mobile.
+
 ### Próximas entidades (não iniciadas)
 
-- Contatos e empresas.
 - Oportunidades (lista real + Kanban + detalhe — hoje só a lista é demo).
 - Produtos e serviços.
 - Prospecção (schema pronto, CRUD pendente).

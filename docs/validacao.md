@@ -75,3 +75,17 @@ Bugs reais encontrados e corrigidos durante a validação (não teóricos):
 4. **Logout não existia no mobile.** A Sidebar (onde ficava o botão "Sair") é `hidden` abaixo do breakpoint `lg`, e o menu inferior mobile não tinha equivalente — usuário em um celular não tinha como sair da conta pela interface. Corrigido adicionando um botão de logout na Topbar (visível em todas as telas, `lg:hidden` apenas para não duplicar na desktop).
 
 Migração de estrutura ainda não feita (aviso não-bloqueante do Next 16): `middleware.ts` → `proxy.ts`. Ver `docs/decisoes-tecnicas.md`.
+
+## Validação Fase 3 parcial — Contatos e Empresas (19/07/2026)
+
+| Comando | Resultado |
+|---|---|
+| `npm run check` (typecheck+test+build) | ✅ 42 rotas, 0 erros |
+| `npm run lint` | ✅ mesmo warning cosmético de sempre |
+| `npx playwright test` (suíte completa, chromium + mobile) | ✅ **23/23** |
+
+Sem migração nesta etapa — reaproveitou `companies`, `contacts` e `company_contacts` já existentes no schema herdado.
+
+Bugs de teste corrigidos durante a validação (nenhum bug de produto desta vez):
+1. `getByRole("alert")` colidia com o `role="alert"` do route announcer interno do Next.js — trocado por `getByText(...)` no conteúdo real da mensagem de erro.
+2. `getByRole("button", { name: "Buscar" })` colidia com o botão de busca global da Topbar — precisou de `{ exact: true }`.

@@ -90,6 +90,15 @@
 - Conciliação ou importação bancária, que não faz parte da primeira versão.
 - Teste completo do fluxo ponta a ponta.
 
+## Fase 0 — compilação e infraestrutura (concluída em 19/07/2026)
+
+- `npm install`, `typecheck`, `lint`, `test`, `build` executados com sucesso (ambiente: VPS `pulso@191.96.251.124`, Node 20, ver `docs/operacao.md`).
+- PostgreSQL 17 isolado via `docker compose` (`pulso-crm-app-db-1`), sem impacto em outros serviços da VPS compartilhada.
+- Migração inicial gerada e aplicada (`packages/database/drizzle/0000_equal_gravity.sql`, 29 tabelas) e seed de pipeline/produtos executado.
+- `docker compose up` validado de ponta a ponta (build multi-stage da imagem `web` + `db`), `/api/health` respondendo pelo container real.
+- Repositório Git local inicializado com commit base da fundação recebida.
+- Decisão de ambiente registrada em `docs/decisoes-tecnicas.md`.
+
 ## Próxima sequência recomendada
 
 1. Onboarding e autenticação.

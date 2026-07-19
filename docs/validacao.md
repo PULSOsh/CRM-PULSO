@@ -89,3 +89,15 @@ Sem migração nesta etapa — reaproveitou `companies`, `contacts` e `company_c
 Bugs de teste corrigidos durante a validação (nenhum bug de produto desta vez):
 1. `getByRole("alert")` colidia com o `role="alert"` do route announcer interno do Next.js — trocado por `getByText(...)` no conteúdo real da mensagem de erro.
 2. `getByRole("button", { name: "Buscar" })` colidia com o botão de busca global da Topbar — precisou de `{ exact: true }`.
+
+## Validação Fase 3 parcial — Oportunidades (19/07/2026)
+
+| Comando | Resultado |
+|---|---|
+| `npm run check` | ✅ 43 rotas, 0 erros |
+| `npm run lint` | ✅ mesmo warning cosmético |
+| `npx playwright test` (suíte completa) | ✅ **29/29** (chromium + mobile) |
+
+Bug de produto real encontrado e corrigido: `onClick` passado diretamente a uma `<div>` dentro de um Server Component (`page.tsx` do board) — React 19/Next 16 rejeita isso em runtime ("Event handlers cannot be passed to Client Component props"), quebrando a página inteira ao renderizar qualquer card. O `<select>` do componente cliente (`stage-select.tsx`) já fazia `stopPropagation()` sozinho, então a `div` com `onClick` era redundante além de inválida — removida.
+
+Bugs de teste (seletor ambíguo, já esperado dado o padrão que se repete): `getByText(...)` sem `{ exact: true }` colidindo com textos parecidos em badge + histórico de atividades.

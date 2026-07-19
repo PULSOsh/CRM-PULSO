@@ -134,9 +134,16 @@ Decisão registrada em `docs/decisoes-tecnicas.md`: em vez de desenhar de uma ve
 - Detecção de duplicidade por e-mail/telefone (contato) e documento (empresa) antes de criar — bloqueia e linka para o registro existente. Mesclagem (merge) de duplicados ainda não implementada.
 - Testes E2E (`apps/web/e2e/contatos.spec.ts`): criar/editar contato, bloquear duplicado, criar empresa e vincular contato, buscar — 100% verde em chromium e mobile.
 
+### Oportunidades — completo
+
+- Kanban real (`/app/comercial/oportunidades`) agrupado por etapa do pipeline padrão, com seletor de pipeline quando houver mais de um.
+- Criação manual exigindo próxima ação (regra "toda oportunidade aberta precisa de próxima ação" aplicada no formulário, com seleção opcional de contato via busca).
+- Mudança de etapa direto no card do board (grava atividade + auditoria); detalhe (`/app/comercial/oportunidades/[id]`) com edição da próxima ação, "marcar como ganho" e "marcar como perdido" com motivo obrigatório.
+- Testes E2E (`apps/web/e2e/oportunidades.spec.ts`): criação com validação HTML5 de campo obrigatório, aparição no board, mudança de etapa, perda com motivo — 100% verde em chromium e mobile.
+- Histórico de movimentação de etapa registrado via `activities` (não uma tabela dedicada — decisão consistente com "schema sob demanda").
+
 ### Próximas entidades (não iniciadas)
 
-- Oportunidades (lista real + Kanban + detalhe — hoje só a lista é demo).
 - Produtos e serviços.
 - Prospecção (schema pronto, CRUD pendente).
 

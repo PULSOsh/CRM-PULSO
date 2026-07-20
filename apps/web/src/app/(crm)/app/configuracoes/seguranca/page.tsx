@@ -62,6 +62,22 @@ export default function SecurityPage() {
           </div>
         ))}
       </Card>
+      
+      <div className="mt-8">
+        <PageHeader
+          eyebrow="Dados"
+          title="Backups"
+          description="Exportação completa do banco de dados em formato JSON nativo."
+          actions={
+            <a href="/api/admin/backup" download className="primary-button">
+              Baixar Backup Completo
+            </a>
+          }
+        />
+        <div className="mb-5 rounded-2xl border border-[var(--line)] bg-[var(--soft)] p-4 text-sm leading-6 text-[var(--muted-strong)]">
+          <strong className="text-[var(--carbon)]">Exportação Universal:</strong> Este recurso varre todas as tabelas e exporta tudo em um arquivo JSON estrito.
+        </div>
+      </div>
     </>
   );
 }

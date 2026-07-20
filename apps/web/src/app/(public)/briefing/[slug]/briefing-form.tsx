@@ -18,6 +18,7 @@ export function BriefingForm({
   const [saving, startSaving] = useTransition();
   const [completing, startCompleting] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [isCompleted, setIsCompleted] = useState(false);
 
   function persist(next: Record<string, unknown>) {
     setResponses(next);
@@ -41,14 +42,22 @@ export function BriefingForm({
     setError(null);
     startCompleting(async () => {
       try {
-        // Ao concluir com sucesso, o Server Action revalida a rota automaticamente e o
-        // Server Component (page.tsx) passa a renderizar a tela de "briefing concluído" —
-        // não precisa de estado local aqui.
         await completeBriefing(briefingId, token);
+        setIsCompleted(true);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Não foi possível concluir o briefing.");
       }
     });
+  }
+
+  if (isCompleted) {
+    return (
+      <main className="mx-auto flex min-h-[60vh] max-w-lg flex-col items-center justify-center px-4 text-center">
+        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--signal)]">{code}</p>
+        <h1 className="mt-3 text-2xl font-extrabold">Briefing concluído com sucesso</h1>
+        <p className="mt-3 text-sm leading-6 text-[var(--muted)]">Obrigado! Recebemos suas respostas e nossa equipe já está com elas em mãos.</p>
+      </main>
+    );
   }
 
   return (

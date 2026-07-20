@@ -1,39 +1,59 @@
 import { Card, Badge } from "@pulso/ui";
-import { ArrowDownRight, ArrowUpRight, Plus } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
+import { getFinancialSummary, getRecentCashFlow } from "../actions";
 
-const metrics = [
-  ["Saldo empresarial","R$ 14.820,00","+ R$ 4.620 no mês","up"],
-  ["A receber","R$ 9.200,00","R$ 1.500 vencido","down"],
-  ["A pagar","R$ 3.480,00","7 compromissos","down"],
-  ["Margem prevista","52,4%","+ 4,8 p.p.","up"]
-];
+const currency = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
-export default function FinancePage() {
+export default async function FinanceOverviewPage() {
+  const [summary, cashFlow] = await Promise.all([
+    getFinancialSummary("company"),
+    getRecentCashFlow("company", 14)
+  ]);
+
+  const maxAbs = Math.max(1, ...cashFlow.map((d) => Math.abs(d.net)));
+  const metrics = [
+    { label: "Saldo (realizado)", value: summary.balance, direction: summary.balance >= 0 ? "up" : "down" },
+    { label: "A receber pendente", value: summary.receivablePending, direction: "down" },
+    { label: "A pagar pendente", value: summary.payablePending, direction: "down" },
+  ];
+
   return (
     <>
-      <PageHeader eyebrow="Financeiro empresarial" title="Visão financeira" description="Caixa, competência, margem, lucro, compromissos e metas em uma única leitura."
-        actions={<button className="primary-button"><Plus className="size-4" />Novo lançamento</button>} />
+      <PageHeader eyebrow="Financeiro empresarial" title="Visão financeira" description="Regime de caixa, com base em lançamentos reais — sem projeção especulativa." />
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {metrics.map(([label,value,detail,direction])=>(
-          <Card key={label} className="p-5">
-            <div className="flex items-center justify-between"><p className="text-xs font-bold text-[var(--muted)]">{label}</p>{direction==="up"?<ArrowUpRight className="size-4 text-emerald-600" />:<ArrowDownRight className="size-4 text-[var(--signal)]" />}</div>
-            <p className="money-value mt-3 text-3xl font-black tracking-[-0.06em]">{value}</p><p className="mt-2 text-xs text-[var(--muted)]">{detail}</p>
+        {metrics.map((m) => (
+          <Card key={m.label} className="p-5">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold text-[var(--muted)]">{m.label}</p>
+              {m.direction === "up" ? <ArrowUpRight className="size-4 text-emerald-600" /> : <ArrowDownRight className="size-4 text-[var(--signal)]" />}
+            </div>
+            <p className="money-value mt-3 text-3xl font-black tracking-[-0.06em]">{currency(m.value)}</p>
           </Card>
         ))}
-      </div>
-      <div className="mt-5 grid gap-5 xl:grid-cols-[1.3fr_.7fr]">
         <Card className="p-5">
-          <div className="flex items-center justify-between"><h2 className="font-extrabold">Fluxo de caixa — próximos 30 dias</h2><Badge tone="neutral">Regime de caixa</Badge></div>
-          <div className="mt-8 flex h-64 items-end gap-3 border-b border-[var(--line)] px-2">
-            {[38,62,51,79,58,90,72,96,68,86,74,92].map((height,index)=><div key={index} className="flex flex-1 flex-col justify-end gap-1"><div className="rounded-t-lg bg-[var(--signal)]" style={{height:`${height}%`}} /></div>)}
-          </div>
-          <div className="mt-3 flex justify-between font-mono text-[9px] text-[var(--muted)]"><span>19 JUL</span><span>26 JUL</span><span>02 AGO</span><span>09 AGO</span><span>18 AGO</span></div>
+          <div className="flex items-center justify-between"><p className="text-xs font-bold text-[var(--muted)]">Lançamentos vencidos</p></div>
+          <p className="money-value mt-3 text-3xl font-black tracking-[-0.06em]">{summary.overdueCount}</p>
         </Card>
+      </div>
+
+      <div className="mt-5">
         <Card className="p-5">
-          <h2 className="font-extrabold">Meta do mês</h2>
-          <div className="mt-6 grid place-items-center"><div className="grid size-48 place-items-center rounded-full bg-[conic-gradient(var(--signal)_0_67%,var(--soft)_67%_100%)] p-4"><div className="grid size-full place-items-center rounded-full bg-[var(--surface)] text-center"><div><p className="text-4xl font-black tracking-[-0.06em]">67%</p><p className="mt-1 text-xs text-[var(--muted)]">R$ 20 mil</p></div></div></div></div>
-          <p className="money-value mt-5 text-center text-sm font-bold">Faltam R$ 6.700,00</p>
+          <div className="flex items-center justify-between"><h2 className="font-extrabold">Fluxo de caixa — últimos 14 dias</h2><Badge tone="neutral">Regime de caixa</Badge></div>
+          <div className="mt-8 flex h-64 items-end gap-3 border-b border-[var(--line)] px-2">
+            {cashFlow.map((d) => {
+              const height = Math.max(4, (Math.abs(d.net) / maxAbs) * 100);
+              return (
+                <div key={d.day} className="flex flex-1 flex-col justify-end gap-1" title={`${d.day}: ${currency(d.net)}`}>
+                  <div className={`rounded-t-lg ${d.net >= 0 ? "bg-[var(--signal)]" : "bg-[var(--muted)]"}`} style={{ height: `${height}%` }} />
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-3 flex justify-between font-mono text-[9px] text-[var(--muted)]">
+            <span>{cashFlow[0] && new Date(cashFlow[0].day).toLocaleDateString("pt-BR")}</span>
+            <span>{cashFlow.at(-1) && new Date(cashFlow.at(-1)!.day).toLocaleDateString("pt-BR")}</span>
+          </div>
         </Card>
       </div>
     </>

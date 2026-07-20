@@ -161,4 +161,24 @@ Bugs reais encontrados e corrigidos durante a validação:
 
 Bug real (terceira ocorrência do mesmo padrão — ver `docs/decisoes-tecnicas.md` § "revalidação automática apaga estado local"): o botão "Revisar e enviar para assinatura" chamava a Server Action direto do client e guardava o link gerado (só exibido uma vez) em `useState`; como a ação muda `contract.status` de `draft` para `sent`, a revalidação automática desmontava o próprio bloco condicional `{isDraft && (...)}` que continha o componente com o link — o link nunca chegava a aparecer. Desta vez a correção foi mais definitiva: a action passou a fazer `redirect()` com o token como query string (mesmo padrão já usado em Propostas/Briefings na criação), eliminando de vez a dependência de estado local de client component para esse tipo de confirmação.
 
+## Validação Fase 7 — Financeiro manual, empresa e pessoal (20/07/2026)
+
+| Comando | Resultado |
+|---|---|
+| `npm run typecheck` | ✅ 0 erros |
+| `npm run lint` | ✅ mesmo warning cosmético |
+| `npm run build` (após limpar `.next`) | ✅ 49 rotas, build de produção limpo |
+| `npx playwright test financeiro.spec.ts --project=chromium` | ✅ **6/6** |
+| `npx playwright test` (suíte completa, chromium + mobile) | ✅ **66/67** na primeira passada, **67/67** ao reproduzir isolado o único teste que falhou |
+
+Sem migração — reaproveita `financial_accounts`/`financial_entries`, que já existiam desde a fundação sem nenhuma tela conectada.
+
+Nenhum bug de produto encontrado nesta fase. Dois ajustes de teste, ambos esperados dado o padrão já conhecido de seletor ambíguo:
+1. `row.getByText("R$ 300,00")` colidia com o texto "Pago: R$ 300,00" (badge de valor pago exibido junto ao valor total quando `amountActual > 0`) — corrigido com `{ exact: true }`.
+2. A descrição do lançamento de estorno é `Estorno de ${entry.code}: ${motivo}` — **não** inclui a descrição original, só o código. O teste inicial tentava localizar o lançamento compensatório em "a pagar" filtrando pela descrição do lançamento original (`RECEIVABLE_DESC`), que nunca aparece lá. Corrigido capturando o código real (`COB-2026-XXXX`) exibido na tabela logo após criar o lançamento, e filtrando por ele.
+
+Comportamento validado como intencional (não é bug): o estorno de um recebível ("in") gera um lançamento de despesa ("out") — por isso o compensatório de uma conta a receber aparece em `/app/financeiro/pagar`, não em `/app/financeiro/receber`. O lançamento original nunca é alterado (nem status, nem valores) — só ganha `metadata.reversedBy` apontando para o novo lançamento.
+
+**Fase 7 fechada.** 6 testes E2E novos cobrindo criação/baixa parcial/baixa total/estorno de contas a receber, criação de contas a pagar, separação do livro pessoal e carregamento da visão financeira — suíte completa em 67/67, todos reais (Postgres de verdade, sem mocks).
+
 Bugs de teste (mesmo padrão de sempre — texto/seletor repetido na tela, principalmente por causa da logo "PULSO" aparecer em vários lugares do layout e por elementos irmãos vs. descendentes num `.locator("..")`): corrigidos com locators mais específicos.

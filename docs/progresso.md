@@ -180,12 +180,23 @@ Leads, Contatos/Empresas, Oportunidades (Kanban) e Produtos têm CRUD real, pers
 - Assinatura ZapSign: não implementada (sem credenciais reais disponíveis) — `provider` já é um campo livre no schema (`internal`/`upload`/futuramente `zapsign`), e a estrutura de eventos idempotentes já está pronta para receber webhooks quando a integração for configurada.
 - Testes E2E (`apps/web/e2e/contratos.spec.ts`): fluxo completo lead→briefing pulado→proposta aceita→contrato→assinatura do cliente (sem sessão)→assinatura interna da PULSO→recebível criado — 9/9, suíte completa 57/57 (chromium + mobile).
 
+## Fase 7 — financeiro manual, empresa e pessoal (concluída em 20/07/2026)
+
+- Sem migração nova: reaproveita `financial_accounts`/`financial_entries`, que já existiam no schema desde a fundação mas não tinham nenhuma tela real conectada.
+- `apps/web/src/app/(crm)/app/financeiro/actions.ts`: `createReceivable`/`createPayable`/`createPersonalEntry` (geram código sequencial via `nextSequence`, namespace `charge`/`expense`); `registerPayment` (baixa manual, cumulativa — permite quitar em mais de uma parcela; status muda pending→partial→paid automaticamente comparando `amountActual` com `amountExpected`; grava quem deu a baixa em `activities`); `reverseEntry` (estorno **nunca** apaga nem edita o lançamento original — cria um novo lançamento compensatório em sentido oposto e só anota `metadata.reversedBy` no original); `getFinancialSummary`/`getRecentCashFlow` para os KPIs e o gráfico de caixa.
+- Contas a receber (`/app/financeiro/receber`) e a pagar (`/app/financeiro/pagar`): listagem real, criação manual, baixa (total ou parcial) e estorno, tudo com o mesmo componente `EntryActions`.
+- Finanças pessoais (`/app/financeiro/pessoal`): livro **separado** do caixa da empresa (`scope: "personal"`, nunca somado sem uma consolidação explícita), aceita receita e despesa no mesmo formulário; proteção por PIN citada no prompt original ainda não implementada — aviso explícito na própria tela.
+- Visão financeira (`/app/financeiro/visao`): KPIs reais (saldo realizado, a receber/pagar pendente, lançamentos vencidos) e gráfico de fluxo de caixa dos últimos 14 dias (regime de caixa, agrupado por dia via `to_char`).
+- Contas a pagar/receber recorrentes (`/app/financeiro/recorrentes`) permanece como demo — decisão registrada em `docs/decisoes-tecnicas.md`: precisa de schema próprio para MRR/reajuste/ciclo de renovação, escopo maior que o resto da Fase 7 e não foi forçado para caber no mesmo lote.
+- Testes E2E (`apps/web/e2e/financeiro.spec.ts`): cria conta a receber → baixa parcial → baixa total (status pending→partial→paid) → estorna e confirma que o lançamento original não muda enquanto o compensatório aparece do lado oposto (recebível estornado gera lançamento em "a pagar") → cria conta a pagar → cria lançamento pessoal e confirma que ele não aparece nas telas da empresa → visão financeira carrega — 6/6, suíte completa 67/67 (chromium + mobile; 1 falha isolada por rate-limit de login ao rodar a suíte inteira em sequência, confirmada como flakiness reproduzindo o mesmo teste sozinho com sucesso, não uma regressão desta fase).
+
 ### Não iniciado
 
 - Prospecção (schema pronto, CRUD pendente).
 - Geração de PDF real de proposta/contrato (placeholder ainda, ver `packages/documents`) — as cláusulas e o snapshot já existem como texto/JSON versionado, falta a renderização visual em PDF.
 - Notificação automática ao administrador quando o cliente pede condição alternativa (fica visível no painel, mas sem alerta ativo — depende da Fase 10, notificações).
-- Tela de gestão de contas a receber/pagar (o recebível do contrato já é criado no banco, mas `/app/financeiro/receber` ainda é demo — Fase 7).
+- Contas recorrentes (MRR, reajuste, ciclo de renovação) — `/app/financeiro/recorrentes` ainda é demo, precisa de schema próprio.
+- Proteção por PIN das finanças pessoais.
 
 ## Próxima sequência recomendada
 

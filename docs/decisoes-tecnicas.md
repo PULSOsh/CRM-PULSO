@@ -92,3 +92,21 @@ Desde a fundação, `packages/storage` tinha um adapter `LocalPrivateStorage` co
 Documentado nas Fases 4 e 5 (ver decisões acima), o mesmo bug apareceu de novo no botão de enviar contrato: dessa vez não era só o estado sumir, era o **componente inteiro desmontar** porque a condição `{isDraft && <SendContractButton />}` no Server Component pai deixava de ser verdadeira assim que a Server Action mudava `status` para `sent`.
 
 **Decisão final para o padrão**: qualquer ação que (a) muda um status que o Server Component usa para decidir o que renderizar, **e** (b) precisa mostrar um segredo que só existe uma vez (token de link público), deve fazer a Server Action terminar com `redirect()` incluindo o segredo como query string, nunca depender de `useState` no client. É exatamente o padrão que Briefings e Propostas já usavam para a criação; Contratos só precisou do mesmo tratamento também para o envio. Registrado aqui como a solução padrão a copiar em qualquer fluxo futuro parecido (ex.: portal do cliente, Fase 9).
+
+## 20/07/2026 — Fase 7: estorno como lançamento compensatório, nunca edição do original
+
+`reverseEntry` (`apps/web/src/app/(crm)/app/financeiro/actions.ts`) nunca apaga nem muda `status`/`amountActual` do lançamento original — cria um **novo** `financial_entries` em sentido oposto (`direction` invertida, `type: "reversal"`, `status: "paid"` imediato, `metadata: { reversalOf, reason }`) e só anota `metadata.reversedBy` no original apontando para ele.
+
+**Por quê:** é o mesmo raciocínio de auditoria contábil que já rege o restante do sistema (`recordAuditEvent`, `contract_events` imutável) — um lançamento pago não deveria "voltar a ser pendente" ou desaparecer; a trilha completa (o que foi cobrado, o que foi pago, o que foi estornado e por quê) precisa continuar existindo depois do estorno. Efeito colateral notado durante a validação, não um bug: estornar um recebível ("in") gera uma despesa ("out") equivalente, então o compensatório de um lançamento criado em `/app/financeiro/receber` aparece em `/app/financeiro/pagar`, não na mesma tela — é o comportamento correto (o dinheiro que entrou precisa "sair" de volta), só não é óbvio à primeira vista.
+
+## 20/07/2026 — Fase 7: contas recorrentes deixadas como demo, fora do escopo
+
+`/app/financeiro/recorrentes` foi a única página do módulo financeiro **não** reescrita nesta fase — segue mostrando dados estáticos de exemplo.
+
+**Por quê:** cobrança recorrente (MRR, reajuste anual, ciclo de renovação, o que acontece quando o cliente cancela no meio do ciclo) é um domínio com regras próprias que `financial_entries` (pensado para lançamentos pontuais) não modela bem — precisaria de uma tabela nova (`recurring_charges` ou equivalente) com sua própria lógica de geração de parcelas futuras. Mesma política já registrada como "schema cresce sob demanda" (ver decisão acima): não forçar essa tabela para caber no mesmo lote só porque o prompt original menciona recorrência: melhor entregar o resto do financeiro manual funcionando de verdade agora e tratar recorrência como unidade própria quando for priorizada.
+
+## 20/07/2026 — Finanças pessoais sem PIN nesta fase
+
+O prompt original pede uma camada extra de proteção (PIN) para a área de finanças pessoais, separada do login principal. Não implementada nesta fase — Better Auth não tem um conceito nativo de "segundo fator local por seção da aplicação", precisaria de um mecanismo próprio (sessão secundária, cookie de curta duração, etc.) que não existe em nenhuma outra parte do sistema ainda.
+
+**Decisão:** entregar a separação de dados (livro pessoal nunca aparece nas telas da empresa, nunca é somado ao saldo da empresa) que é a parte que protege contra erro/vazamento acidental de informação, e deixar explícito na própria interface que o PIN ainda não existe, em vez de simular uma proteção que não protege nada. Revisitar quando (e se) o prompt original for reconfirmado como requisito obrigatório — é a única lacuna desta fase que é comportamental, não só "tela ainda não construída".

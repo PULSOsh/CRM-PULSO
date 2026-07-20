@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: "CRM operacional, comercial e financeiro da PULSO.",
   manifest: "/manifest.webmanifest"
 };
-export const viewport: Viewport = { themeColor: "#F4F2ED", colorScheme: "light dark" };
+export const viewport: Viewport = { themeColor: "#11110f", colorScheme: "dark light" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <html lang="pt-BR" suppressHydrationWarning><body>{children}</body></html>;

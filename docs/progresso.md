@@ -41,7 +41,7 @@
 
 - Briefing demonstrativo com autosave visual.
 - Proposta interativa com adicionais e parcelas.
-- Portal demonstrativo.
+- Portal do cliente autenticado e persistente.
 
 ### Infraestrutura de domínio
 
@@ -63,20 +63,19 @@
 ## Parcial
 
 - Schema cobre o núcleo, mas faltam tabelas complementares listadas em `banco-de-dados.md`.
-- Páginas de módulos usam dados demonstrativos.
+- Alguns módulos ainda usam dados demonstrativos (prospecção, recorrência, assistente de IA e integrações não configuradas).
 - PDF possui contrato de interface e placeholder; renderização real via Chromium ainda precisa ser ligada.
 - PWA tem manifest; service worker e sincronização offline ainda não estão implementados.
 - Modo demonstração está representado por dados e configuração; isolamento de banco precisa ser aplicado no deploy.
 - E-mail possui renderer e modo dev; SMTP e Resend precisam de adapters.
-- Arquivos privados possuem adapter; rotas de upload e download ainda precisam ser conectadas.
+- Arquivos privados usam adapter e rotas reais; backup externo automatizado ainda precisa ser conectado.
 
 ## Não implementado ainda
 
 - CRUD persistente completo de todos os módulos.
 - Automações transacionais.
 - Builder de templates.
-- Convites e login do portal.
-- Mensagens.
+- Mensagens omnichannel fora do suporte.
 - Importação CSV/Excel.
 - Exportações.
 - ZapSign real.
@@ -207,11 +206,24 @@ Leads, Contatos/Empresas, Oportunidades (Kanban) e Produtos têm CRUD real, pers
 - **Catálogo de produtos corrigido para bater com a oferta real da PULSO** (fonte: `catalogo.pulso.cloud`, snapshot fornecido pelo usuário) — o seed tinha um produto fabricado ("Site Profissional para Dentistas", nunca existiu no catálogo real) e faltava "SaaS ou White Label"; categorias e nomes de alguns produtos também estavam divergentes. Corrigido em `packages/database/src/seed.ts`: os 13 produtos reais ficam ativos com nome/categoria/preço/prazo corretos, o produto fabricado foi arquivado (não apagado, para não quebrar propostas/contratos antigos que já o referenciam).
 - **Cores semânticas (sucesso/aviso/erro/info) alinhadas ao design system oficial** (`PULSO_VISUAL_DESIGN_SYSTEM_v1.0`, tokens fornecidos pelo usuário) — `apps/web/src/app/globals.css` ganhou `--success`/`--warning`/`--error`/`--info` com os hex canônicos (`#2E8B57`/`#D88A12`/`#C93C3C`/`#2B6CB0`), substituindo valores ad-hoc que já existiam desde a fundação da base.
 
+## Fase 9 — portal do cliente e suporte (concluída em 20/07/2026)
+
+- Portal sem cadastro público: o administrador convida um usuário vinculado a uma empresa em `/app/relacionamento/portal/novo`; o link de ativação usa token aleatório de uso único e o cliente define a própria senha. Convites, ativações, revogações e concessões de projeto são auditados.
+- Autenticação própria e isolada do Better Auth interno: senha com `scrypt` nativo do Node, cookie `portal_session` `httpOnly`/`secure`/`sameSite=lax`, sessão persistida em `portal_sessions` apenas pelo hash do token e revogada no logout ou quando o acesso do usuário é cancelado.
+- Permissões reais por projeto em `portal_permissions`, com chave primária corrigida para `(portalUserId, projectId)`. Cada usuário pode acessar vários projetos; cada projeto só aparece após concessão explícita do administrador.
+- Portal autenticado em `/portal`: lista projetos liberados, arquivos marcados como visíveis ao cliente, aprovações pendentes e chamados da empresa. Aprovações podem ser decididas dentro do portal sem reutilizar o link público; a Server Action valida conjuntamente usuário, projeto e aprovação.
+- Download privado ampliado com autorização dupla: a rota `/api/files/[id]` continua aceitando a sessão administrativa e, para o portal, só entrega arquivo `visibility="client"` vinculado a um projeto explicitamente concedido ao usuário.
+- Suporte persistente: cliente abre chamado e responde no portal; administrador cria, acompanha, altera status e responde em `/app/operacao/suporte`. `ticket_messages.visibility` separa mensagens ao cliente de notas internas, que nunca são consultadas pelo portal.
+- Correção de domínio necessária ao portal: `createOpportunity` passou a persistir `companyId` derivado do vínculo `company_contacts`; antes gravava apenas `contactId`, quebrando a cadeia oportunidade → contrato → projeto → empresa.
+- Revisão de autorização antes do deploy: projeto informado em chamado precisa pertencer às permissões do usuário, uma aprovação precisa pertencer ao projeto concedido e o fluxo de convite bloqueia e-mail já usado, coerente com o login global por e-mail.
+- Migração `0007_fearless_killraven.sql`: cria `portal_sessions` e `ticket_messages`, adiciona ativação/revogação a `portal_users` e corrige a chave de `portal_permissions`.
+- Testes E2E (`apps/web/e2e/portal.spec.ts`): fluxo completo contato/empresa/oportunidade → contrato assinado → projeto → convite → ativação/login → aprovação → chamado → nota interna/mensagem ao cliente → revogação. **21/21** isolados (setup + chromium + mobile); na regressão completa, os 20 cenários do portal passaram novamente.
+
 ### Não iniciado
 
 - Prospecção (schema pronto, CRUD pendente).
 - Geração de PDF real de proposta/contrato (placeholder ainda, ver `packages/documents`).
-- Notificação automática ao administrador quando o cliente pede condição alternativa em proposta, ou quando solicita alterações em uma aprovação (fica visível no painel, sem alerta ativo — depende da Fase 10).
+- Notificação automática ao administrador quando o cliente pede condição alternativa em proposta, solicita alterações em uma aprovação ou abre/responde chamado (fica visível nos módulos, sem alerta ativo — depende da Fase 10).
 - Contas recorrentes (MRR, reajuste, ciclo de renovação) — `/app/financeiro/recorrentes` ainda é demo.
 - Proteção por PIN das finanças pessoais.
 - Etapas/pipeline customizável por projeto (o prompt original permite, "podem ser personalizadas" — não é obrigatório; ficou com status fixo + lista de tarefas por ora, ver `docs/decisoes-tecnicas.md`).

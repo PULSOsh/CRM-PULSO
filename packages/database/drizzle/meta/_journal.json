@@ -50,6 +50,13 @@
       "when": 1784518112310,
       "tag": "0006_furry_morlun",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1784544411151,
+      "tag": "0007_fearless_killraven",
+      "breakpoints": true
     }
   ]
 }

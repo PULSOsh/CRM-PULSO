@@ -494,6 +494,16 @@ export const tickets = pgTable("tickets", {
   ...timestamps,
 });
 
+export const ticketMessages = pgTable("ticket_messages", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  ticketId: uuid("ticket_id").notNull().references(() => tickets.id, { onDelete: "cascade" }),
+  authorType: text("author_type").notNull(),
+  authorName: text("author_name").notNull(),
+  body: text("body").notNull(),
+  visibility: visibility("visibility").default("client").notNull(),
+  ...timestamps,
+}, (table) => [index("ticket_messages_ticket_idx").on(table.ticketId)]);
+
 export const financialAccounts = pgTable("financial_accounts", {
   id: uuid("id").defaultRandom().primaryKey(),
   scope: text("scope").notNull(),
@@ -540,17 +550,30 @@ export const portalUsers = pgTable("portal_users", {
   email: text("email").notNull(),
   passwordHash: text("password_hash"),
   status: text("status").default("invited").notNull(),
+  activationTokenHash: text("activation_token_hash"),
+  invitedAt: timestamp("invited_at", { withTimezone: true }).defaultNow().notNull(),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
   lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
   ...timestamps,
 }, (table) => [uniqueIndex("portal_user_company_email_unique").on(table.companyId, table.email)]);
 
+export const portalSessions = pgTable("portal_sessions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  portalUserId: uuid("portal_user_id").notNull().references(() => portalUsers.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  ...timestamps,
+}, (table) => [uniqueIndex("portal_session_token_hash_unique").on(table.tokenHash)]);
+
 export const portalPermissions = pgTable("portal_permissions", {
   portalUserId: uuid("portal_user_id").notNull().references(() => portalUsers.id, { onDelete: "cascade" }),
-  projectId: uuid("project_id").references(() => projects.id, { onDelete: "cascade" }),
-  role: text("role").notNull(),
+  projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  role: text("role").default("client").notNull(),
   permissions: text("permissions").array().default([]),
   ...timestamps,
-}, (table) => [primaryKey({ columns: [table.portalUserId, table.role] })]);
+}, (table) => [primaryKey({ columns: [table.portalUserId, table.projectId] })]);
 
 export const activities = pgTable("activities", {
   id: uuid("id").defaultRandom().primaryKey(),

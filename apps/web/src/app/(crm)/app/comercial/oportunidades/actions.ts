@@ -78,10 +78,19 @@ export async function createOpportunity(_prev: OpportunityActionState, formData:
   const nextActionDate = new Date(parsed.data.nextActionAt);
   if (Number.isNaN(nextActionDate.getTime())) return { error: "Data de próxima ação inválida." };
 
+  let companyId: string | null = null;
+  if (parsed.data.contactId) {
+    const [link] = await db.select({ companyId: schema.companyContacts.companyId }).from(schema.companyContacts)
+      .where(eq(schema.companyContacts.contactId, parsed.data.contactId))
+      .orderBy(desc(schema.companyContacts.isPrimary)).limit(1);
+    companyId = link?.companyId ?? null;
+  }
+
   const [opportunity] = await db.insert(schema.opportunities).values({
     code,
     title: parsed.data.title,
     contactId: parsed.data.contactId || null,
+    companyId,
     pipelineId: pipeline.id,
     stageId: firstStage.id,
     expectedValue: parsed.data.expectedValue?.replace(",", ".") || "0",

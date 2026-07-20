@@ -131,3 +131,27 @@ O usuário indicou quatro pastas locais (`PULSO_CATALOGO_PRODUTOS_V3_WHATSAPP`, 
 2. **Cores semânticas**: `badge-success`/`badge-warning` usavam hex ad-hoc (`#1b7f5a`, `#b36b00`) desde a fundação da base, divergentes dos tokens oficiais do design system (`#2E8B57`/`#D88A12`). Adicionadas variáveis `--success`/`--warning`/`--error`/`--info` em `globals.css` com os valores canônicos (incluindo variantes para tema escuro) e novas classes `badge-danger`/`badge-info`.
 
 **Não fiz** uma varredura completa trocando os ~22 usos existentes de `#b3261e` (vermelho de erro ad-hoc, padrão Material Design) pelo novo `--error` — é um valor visualmente equivalente (vermelho de erro), já testado e estável em 7 fases anteriores, e uma refatoração mecânica de 22 arquivos não relacionados ao trabalho desta fase é desproporcional ao ganho. Todo código **novo** desta fase já usa `var(--error)`; a convergência do código legado fica para quando essas telas forem tocadas por outro motivo.
+
+## 20/07/2026 — Fase 9: autenticação do portal separada do administrador interno
+
+O Better Auth continua exclusivo ao único administrador interno. Usuários clientes têm credenciais e sessões próprias em `portal_users`/`portal_sessions`: senha derivada com `scrypt`, token de sessão aleatório salvo apenas como hash, cookie `httpOnly`/`secure`/`sameSite=lax` limitado ao caminho `/portal` e expiração de 14 dias.
+
+**Por quê:** misturar clientes no mesmo modelo de identidade do administrador aumentaria a superfície de configuração do Better Auth e tornaria mais fácil conceder acidentalmente acesso às rotas `/app`. A separação deixa a fronteira explícita: middleware/layout administrativo só reconhece sessão Better Auth; layout e Server Actions do portal só reconhecem `portal_session` e sempre consultam a permissão por projeto.
+
+## 20/07/2026 — Fase 9: permissão do portal tem chave por usuário e projeto
+
+O schema inicial usava a chave primária `(portalUserId, role)` em `portal_permissions`, embora a tabela também tivesse `projectId`. Isso permitiria no máximo uma linha com papel `client` por usuário e, na prática, impediria o mesmo cliente de acessar dois projetos.
+
+**Decisão:** a migração `0007_fearless_killraven.sql` torna `projectId` obrigatório, define `role="client"` como padrão e muda a chave para `(portalUserId, projectId)`. Autorização nunca é inferida só pela empresa: projeto, arquivo e aprovação exigem a concessão explícita. Chamados são visíveis por empresa, mas qualquer `projectId` opcional enviado pelo cliente também precisa estar entre suas concessões.
+
+## 20/07/2026 — Fase 9: notas internas são linhas separadas, não texto filtrado na interface
+
+Cada interação de suporte é uma linha em `ticket_messages` com `visibility="client"` ou `visibility="internal"`. As consultas do portal excluem `internal` no banco; a interface não recebe esse conteúdo para depois escondê-lo com CSS ou condição client-side.
+
+**Por quê:** "nota interna nunca aparece no portal" é uma regra de confidencialidade, não apenas de apresentação. Filtrar na query reduz o risco de exposição por HTML, estado serializado, falha de componente ou inspeção do navegador. A mesma defesa em profundidade vale para arquivos: sessão de portal só autoriza download de arquivo `client` ligado a projeto concedido; a sessão administrativa mantém acesso operacional completo.
+
+## 20/07/2026 — Fase 9: identidade de login do portal é global por e-mail
+
+O login do portal pede apenas e-mail e senha, sem empresa/tenant. Portanto um mesmo e-mail não pode identificar contas diferentes em empresas diferentes sem tornar o resultado ambíguo.
+
+**Decisão:** o convite normaliza o e-mail para minúsculas e rejeita qualquer conta existente no portal, independentemente da empresa. O índice composto legado `(companyId, email)` permanece no schema nesta migração para não ampliar uma alteração estrutural já aplicada no banco de desenvolvimento; como só o administrador interno cria convites, o fluxo serializado da aplicação é a fonte de integridade nesta versão. Se no futuro houver provisionamento concorrente/API pública, a restrição deve migrar para um índice único global no banco ou o login deve ganhar um identificador explícito de empresa.

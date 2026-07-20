@@ -204,3 +204,26 @@ Bugs de teste (padrões já conhecidos, mais um novo):
 4. **Falso positivo por corrida de revalidação** ao parar o timer: `getByText(description)` batia tanto no widget do timer (ainda mostrando "Parando..." com o texto antigo, antes da revalidação assentar) quanto na lista de lançamentos (já atualizada) — 2 elementos simultâneos. Corrigido esperando o botão "Iniciar timer" reaparecer (confirma que o timer realmente parou) antes de checar a lista.
 
 **Fase 8 fechada.** 9 testes E2E novos cobrindo geração idempotente de projeto a partir de contrato assinado, tarefas, upload/lixeira/restauração de arquivo, aprovação com link público e decisão do cliente sem sessão, bloqueio/liberação de conclusão de projeto por aprovação pendente, e horas manuais/timer — suíte completa em 83/83, todos reais.
+
+## Validação Fase 9 — Portal do cliente e suporte (20/07/2026)
+
+| Comando | Resultado |
+|---|---|
+| `npm run db:generate` / `db:migrate` | ✅ migração `0007_fearless_killraven.sql` aplicada no banco de desenvolvimento (sessões do portal, mensagens de chamado, ativação/revogação e chave de permissão por projeto) |
+| `npm run typecheck` | ✅ 0 erros |
+| `npm run lint` | ✅ 0 erros; 1 aviso preexistente em `postcss.config.mjs` (`import/no-anonymous-default-export`) |
+| `npm run test` | ✅ **1/1** Vitest |
+| `npm run build` (após limpar `.next`) | ✅ 77 rotas no manifesto de build, 0 erros; somente o aviso conhecido de `middleware.ts` depreciado |
+| `PORT=3010 npx playwright test e2e/portal.spec.ts` (chromium + mobile) | ✅ **21/21** (1 setup + 10 desktop + 10 mobile), repetido após a revisão de autorização |
+| `PORT=3010 npx playwright test` (suíte completa) | ⚠️ **99 passaram**, 1 flake legado em `financeiro.spec.ts` mobile e 3 seguintes não rodaram pelo modo serial; os 20 cenários do portal passaram em chromium e mobile |
+| `PORT=3010 npx playwright test e2e/financeiro.spec.ts --project=mobile` | ✅ **6/6** ao reproduzir imediatamente o único ponto da suíte completa que falhou; confirma instabilidade ambiental, não regressão |
+
+Problemas encontrados e corrigidos durante a validação:
+
+1. **Dados de teste não únicos entre reexecuções**: o título fixo do chamado colidia com registros deixados por tentativas anteriores e causava `strict mode violation`; `TICKET_TITLE` passou a receber sufixo `Date.now()`.
+2. **Execução do Playwright na porta errada**: a porta 3000 da VPS pertence ao Dokploy; sem `PORT=3010`, o setup abria a tela de erro do próprio Dokploy. A validação válida foi feita integralmente na porta isolada 3010, conforme `docs/operacao.md`.
+3. **Aprovação cruzada por identificador**: a ação do portal verificava acesso ao `projectId`, mas não confirmava que o `approvalId` pertencia ao mesmo projeto. Adicionada validação conjunta antes da decisão.
+4. **Projeto arbitrário em chamado**: a ação aceitava um `projectId` enviado manualmente fora das opções exibidas pelo formulário. Agora exige uma linha correspondente em `portal_permissions`.
+5. **Identidade ambígua por e-mail**: o login usa e-mail + senha sem seletor de empresa, enquanto o convite bloqueava duplicidade apenas dentro da mesma empresa. O fluxo agora normaliza o e-mail e impede reutilização global no portal.
+
+**Fase 9 fechada para publicação.** O portal e o suporte usam banco e sessões reais, sem mocks; arquivos, aprovações e chamados respeitam as permissões concedidas e notas internas foram verificadas como invisíveis ao cliente.

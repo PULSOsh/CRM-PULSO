@@ -522,6 +522,23 @@ export const financialAccounts = pgTable("financial_accounts", {
   ...timestamps,
 });
 
+export const financialRecurrences = pgTable("financial_recurrences", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  scope: text("scope").notNull(),
+  direction: text("direction").notNull(),
+  type: text("type").notNull(),
+  description: text("description").notNull(),
+  category: text("category"),
+  accountId: uuid("account_id").references(() => financialAccounts.id),
+  amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
+  frequency: text("frequency").default("monthly").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date"),
+  nextDueDate: date("next_due_date").notNull(),
+  status: text("status").default("active").notNull(), // active, paused, canceled
+  ...timestamps,
+});
+
 export const financialEntries = pgTable("financial_entries", {
   id: uuid("id").defaultRandom().primaryKey(),
   code: varchar("code", { length: 32 }).notNull().unique(),

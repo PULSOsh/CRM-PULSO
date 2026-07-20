@@ -148,3 +148,17 @@ Bugs reais encontrados e corrigidos durante a validação:
 5. Ao corrigir #1, o formulário de "pular briefing" passou a renderizar de verdade (antes mostrava só "nenhum produto elegível" e nem desenhava o campo de busca) — quebrou dois testes existentes (`briefings.spec.ts`, `smoke.spec.ts`) que não esperavam por isso. Ajustados para escopar os seletores por card em vez de indexar posicionalmente, e o smoke test da proposta pública (que testava a antiga página estática) foi trocado para validar o comportamento real da rota com slug inválido, já que a página `/proposta/[slug]` deixou de ser demo.
 
 **Fase 5 fechada.** 49 testes E2E cobrindo lead→briefing→proposta→aceite público, todos reais.
+
+## Validação Fase 6 — Contrato e assinatura interna (20/07/2026)
+
+| Comando | Resultado |
+|---|---|
+| `npm run check` (após limpar `.next`) | ✅ 49 rotas, 0 erros |
+| `npm run lint` | ✅ mesmo warning cosmético |
+| `npm run db:generate` / `db:migrate` | ✅ migração `0005_bent_polaris.sql` (`contract_signatories`, `contract_events`, campos novos em `contracts`) |
+| `npx playwright test` (suíte completa, chromium + mobile) | ✅ **57/57** |
+| Verificação direta no banco | ✅ `financial_entries` recebeu `COB-2026-0001 — Recebível do contrato CONT-2026-0002` automaticamente ao completar a assinatura |
+
+Bug real (terceira ocorrência do mesmo padrão — ver `docs/decisoes-tecnicas.md` § "revalidação automática apaga estado local"): o botão "Revisar e enviar para assinatura" chamava a Server Action direto do client e guardava o link gerado (só exibido uma vez) em `useState`; como a ação muda `contract.status` de `draft` para `sent`, a revalidação automática desmontava o próprio bloco condicional `{isDraft && (...)}` que continha o componente com o link — o link nunca chegava a aparecer. Desta vez a correção foi mais definitiva: a action passou a fazer `redirect()` com o token como query string (mesmo padrão já usado em Propostas/Briefings na criação), eliminando de vez a dependência de estado local de client component para esse tipo de confirmação.
+
+Bugs de teste (mesmo padrão de sempre — texto/seletor repetido na tela, principalmente por causa da logo "PULSO" aparecer em vários lugares do layout e por elementos irmãos vs. descendentes num `.locator("..")`): corrigidos com locators mais específicos.

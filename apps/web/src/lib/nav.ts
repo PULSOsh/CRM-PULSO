@@ -3,7 +3,7 @@ import {
   CircleDollarSign, ClipboardCheck, ContactRound, FileCheck2, FileText,
   FolderOpen, Headphones, House, Landmark, LayoutDashboard, ListTodo,
   MessageSquareText, Package, PanelsTopLeft, ReceiptText, Search,
-  Settings2, ShieldCheck, Sparkles, Target, UsersRound, WalletCards, Lock
+  Settings2, ShieldCheck, Sparkles, Target, UsersRound, WalletCards, Lock, FileSignature
 } from "lucide-react";
 
 export const navigation = [
@@ -15,6 +15,7 @@ export const navigation = [
     { label: "Oportunidades", href: "/app/comercial/oportunidades", icon: ChartNoAxesCombined },
     { label: "Briefings", href: "/app/comercial/briefings", icon: ClipboardCheck },
     { label: "Propostas", href: "/app/comercial/propostas", icon: FileText },
+    { label: "Contratos", href: "/app/comercial/contratos", icon: FileSignature },
     { label: "Produtos e serviços", href: "/app/comercial/produtos", icon: Package }
   ]},
   { title: "Operação", items: [

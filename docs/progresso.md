@@ -171,11 +171,21 @@ Leads, Contatos/Empresas, Oportunidades (Kanban) e Produtos têm CRUD real, pers
 - Página pública: cálculo de total sempre recomputado no servidor a partir do snapshot (nunca confia no cliente); cliente escolhe adicionais e condição de pagamento; aceite registra nome, documento, IP, user-agent e declaração explícita; recusa e "solicitar outra condição" (esta última não altera a versão vigente, só cria um pedido).
 - Testes E2E (`apps/web/e2e/propostas.spec.ts`): bloqueio sem briefing → pula briefing → cria proposta → publica com itens reais → cliente aceita com adicional selecionado → aparece aceita no painel — 5/5, mais suíte completa 49/49 (chromium + mobile).
 
+## Fase 6 — contrato e assinatura interna (concluída em 20/07/2026)
+
+- Schema: `contracts` ganhou `opportunityId`, link público (`publicSlug`/`publicTokenHash`), `signedFileId`, cancelamento (`cancelledAt`/`cancelReason`); novas tabelas `contract_signatories` (um ou mais signatários, papel `pulso`/`client`, evidências de assinatura) e `contract_events` (log imutável com `idempotencyKey` único preparado para webhooks futuros do ZapSign).
+- **Upload/download de arquivos privados finalmente conectado** (`/api/files` POST, `/api/files/[id]` GET) — usa o `LocalPrivateStorage` que já existia desde a fundação mas nunca tinha rota real. Autenticado, grava metadados em `files`, hash SHA-256 automático (via o próprio adapter).
+- Fluxo interno (`/app/comercial/contratos`): gerar rascunho a partir de proposta aceita (bloqueia se a proposta não estiver aceita; idempotente — gerar de novo para a mesma versão aceita retorna o contrato já existente em vez de duplicar); cláusulas com texto padrão editável enquanto rascunho; gerenciar signatários; revisar e enviar (gera link público, token só exibido uma vez); assinatura interna da PULSO com evidências (nome, documento, IP, user-agent, declaração); upload de documento assinado externamente como alternativa à assinatura interna; cancelamento com motivo obrigatório (preserva documento e eventos, não apaga nada).
+- Página pública (`/contrato/[slug]?token=...`): mostra cláusulas e signatários, cliente assina com evidências completas; quando todos os signatários assinam, o contrato congela (hash do conteúdo + signatários) e **prepara automaticamente um recebível** em `financial_entries` (schema já existia desde a fundação; a Fase 7 vai construir a tela de gestão desses lançamentos) — sem gerar cobrança nem enviar nada automaticamente, como exigido pelas regras de negócio.
+- Assinatura ZapSign: não implementada (sem credenciais reais disponíveis) — `provider` já é um campo livre no schema (`internal`/`upload`/futuramente `zapsign`), e a estrutura de eventos idempotentes já está pronta para receber webhooks quando a integração for configurada.
+- Testes E2E (`apps/web/e2e/contratos.spec.ts`): fluxo completo lead→briefing pulado→proposta aceita→contrato→assinatura do cliente (sem sessão)→assinatura interna da PULSO→recebível criado — 9/9, suíte completa 57/57 (chromium + mobile).
+
 ### Não iniciado
 
 - Prospecção (schema pronto, CRUD pendente).
-- Geração de PDF da proposta (placeholder ainda, ver `packages/documents`).
+- Geração de PDF real de proposta/contrato (placeholder ainda, ver `packages/documents`) — as cláusulas e o snapshot já existem como texto/JSON versionado, falta a renderização visual em PDF.
 - Notificação automática ao administrador quando o cliente pede condição alternativa (fica visível no painel, mas sem alerta ativo — depende da Fase 10, notificações).
+- Tela de gestão de contas a receber/pagar (o recebível do contrato já é criado no banco, mas `/app/financeiro/receber` ainda é demo — Fase 7).
 
 ## Próxima sequência recomendada
 

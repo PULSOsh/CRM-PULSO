@@ -350,15 +350,46 @@ export const contracts = pgTable("contracts", {
   id: uuid("id").defaultRandom().primaryKey(),
   code: varchar("code", { length: 32 }).notNull().unique(),
   proposalVersionId: uuid("proposal_version_id").notNull().references(() => proposalVersions.id),
+  opportunityId: uuid("opportunity_id").notNull().references(() => opportunities.id),
   status: text("status").default("draft").notNull(),
   provider: text("provider").default("internal").notNull(),
   externalId: text("external_id"),
   content: jsonb("content").$type<Record<string, unknown>>().notNull(),
   documentHash: text("document_hash"),
+  publicSlug: text("public_slug"),
+  publicTokenHash: text("public_token_hash"),
+  signedFileId: uuid("signed_file_id").references(() => files.id),
   sentAt: timestamp("sent_at", { withTimezone: true }),
   signedAt: timestamp("signed_at", { withTimezone: true }),
+  cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+  cancelReason: text("cancel_reason"),
+  ...timestamps,
+}, (table) => [uniqueIndex("contract_public_slug_unique").on(table.publicSlug)]);
+
+export const contractSignatories = pgTable("contract_signatories", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  contractId: uuid("contract_id").notNull().references(() => contracts.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  email: text("email"),
+  document: text("document"),
+  role: text("role").default("client").notNull(),
+  position: integer("position").default(0).notNull(),
+  status: text("status").default("pending").notNull(),
+  signedAt: timestamp("signed_at", { withTimezone: true }),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  declaration: text("declaration"),
   ...timestamps,
 });
+
+export const contractEvents = pgTable("contract_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  contractId: uuid("contract_id").notNull().references(() => contracts.id, { onDelete: "cascade" }),
+  type: text("type").notNull(),
+  payload: jsonb("payload").$type<Record<string, unknown>>(),
+  idempotencyKey: text("idempotency_key"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [uniqueIndex("contract_events_idempotency_unique").on(table.idempotencyKey)]);
 
 export const projects = pgTable("projects", {
   id: uuid("id").defaultRandom().primaryKey(),

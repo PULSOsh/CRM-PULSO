@@ -54,3 +54,21 @@ A seção 7 do prompt mestre lista ~80 tabelas (identidade/portal, templates/doc
 ## 19/07/2026 — Aviso "middleware deprecated" do Next.js 16 (não corrigido ainda)
 
 O Next.js 16.2 avisa que o arquivo `middleware.ts` será renomeado para `proxy.ts` numa convenção futura (`https://nextjs.org/docs/messages/middleware-to-proxy`). Ainda funciona normalmente (é só aviso, não erro), então não foi migrado agora para não introduzir risco fora do escopo da Fase 1. Pendência de baixo risco para revisar numa fase de polimento (Fase 11).
+
+## 20/07/2026 — Padrão "revalidação automática apaga estado local" em Server Actions chamadas direto do client
+
+Apareceu duas vezes (Fase 4, briefing público; Fase 5, proposta pública): um Client Component chama uma Server Action diretamente (não via `<form action={fn}>`, via `onClick` + `await fn()`), a ação muda o `status` de um registro no banco, e a tela de confirmação local (`useState` tipo `completed`/`accepted`) nunca chega a aparecer — o Next.js App Router revalida a rota automaticamente depois que uma Server Action é chamada a partir de um Client Component, o que faz o Server Component pai (`page.tsx`) re-renderizar com o estado real do banco, substituindo a árvore antes do `setState` local ter qualquer efeito visível.
+
+**Decisão (regra geral para o resto do projeto):** nunca depender de estado local de Client Component para mostrar "acabei de fazer X com sucesso" quando X muda um status que o Server Component pai também usa para decidir o que renderizar. Em vez disso, deixar o Server Component ser a única fonte de verdade da tela — a revalidação automática já cuida de mostrar o estado atualizado. Vale para as próximas fases: aceite de contrato, confirmação de pagamento, aprovação de entrega, etc. — qualquer ação pública que muda status e é chamada direto do client vai ter esse mesmo comportamento.
+
+## 20/07/2026 — Timeouts do Playwright aumentados (dev mode compila rotas sob demanda)
+
+Um teste ficava preso por >30s no clique de login, com "[Fast Refresh] rebuilding" aparecendo no meio do fluxo. Investigação (incluindo suspeita de container concorrente — ver decisão seguinte) descartou causas externas: o log do servidor mostrava o `POST /api/auth/sign-in/email` retornando `200` normalmente. O problema era simplesmente que a timeout padrão do `expect()` do Playwright (5s) é curta demais para a primeira navegação a uma rota que o `next dev` ainda não compilou (compilação just-in-time), especialmente no disco mais lento da VPS de testes (avisos recorrentes de "Slow filesystem detected").
+
+**Decisão:** `playwright.config.ts` ganhou `expect: { timeout: 15_000 }` e `timeout: 60_000` (timeout por teste) no nível raiz do config. Isso é puramente uma folga para o custo de dev mode — `next start`/produção não tem esse problema porque as rotas já vêm pré-compiladas do build.
+
+## 20/07/2026 — Dokploy redeploya `pulso-crm-bx9hht` a cada `git push`, mesmo após reset anterior
+
+Durante a investigação do timeout acima, encontrei um processo `next-server` (dentro de um container Docker, `cwd=/app/apps/web`) rodando havia 3 horas na mesma VPS. `docker ps -a --filter name=pulso-crm` revelou um serviço Swarm `pulso-crm-bx9hht` "Up 3 hours", com `/etc/dokploy/applications/pulso-crm-bx9hht/code/` contendo o código deste mesmo repositório (`docs/decisoes-tecnicas.md`, `docs/operacao.md` — arquivos criados nesta sessão). Ou seja: o Dokploy tem um webhook conectado ao GitHub `PULSOsh/CRM-PULSO` e faz build+deploy automático a cada push — o mesmo serviço que o usuário tinha pedido para apagar por completo numa sessão anterior (ver memória `pulso-crm-v2-state`) voltou a existir como efeito colateral dos pushes desta sessão, sem que ninguém tivesse configurado isso de propósito nesta conversa.
+
+**Decisão, com autorização explícita do usuário:** `docker service scale pulso-crm-bx9hht=0` — para o container, sem apagar o serviço nem mexer na configuração do webhook no Dokploy. Detalhes completos (incluindo o `BETTER_AUTH_SECRET` fraco que esse deploy usa) registrados na memória de projeto `dokploy-autodeploy-webhook`, para não ser esquecido em sessões futuras — qualquer novo `git push` para esse repositório pode reativá-lo.

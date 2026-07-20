@@ -33,9 +33,11 @@ const mainStages = [
   "Fechado — perdido",
 ];
 
-const catalog = [
-  ["PROD-001", "Link na Bio", "Presença digital", "197"],
-  ["PROD-002", "Cartão Digital", "Presença digital", "297"],
+// allowBriefingSkip: true apenas para produtos de presença digital simples, sem escopo
+// suficiente para justificar o questionário completo (regra: "pular exige produto elegível").
+const catalog: [string, string, string, string, boolean?][] = [
+  ["PROD-001", "Link na Bio", "Presença digital", "197", true],
+  ["PROD-002", "Cartão Digital", "Presença digital", "297", true],
   ["PROD-003", "Catálogo Digital", "Presença digital", "597"],
   ["PROD-004", "Site Essencial", "Sites", "1200"],
   ["PROD-005", "Landing Page", "Sites", "1500"],
@@ -66,17 +68,11 @@ async function seed() {
     );
   }
 
-  await db
-    .insert(products)
-    .values(
-      catalog.map(([code, name, category, basePrice]) => ({
-        code,
-        name,
-        category,
-        basePrice,
-      })),
-    )
-    .onConflictDoNothing();
+  for (const [code, name, category, basePrice, allowBriefingSkip] of catalog) {
+    await db.insert(products)
+      .values({ code, name, category, basePrice, allowBriefingSkip: allowBriefingSkip ?? false })
+      .onConflictDoUpdate({ target: products.code, set: { allowBriefingSkip: allowBriefingSkip ?? false } });
+  }
 
   const [existingTemplate] = await db.select({ id: briefingTemplates.id }).from(briefingTemplates).where(eq(briefingTemplates.isDefault, true)).limit(1);
   if (!existingTemplate) {

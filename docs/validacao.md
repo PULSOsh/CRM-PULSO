@@ -130,3 +130,21 @@ Bugs reais encontrados e corrigidos durante a validação:
 4. Erro bobo introduzido durante o fix #3: removi o import do ícone `Check` do lucide-react sem notar que ainda era usado no multiselect — `next dev` (modo desenvolvimento) não bloqueia nisso, só quebra em runtime no navegador; `tsc --noEmit` pega isso na hora. Lição registrada: sempre rodar `npm run typecheck` depois de qualquer edição, antes de gastar tempo rodando Playwright.
 
 Reafirma o padrão dos bugs de teste (seletor ambíguo por badge/texto repetido) — já não vale mais a pena listar item a item, o padrão é conhecido: sempre preferir `{ exact: true }` ou `.first()` quando o texto pode aparecer em mais de um lugar da tela.
+
+## Validação Fase 5 — Proposta versionada (19-20/07/2026)
+
+| Comando | Resultado |
+|---|---|
+| `npm run check` (após limpar `.next`) | ✅ 46 rotas, 0 erros |
+| `npm run lint` | ✅ mesmo warning cosmético |
+| `npm run db:generate` / `db:migrate` | ✅ migração `0004_yummy_queen_noir.sql` (`proposal_change_requests` + campos de aceite) |
+| `npx playwright test` (suíte completa, chromium + mobile) | ✅ **49/49** |
+
+Bugs reais encontrados e corrigidos durante a validação:
+1. **Nenhum produto do seed tinha `allowBriefingSkip = true`** — a regra "pular briefing exige produto elegível" nunca podia ser exercida de verdade porque não existia produto elegível algum. Corrigido marcando "Link na Bio" e "Cartão Digital" (presença digital simples) como elegíveis, e o seed passou a fazer upsert (`onConflictDoUpdate`) desse campo em vez de só inserir, para que rodar o seed de novo corrija instalações já existentes.
+2. **Mesmo bug do "estado local perdido por revalidação automática de Server Action"** já visto na Fase 4, agora na tela pública de proposta: aceitar/rejeitar chamava a Server Action direto do client e a tela de confirmação local nunca aparecia (o Server Component já assumia com o estado real do banco antes). Mesma correção: removido o estado local `accepted`/`rejected`, a página do servidor decide a tela com base no `status` real.
+3. **Teste travando por >30s no login** — investigado a fundo (ver `docs/decisoes-tecnicas.md`): não era bug de produto, era timeout de assertion padrão (5s) curto demais para compilação just-in-time do Next em dev mode num disco lento. Corrigido aumentando os timeouts do Playwright (`expect.timeout: 15s`, timeout de teste: 60s) — decisão de configuração de teste, não mudança de comportamento do app.
+4. **Descoberta importante e não relacionada a bug de código**: durante essa investigação, achei que o Dokploy dessa VPS está fazendo deploy automático a cada `git push` para o GitHub, recriando um serviço (`pulso-crm-bx9hht`) que o usuário tinha pedido para apagar numa sessão anterior. Parei o serviço (`docker service scale ...=0`) com autorização do usuário; webhook do Dokploy não foi tocado. Registrado em memória do projeto para não esquecer em sessões futuras.
+5. Ao corrigir #1, o formulário de "pular briefing" passou a renderizar de verdade (antes mostrava só "nenhum produto elegível" e nem desenhava o campo de busca) — quebrou dois testes existentes (`briefings.spec.ts`, `smoke.spec.ts`) que não esperavam por isso. Ajustados para escopar os seletores por card em vez de indexar posicionalmente, e o smoke test da proposta pública (que testava a antiga página estática) foi trocado para validar o comportamento real da rota com slug inválido, já que a página `/proposta/[slug]` deixou de ser demo.
+
+**Fase 5 fechada.** 49 testes E2E cobrindo lead→briefing→proposta→aceite público, todos reais.

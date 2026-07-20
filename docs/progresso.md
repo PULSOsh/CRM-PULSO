@@ -163,9 +163,19 @@ Leads, Contatos/Empresas, Oportunidades (Kanban) e Produtos têm CRUD real, pers
 - Conclusão do briefing: idempotente, cria tarefa interna "Analisar briefing", registra atividade na oportunidade, avança a etapa do pipeline para "Briefing recebido" (e "Briefing solicitado" ao criar) por nome — sem acoplar a um pipeline específico.
 - Testes E2E (`apps/web/e2e/briefings.spec.ts`) cobrindo o ciclo completo **sem sessão interna** na parte pública (limpa cookies antes de simular o cliente): gera link → cliente responde e conclui → aparece concluído no painel → marca como analisado.
 
+## Fase 5 — proposta versionada (concluída em 19/07/2026)
+
+- Schema: `proposals` ganhou campos de aceite (versão aceita, nome/documento/IP/user-agent do aceitante, detalhes da aceitação, rejeição com motivo); `proposal_versions` ganhou `viewCount`/`viewedAt`; nova tabela `proposal_change_requests` para pedidos de condição alternativa (não altera a proposta vigente, fica pendente até o admin decidir). Tipos `ProposalContent`/`ProposalItem`/`ProposalAddon`/`PaymentCondition` versionados dentro do snapshot JSONB de cada versão — mesmo padrão de imutabilidade do briefing.
+- Componente `OpportunityPicker` extraído para `apps/web/src/components/` e reaproveitado por Briefings e Propostas (era duplicado).
+- Fluxo interno: criar proposta exige briefing concluído ou pulo aprovado na oportunidade (bloqueio real, não só de interface); editor de rascunho com itens de escopo/adicionais/condições de pagamento dinâmicos (somam para o subtotal, calculado no servidor); publicar congela snapshot com hash; nova versão só pode ser criada depois que a anterior for publicada; pedidos de condição alternativa aparecem para aprovar/rejeitar.
+- Página pública: cálculo de total sempre recomputado no servidor a partir do snapshot (nunca confia no cliente); cliente escolhe adicionais e condição de pagamento; aceite registra nome, documento, IP, user-agent e declaração explícita; recusa e "solicitar outra condição" (esta última não altera a versão vigente, só cria um pedido).
+- Testes E2E (`apps/web/e2e/propostas.spec.ts`): bloqueio sem briefing → pula briefing → cria proposta → publica com itens reais → cliente aceita com adicional selecionado → aparece aceita no painel — 5/5, mais suíte completa 49/49 (chromium + mobile).
+
 ### Não iniciado
 
 - Prospecção (schema pronto, CRUD pendente).
+- Geração de PDF da proposta (placeholder ainda, ver `packages/documents`).
+- Notificação automática ao administrador quando o cliente pede condição alternativa (fica visível no painel, mas sem alerta ativo — depende da Fase 10, notificações).
 
 ## Próxima sequência recomendada
 

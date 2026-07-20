@@ -2,8 +2,8 @@
 
 import { Check, Copy } from "lucide-react";
 import { useActionState, useState } from "react";
-import { createBriefing, skipBriefing, type BriefingActionState } from "../actions";
-import { OpportunityPicker } from "./opportunity-picker";
+import { OpportunityPicker } from "@/components/opportunity-picker";
+import { createBriefing, searchOpportunitiesForBriefing, skipBriefing, type BriefingActionState } from "../actions";
 
 const initialState: BriefingActionState = {};
 
@@ -33,7 +33,7 @@ export function CreateBriefingForm({ products }: { products: { id: string; name:
 
   return (
     <form className="space-y-4" action={formAction}>
-      <OpportunityPicker />
+      <OpportunityPicker searchAction={searchOpportunitiesForBriefing} />
       <div>
         <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="productId">Produto (opcional)</label>
         <select id="productId" name="productId" className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]">
@@ -60,7 +60,7 @@ export function SkipBriefingForm({ eligibleProducts }: { eligibleProducts: { id:
 
   return (
     <form className="space-y-4" action={formAction}>
-      <OpportunityPicker />
+      <OpportunityPicker searchAction={searchOpportunitiesForBriefing} />
       <div>
         <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="skip-productId">Produto elegível</label>
         <select id="skip-productId" name="productId" required className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]">

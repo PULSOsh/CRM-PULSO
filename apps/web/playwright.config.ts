@@ -6,6 +6,12 @@ const baseURL = `http://127.0.0.1:${port}`;
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
+  // Timeouts mais altos que o padrão: em dev mode, a primeira navegação para cada rota ainda
+  // não compilada exige compilação just-in-time, que no disco lento da VPS de testes passa
+  // fácil de 5-30s quando um teste visita várias rotas novas em sequência -- não é lentidão
+  // real do app, é custo de dev mode (next start/produção não tem esse problema).
+  timeout: 60_000,
+  expect: { timeout: 15_000 },
   use: {
     baseURL,
     trace: "on-first-retry"

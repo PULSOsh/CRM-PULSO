@@ -8,8 +8,9 @@ test("rota interna exige login", async ({ page }) => {
   await expect(page).toHaveURL(/\/login\?redirect=%2Fapp%2Fhoje/);
 });
 
-test("abre proposta pública", async ({ page }) => {
-  await page.goto("/proposta/demo");
-  await expect(page.getByRole("heading", { name: /site que transforma confiança/i })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Aceitar proposta/i })).toBeVisible();
+// A proposta pública agora é 100% dado real (ver apps/web/e2e/propostas.spec.ts para o fluxo
+// completo); aqui só confirmamos que a rota pública responde de forma segura sem token/slug válido.
+test("proposta pública sem token válido mostra link inválido, não quebra", async ({ page }) => {
+  await page.goto("/proposta/inexistente");
+  await expect(page.getByRole("heading", { name: "Link inválido ou expirado" })).toBeVisible();
 });

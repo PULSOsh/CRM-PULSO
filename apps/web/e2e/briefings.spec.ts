@@ -12,10 +12,11 @@ test.describe.serial("briefings", () => {
     await expect(page).toHaveURL(/\/app\/comercial\/oportunidades\/[a-f0-9-]+$/);
 
     await page.goto("/app/comercial/briefings/novo");
-    await page.getByPlaceholder("Buscar oportunidade aberta por título").fill(OPP_TITLE);
-    await page.getByRole("button", { name: "Buscar", exact: true }).click();
-    await page.getByText(OPP_TITLE).click();
-    await page.getByRole("button", { name: "Gerar link do briefing" }).click();
+    const sendCard = page.locator("div", { has: page.getByRole("heading", { name: "Enviar briefing" }) }).last();
+    await sendCard.getByPlaceholder("Buscar oportunidade aberta por título").fill(OPP_TITLE);
+    await sendCard.getByRole("button", { name: "Buscar", exact: true }).click();
+    await sendCard.getByText(OPP_TITLE).click();
+    await sendCard.getByRole("button", { name: "Gerar link do briefing" }).click();
 
     await expect(page.getByText(/Briefing BRF-\d{4}-\d{4} criado/)).toBeVisible();
     const linkInput = page.locator("input[readonly]");

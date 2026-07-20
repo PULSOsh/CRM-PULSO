@@ -283,6 +283,19 @@ export const briefings = pgTable("briefings", {
   ...timestamps,
 }, (table) => [uniqueIndex("briefing_public_slug_unique").on(table.publicSlug)]);
 
+export type ProposalItem = { id: string; label: string; description?: string; price: number };
+export type ProposalAddon = { id: string; label: string; description?: string; price: number };
+export type PaymentCondition = { id: string; label: string; installments: number; feePercent?: number };
+export type ProposalContent = {
+  intro: string;
+  context: string;
+  scopeTitle: string;
+  scopeItems: ProposalItem[];
+  addons: ProposalAddon[];
+  paymentConditions: PaymentCondition[];
+  termsSummary?: string;
+};
+
 export const proposals = pgTable("proposals", {
   id: uuid("id").defaultRandom().primaryKey(),
   code: varchar("code", { length: 32 }).notNull().unique(),
@@ -291,7 +304,15 @@ export const proposals = pgTable("proposals", {
   publicSlug: text("public_slug").notNull(),
   publicTokenHash: text("public_token_hash").notNull(),
   validUntil: date("valid_until"),
+  acceptedVersionId: uuid("accepted_version_id"),
   acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+  acceptorName: text("acceptor_name"),
+  acceptorDocument: text("acceptor_document"),
+  acceptorIp: text("acceptor_ip"),
+  acceptorUserAgent: text("acceptor_user_agent"),
+  acceptanceDetails: jsonb("acceptance_details").$type<{ selectedAddonIds: string[]; paymentConditionId: string; declaration: string }>(),
+  rejectedAt: timestamp("rejected_at", { withTimezone: true }),
+  rejectionReason: text("rejection_reason"),
   ...timestamps,
 }, (table) => [uniqueIndex("proposal_public_slug_unique").on(table.publicSlug)]);
 
@@ -299,15 +320,31 @@ export const proposalVersions = pgTable("proposal_versions", {
   id: uuid("id").defaultRandom().primaryKey(),
   proposalId: uuid("proposal_id").notNull().references(() => proposals.id, { onDelete: "cascade" }),
   version: integer("version").notNull(),
-  content: jsonb("content").$type<Record<string, unknown>>().notNull(),
+  content: jsonb("content").$type<ProposalContent>().notNull(),
   subtotal: numeric("subtotal", { precision: 14, scale: 2 }).notNull(),
   discount: numeric("discount", { precision: 14, scale: 2 }).default("0").notNull(),
   fees: numeric("fees", { precision: 14, scale: 2 }).default("0").notNull(),
   total: numeric("total", { precision: 14, scale: 2 }).notNull(),
   snapshotHash: text("snapshot_hash").notNull(),
   publishedAt: timestamp("published_at", { withTimezone: true }),
+  viewedAt: timestamp("viewed_at", { withTimezone: true }),
+  viewCount: integer("view_count").default(0).notNull(),
   ...timestamps,
 }, (table) => [uniqueIndex("proposal_version_unique").on(table.proposalId, table.version)]);
+
+export const proposalChangeRequests = pgTable("proposal_change_requests", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  proposalId: uuid("proposal_id").notNull().references(() => proposals.id, { onDelete: "cascade" }),
+  proposalVersionId: uuid("proposal_version_id").notNull().references(() => proposalVersions.id),
+  requestedPaymentLabel: text("requested_payment_label"),
+  requestedEntry: numeric("requested_entry", { precision: 14, scale: 2 }),
+  requestedInstallments: integer("requested_installments"),
+  comment: text("comment"),
+  status: text("status").default("pending").notNull(),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  resolutionComment: text("resolution_comment"),
+  ...timestamps,
+});
 
 export const contracts = pgTable("contracts", {
   id: uuid("id").defaultRandom().primaryKey(),

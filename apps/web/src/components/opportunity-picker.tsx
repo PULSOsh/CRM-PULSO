@@ -1,17 +1,23 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { searchOpportunitiesForBriefing } from "../actions";
 
-export function OpportunityPicker({ name = "opportunityId" }: { name?: string }) {
+type OpportunityResult = { id: string; title: string; code: string };
+
+export function OpportunityPicker({
+  name = "opportunityId", searchAction
+}: {
+  name?: string;
+  searchAction: (q: string) => Promise<OpportunityResult[]>;
+}) {
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<{ id: string; title: string; code: string } | null>(null);
-  const [results, setResults] = useState<{ id: string; title: string; code: string }[]>([]);
+  const [selected, setSelected] = useState<OpportunityResult | null>(null);
+  const [results, setResults] = useState<OpportunityResult[]>([]);
   const [pending, startTransition] = useTransition();
 
   function handleSearch() {
     startTransition(async () => {
-      const found = await searchOpportunitiesForBriefing(query);
+      const found = await searchAction(query);
       setResults(found);
     });
   }

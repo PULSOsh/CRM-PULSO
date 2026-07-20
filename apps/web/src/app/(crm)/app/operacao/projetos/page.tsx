@@ -1,19 +1,23 @@
-import { CalendarDays, GanttChart, KanbanSquare, LayoutDashboard, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
+import Link from "next/link";
+import { Card } from "@pulso/ui";
 import { PageHeader } from "@/components/page-header";
-import { ProjectBoard } from "@/components/project-board";
+import { ProjectCards } from "@/components/project-cards";
+import { listProjects } from "./actions";
 
-export default function ProjectsPage() {
+export default async function ProjectsPage() {
+  const projects = await listProjects();
+
   return (
     <>
-      <PageHeader eyebrow="Operação" title="Projetos" description="Acompanhe progresso, prazo, horas, orçamento, dependências, marcos e aprovações."
-        actions={<button className="primary-button"><Plus className="size-4" />Novo projeto</button>} />
-      <div className="mb-5 flex flex-wrap gap-2">
-        <button className="filter-chip filter-chip-active"><LayoutDashboard className="size-4" />Visão geral</button>
-        <button className="filter-chip"><KanbanSquare className="size-4" />Kanban</button>
-        <button className="filter-chip"><GanttChart className="size-4" />Cronograma</button>
-        <button className="filter-chip"><CalendarDays className="size-4" />Calendário</button>
-      </div>
-      <ProjectBoard />
+      <PageHeader eyebrow="Operação" title="Projetos" description="Acompanhe progresso, prazo, horas, orçamento e aprovações de cada projeto."
+        actions={<Link href="/app/operacao/projetos/novo" className="primary-button"><Plus className="size-4" />Novo projeto</Link>} />
+
+      {projects.length === 0 ? (
+        <Card className="p-10 text-center text-sm text-[var(--muted)]">Nenhum projeto ainda. Gere um a partir de um contrato assinado.</Card>
+      ) : (
+        <ProjectCards projects={projects} />
+      )}
     </>
   );
 }

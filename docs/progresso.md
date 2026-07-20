@@ -190,13 +190,31 @@ Leads, Contatos/Empresas, Oportunidades (Kanban) e Produtos têm CRUD real, pers
 - Contas a pagar/receber recorrentes (`/app/financeiro/recorrentes`) permanece como demo — decisão registrada em `docs/decisoes-tecnicas.md`: precisa de schema próprio para MRR/reajuste/ciclo de renovação, escopo maior que o resto da Fase 7 e não foi forçado para caber no mesmo lote.
 - Testes E2E (`apps/web/e2e/financeiro.spec.ts`): cria conta a receber → baixa parcial → baixa total (status pending→partial→paid) → estorna e confirma que o lançamento original não muda enquanto o compensatório aparece do lado oposto (recebível estornado gera lançamento em "a pagar") → cria conta a pagar → cria lançamento pessoal e confirma que ele não aparece nas telas da empresa → visão financeira carrega — 6/6, suíte completa 67/67 (chromium + mobile; 1 falha isolada por rate-limit de login ao rodar a suíte inteira em sequência, confirmada como flakiness reproduzindo o mesmo teste sozinho com sucesso, não uma regressão desta fase).
 
+## Fase 8 — projetos, arquivos, aprovações e horas (concluída em 20/07/2026)
+
+- Schema: `approvals` ganhou `code` (sequencial, namespace `approval`/prefixo `APR`), link público (`publicSlug`/`publicTokenHash`, mesmo padrão de propostas/contratos), evidências de decisão (`decidedByName`, `decisionIp`, `decisionUserAgent`). `projects`, `tasks`, `files` e `time_entries` já existiam completos desde a fundação, sem uso real até agora — só a tabela `approvals` precisou de migração nova (`0006_furry_morlun.sql`).
+- Geração de projeto a partir de contrato assinado (`/app/operacao/projetos/novo`), idempotente — mesmo padrão de "gerar contrato a partir de proposta aceita" da Fase 6: gerar de novo para o mesmo contrato retorna o projeto já existente.
+- Tarefas: lista por projeto e lista global (`/app/operacao/tarefas`), com "atrasadas" separadas; tarefas sem projeto (`entityType`/`entityId` nulos) são tarefas gerais da operação.
+- Arquivos: biblioteca real conectada ao upload/download que já existia desde a Fase 6 (`/api/files`) — listagem por projeto e global (`/app/operacao/arquivos`), com lixeira (soft-delete via `trashedAt`, restaurável).
+- Aprovações: cada rodada gera um link público com token de uso único (mesmo padrão de assinatura/proposta); cliente decide sem sessão interna (aprovar ou solicitar alterações com comentário obrigatório); decisão também pode ser registrada internamente (fallback manual, ex.: cliente aprovou por WhatsApp). Nova rota pública `GET /api/public/aprovacoes/[slug]` para o cliente ver o arquivo vinculado à aprovação sem precisar de sessão — o token da aprovação é o único fator de autenticação, igual ao padrão já usado para link de proposta/contrato.
+- Regra de negócio aplicada: projeto não pode ser concluído com aprovação pendente (`docs/regras-de-negocio.md` — "Projeto não conclui com aprovação obrigatória pendente"); conclusão registra `deliveredAt` e aceita `warrantyEndsAt` opcional informado manualmente (nenhum prazo de garantia padrão foi inventado — não há esse número em nenhum documento de origem).
+- Horas: lançamento manual (data + duração HH:MM) e timer (iniciar/parar, calcula duração real), ambos por projeto; comparação estimado × realizado na página do projeto.
+- **`/app/hoje` deixou de ser 100% dado fabricado** — métricas (pipeline aberto, projetos ativos, a receber pendente, itens vencidos), lista "precisa de atenção" (tarefas/aprovações/financeiro vencidos, oportunidades com próxima ação vencida) e o card de projetos em andamento agora vêm do banco. Removidos `packages/database/src/demo-data.ts` e `apps/web/src/components/project-board.tsx`, que não tinham mais nenhum uso real.
+- Testes E2E (`apps/web/e2e/projetos.spec.ts`): lead→briefing pulado→proposta aceita→contrato assinado→projeto gerado (idempotente)→tarefa criada e concluída→arquivo enviado (com lixeira/restauração)→aprovação criada com link público→cliente aprova sem sessão→projeto concluído após aprovação decidida→horas manuais e timer — 9/9, suíte completa **83/83** (chromium + mobile).
+
+### Correções fora do escopo direto da fase, feitas com a base de apoio de design/catálogo fornecida pelo usuário
+
+- **Catálogo de produtos corrigido para bater com a oferta real da PULSO** (fonte: `catalogo.pulso.cloud`, snapshot fornecido pelo usuário) — o seed tinha um produto fabricado ("Site Profissional para Dentistas", nunca existiu no catálogo real) e faltava "SaaS ou White Label"; categorias e nomes de alguns produtos também estavam divergentes. Corrigido em `packages/database/src/seed.ts`: os 13 produtos reais ficam ativos com nome/categoria/preço/prazo corretos, o produto fabricado foi arquivado (não apagado, para não quebrar propostas/contratos antigos que já o referenciam).
+- **Cores semânticas (sucesso/aviso/erro/info) alinhadas ao design system oficial** (`PULSO_VISUAL_DESIGN_SYSTEM_v1.0`, tokens fornecidos pelo usuário) — `apps/web/src/app/globals.css` ganhou `--success`/`--warning`/`--error`/`--info` com os hex canônicos (`#2E8B57`/`#D88A12`/`#C93C3C`/`#2B6CB0`), substituindo valores ad-hoc que já existiam desde a fundação da base.
+
 ### Não iniciado
 
 - Prospecção (schema pronto, CRUD pendente).
-- Geração de PDF real de proposta/contrato (placeholder ainda, ver `packages/documents`) — as cláusulas e o snapshot já existem como texto/JSON versionado, falta a renderização visual em PDF.
-- Notificação automática ao administrador quando o cliente pede condição alternativa (fica visível no painel, mas sem alerta ativo — depende da Fase 10, notificações).
-- Contas recorrentes (MRR, reajuste, ciclo de renovação) — `/app/financeiro/recorrentes` ainda é demo, precisa de schema próprio.
+- Geração de PDF real de proposta/contrato (placeholder ainda, ver `packages/documents`).
+- Notificação automática ao administrador quando o cliente pede condição alternativa em proposta, ou quando solicita alterações em uma aprovação (fica visível no painel, sem alerta ativo — depende da Fase 10).
+- Contas recorrentes (MRR, reajuste, ciclo de renovação) — `/app/financeiro/recorrentes` ainda é demo.
 - Proteção por PIN das finanças pessoais.
+- Etapas/pipeline customizável por projeto (o prompt original permite, "podem ser personalizadas" — não é obrigatório; ficou com status fixo + lista de tarefas por ora, ver `docs/decisoes-tecnicas.md`).
 
 ## Próxima sequência recomendada
 

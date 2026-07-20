@@ -43,6 +43,13 @@
       "when": 1784513568795,
       "tag": "0005_bent_polaris",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1784518112310,
+      "tag": "0006_furry_morlun",
+      "breakpoints": true
     }
   ]
 }

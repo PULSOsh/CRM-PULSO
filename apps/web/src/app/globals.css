@@ -4,11 +4,13 @@
   --paper:#f4f2ed;--surface:#ffffff;--surface-raised:#ffffff;--carbon:#161616;
   --signal:#e65318;--muted:#7a7a7a;--muted-strong:#494949;--neutral:#c9c9c9;
   --line:#dedbd4;--soft:#ece9e2;color-scheme:light;
+  --success:#2e8b57;--warning:#d88a12;--error:#c93c3c;--info:#2b6cb0;
 }
 :root[data-theme="dark"] {
   --paper:#11110f;--surface:#191917;--surface-raised:#22221f;--carbon:#f4f2ed;
   --signal:#f06b35;--muted:#aaa79f;--muted-strong:#d6d2ca;--neutral:#56534e;
   --line:#32312d;--soft:#25241f;color-scheme:dark;
+  --success:#3da873;--warning:#f0a934;--error:#e35c5c;--info:#4a8fd1;
 }
 *{box-sizing:border-box}html{background:var(--paper)}body{margin:0;background:var(--paper);color:var(--carbon);font-family:Arial,Helvetica,sans-serif;text-rendering:optimizeLegibility}
 button,a{-webkit-tap-highlight-color:transparent}button{cursor:pointer}
@@ -21,8 +23,10 @@ button,a{-webkit-tap-highlight-color:transparent}button{cursor:pointer}
 .badge{display:inline-flex;align-items:center;width:fit-content;border-radius:999px;padding:.35rem .65rem;font-size:.7rem;line-height:1;font-weight:800;white-space:nowrap}
 .badge-neutral{background:var(--soft);color:var(--muted-strong)}
 .badge-signal{background:color-mix(in srgb,var(--signal) 13%,transparent);color:var(--signal)}
-.badge-success{background:color-mix(in srgb,#1b7f5a 13%,transparent);color:#1b7f5a}
-.badge-warning{background:color-mix(in srgb,#b36b00 13%,transparent);color:#9a5c00}
+.badge-success{background:color-mix(in srgb,var(--success) 13%,transparent);color:var(--success)}
+.badge-warning{background:color-mix(in srgb,var(--warning) 13%,transparent);color:var(--warning)}
+.badge-danger{background:color-mix(in srgb,var(--error) 13%,transparent);color:var(--error)}
+.badge-info{background:color-mix(in srgb,var(--info) 13%,transparent);color:var(--info)}
 :root[data-private="true"] .money-value{filter:blur(8px);user-select:none}
 .scrollbar-thin{scrollbar-width:thin;scrollbar-color:var(--neutral) transparent}
 .public-grid{background-image:linear-gradient(to right,color-mix(in srgb,var(--line) 40%,transparent) 1px,transparent 1px),linear-gradient(to bottom,color-mix(in srgb,var(--line) 40%,transparent) 1px,transparent 1px);background-size:28px 28px}

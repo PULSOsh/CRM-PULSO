@@ -8,6 +8,7 @@ const prefixes = {
   proposal: "PROP",
   contract: "CONT",
   project: "PROJ",
+  approval: "APR",
   charge: "COB",
   receipt: "REC",
   support: "SUP",

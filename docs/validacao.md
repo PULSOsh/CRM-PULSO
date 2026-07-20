@@ -182,3 +182,25 @@ Comportamento validado como intencional (não é bug): o estorno de um recebíve
 **Fase 7 fechada.** 6 testes E2E novos cobrindo criação/baixa parcial/baixa total/estorno de contas a receber, criação de contas a pagar, separação do livro pessoal e carregamento da visão financeira — suíte completa em 67/67, todos reais (Postgres de verdade, sem mocks).
 
 Bugs de teste (mesmo padrão de sempre — texto/seletor repetido na tela, principalmente por causa da logo "PULSO" aparecer em vários lugares do layout e por elementos irmãos vs. descendentes num `.locator("..")`): corrigidos com locators mais específicos.
+
+## Validação Fase 8 — Projetos, arquivos, aprovações e horas (20/07/2026)
+
+| Comando | Resultado |
+|---|---|
+| `npm run db:generate` / `db:migrate` | ✅ migração `0006_furry_morlun.sql` (`approvals` ganhou código, link público e evidências de decisão) |
+| `npm run db:seed` | ✅ catálogo real de produtos aplicado (verificado direto no banco: 13 produtos reais ativos, produto fabricado arquivado) |
+| `npm run check` (typecheck + vitest + build, após limpar `.next`) | ✅ 63 rotas, 0 erros |
+| `npx playwright test projetos.spec.ts --project=chromium` | ✅ **9/9** |
+| `npx playwright test` (suíte completa, chromium + mobile) | ✅ **83/83** |
+
+Bugs reais encontrados e corrigidos durante a validação:
+1. **`createTask` rejeitava toda tarefa com "Invalid input"** — o formulário de criação de tarefa (`task-panel.tsx`) nunca teve um campo `description`, mas a Server Action tentava validar `formData.get("description")` com `z.string().optional()`. Campo ausente no FormData retorna `null`, e `.optional()` do Zod só aceita `undefined` — mesmo padrão de bug já visto na Fase 3 (checkbox desmarcado) e documentado em `docs/decisoes-tecnicas.md`. Corrigido removendo o campo `description` do schema e do insert (a UI nunca ofereceu esse campo, então mantê-lo como "aceito mas inatingível" não fazia sentido — se descrição de tarefa vier a ser necessária, adiciona-se o campo na UI e no schema junto).
+2. **`logTimeEntry` teria o mesmo bug** para o checkbox "Faturável" se alguém o desmarcasse (`formData.get("billable")` retorna `null` quando desmarcado, e o schema usava `.optional()`) — encontrado por revisão de código ao corrigir o bug #1, não por falha de teste (o teste E2E deixa o checkbox marcado por padrão). Corrigido preventivamente para `.nullish()`.
+
+Bugs de teste (padrões já conhecidos, mais um novo):
+1. Sequência de espera faltando ao adaptar o fluxo proposta→aceite de `contratos.spec.ts` — o teste pulou os `expect` intermediários ("R$ 197,00" após salvar rascunho, "Enviada" após publicar) antes de capturar o link público, criando uma corrida onde o link era lido antes do token existir. Restaurados os mesmos `expect` do fluxo original comprovado.
+2. **Dados de teste não únicos entre reexecuções** (padrão novo, mas a causa-raiz é a mesma de sempre — texto fixo repetido): o nome do arquivo de upload (`mockup.png`) e a descrição do lançamento de horas via timer (`"Reunião rápida com cliente"`) eram strings fixas, então cada nova tentativa da suíte deixava um registro a mais no banco com o mesmo texto, quebrando `getByText(...)` por violação de strict mode assim que a suíte rodava mais de uma vez. Corrigido dando a esses textos o mesmo tratamento que `OPP_TITLE`/`TASK_TITLE` já tinham (sufixo `Date.now()`).
+3. **Teste combinando decisão pública com verificação interna na mesma função** — `context.clearCookies()` para simular o cliente sem sessão, seguido de navegação de volta a uma rota interna esperando ainda estar autenticado, dentro do mesmo `test()`. Como cada `test()` novo é quem recebe o `storageState` autenticado fresco (não a limpeza de cookies do anterior), a correção foi separar em dois testes distintos — mesmo padrão já usado em `contratos.spec.ts` e `financeiro.spec.ts`, só não tinha sido seguido à risca desta vez.
+4. **Falso positivo por corrida de revalidação** ao parar o timer: `getByText(description)` batia tanto no widget do timer (ainda mostrando "Parando..." com o texto antigo, antes da revalidação assentar) quanto na lista de lançamentos (já atualizada) — 2 elementos simultâneos. Corrigido esperando o botão "Iniciar timer" reaparecer (confirma que o timer realmente parou) antes de checar a lista.
+
+**Fase 8 fechada.** 9 testes E2E novos cobrindo geração idempotente de projeto a partir de contrato assinado, tarefas, upload/lixeira/restauração de arquivo, aprovação com link público e decisão do cliente sem sessão, bloqueio/liberação de conclusão de projeto por aprovação pendente, e horas manuais/timer — suíte completa em 83/83, todos reais.

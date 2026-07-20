@@ -446,6 +446,7 @@ export const files = pgTable("files", {
 
 export const approvals = pgTable("approvals", {
   id: uuid("id").defaultRandom().primaryKey(),
+  code: varchar("code", { length: 32 }).notNull().unique(),
   projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
   fileId: uuid("file_id").references(() => files.id),
   title: text("title").notNull(),
@@ -453,10 +454,15 @@ export const approvals = pgTable("approvals", {
   status: text("status").default("pending").notNull(),
   round: integer("round").default(1).notNull(),
   dueAt: timestamp("due_at", { withTimezone: true }),
+  publicSlug: text("public_slug"),
+  publicTokenHash: text("public_token_hash"),
   decidedAt: timestamp("decided_at", { withTimezone: true }),
+  decidedByName: text("decided_by_name"),
   decisionComment: text("decision_comment"),
+  decisionIp: text("decision_ip"),
+  decisionUserAgent: text("decision_user_agent"),
   ...timestamps,
-});
+}, (table) => [uniqueIndex("approval_public_slug_unique").on(table.publicSlug)]);
 
 export const timeEntries = pgTable("time_entries", {
   id: uuid("id").defaultRandom().primaryKey(),

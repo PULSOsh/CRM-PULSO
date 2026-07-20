@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { eq } from "drizzle-orm";
+import { and, eq, notInArray } from "drizzle-orm";
 import { db, pool } from "./index";
 import { briefingTemplates, pipelineStages, pipelines, products, type BriefingQuestion } from "./schema";
 
@@ -33,21 +33,35 @@ const mainStages = [
   "Fechado — perdido",
 ];
 
+// Catálogo real da PULSO (fonte: catalogo.pulso.cloud, snapshot em D:\PULSO\PULSO_CATALOGO_PRODUTOS_V3_WHATSAPP\catalogo.md).
 // allowBriefingSkip: true apenas para produtos de presença digital simples, sem escopo
 // suficiente para justificar o questionário completo (regra: "pular exige produto elegível").
-const catalog: [string, string, string, string, boolean?][] = [
-  ["PROD-001", "Link na Bio", "Presença digital", "197", true],
-  ["PROD-002", "Cartão Digital", "Presença digital", "297", true],
-  ["PROD-003", "Catálogo Digital", "Presença digital", "597"],
-  ["PROD-004", "Site Essencial", "Sites", "1200"],
-  ["PROD-005", "Landing Page", "Sites", "1500"],
-  ["PROD-006", "Site Institucional", "Sites", "2500"],
-  ["PROD-007", "Loja Virtual", "Sites", "3500"],
-  ["PROD-008", "Site Profissional para Dentistas", "Sites", "1500"],
-  ["PROD-009", "Integração com IA", "Automação e IA", "2000"],
-  ["PROD-010", "Automação de Processos", "Automação e IA", "3000"],
-  ["PROD-011", "Sistema Web", "Sistemas", "4500"],
-  ["PROD-012", "CRM/Painel Operacional", "Sistemas", "5000"],
+type CatalogItem = { code: string; name: string; category: string; basePrice: string; leadTime: string; description: string; allowBriefingSkip?: boolean };
+const catalog: CatalogItem[] = [
+  { code: "PROD-001", name: "Link na Bio", category: "Entrada rápida", basePrice: "197", leadTime: "2 a 3 dias úteis", allowBriefingSkip: true,
+    description: "Uma página no estilo Linktree, mas com a identidade da sua marca, seus contatos e seus links mais importantes." },
+  { code: "PROD-002", name: "Cartão Digital", category: "Entrada rápida", basePrice: "297", leadTime: "2 a 4 dias úteis", allowBriefingSkip: true,
+    description: "Um cartão de visita online com contatos, serviços, redes sociais, localização, PIX e botão para salvar seus dados." },
+  { code: "PROD-003", name: "Catálogo Digital", category: "Entrada rápida", basePrice: "597", leadTime: "5 a 7 dias úteis",
+    description: "Apresente produtos ou serviços em um catálogo online organizado, compartilhável e pronto para gerar pedidos pelo WhatsApp." },
+  { code: "PROD-004", name: "Site Essencial", category: "Sites", basePrice: "1200", leadTime: "7 a 12 dias úteis",
+    description: "Um site profissional de uma página para apresentar sua empresa, serviços, diferenciais e formas de contato." },
+  { code: "PROD-005", name: "Landing Page", category: "Sites", basePrice: "1500", leadTime: "7 a 15 dias úteis",
+    description: "Página focada em uma oferta e uma ação, indicada para tráfego pago, lançamentos, eventos e captação de leads." },
+  { code: "PROD-006", name: "Site Institucional", category: "Sites", basePrice: "2500", leadTime: "15 a 25 dias úteis",
+    description: "Site com múltiplas páginas para apresentar a empresa, seus serviços, projetos, história e canais de contato." },
+  { code: "PROD-007", name: "Loja Virtual Starter", category: "Sites", basePrice: "3500", leadTime: "20 a 35 dias úteis",
+    description: "Estrutura inicial de comércio eletrônico para apresentar produtos, receber pedidos e começar a vender online." },
+  { code: "PROD-009", name: "Integração com IA", category: "Tecnologia", basePrice: "2000", leadTime: "10 a 20 dias úteis",
+    description: "Integre inteligência artificial a um site, sistema ou processo para resumir, classificar, gerar ou analisar informações." },
+  { code: "PROD-010", name: "Automação de Processos", category: "Tecnologia", basePrice: "3000", leadTime: "15 a 25 dias úteis",
+    description: "Conecte ferramentas e automatize tarefas repetitivas para reduzir erros e liberar tempo da equipe." },
+  { code: "PROD-011", name: "Sistema Web", category: "Tecnologia", basePrice: "4500", leadTime: "Prazo personalizado",
+    description: "Sistema personalizado para organizar usuários, dados, processos e regras específicas da sua operação." },
+  { code: "PROD-012", name: "CRM ou Painel Operacional", category: "Tecnologia", basePrice: "5000", leadTime: "Prazo personalizado",
+    description: "Centralize leads, clientes, atividades, indicadores e etapas da operação em um ambiente criado para o seu negócio." },
+  { code: "PROD-013", name: "SaaS ou White Label", category: "Tecnologia", basePrice: "6000", leadTime: "Prazo personalizado",
+    description: "Construa uma plataforma digital para vender por assinatura ou oferecer aos seus clientes com marca personalizada." },
 ];
 
 async function seed() {
@@ -68,11 +82,18 @@ async function seed() {
     );
   }
 
-  for (const [code, name, category, basePrice, allowBriefingSkip] of catalog) {
-    await db.insert(products)
-      .values({ code, name, category, basePrice, allowBriefingSkip: allowBriefingSkip ?? false })
-      .onConflictDoUpdate({ target: products.code, set: { allowBriefingSkip: allowBriefingSkip ?? false } });
+  for (const item of catalog) {
+    const values = {
+      name: item.name, category: item.category, basePrice: item.basePrice, description: item.description,
+      configuration: { leadTime: item.leadTime }, allowBriefingSkip: item.allowBriefingSkip ?? false, status: "active" as const
+    };
+    await db.insert(products).values({ code: item.code, ...values }).onConflictDoUpdate({ target: products.code, set: values });
   }
+
+  // Produtos que saíram do catálogo oficial (ex.: itens de exemplo fabricados numa versão anterior
+  // do seed) ficam arquivados em vez de apagados -- preserva histórico de propostas/contratos antigos.
+  const currentCodes = catalog.map((item) => item.code);
+  await db.update(products).set({ status: "archived" }).where(and(eq(products.status, "active"), notInArray(products.code, currentCodes)));
 
   const [existingTemplate] = await db.select({ id: briefingTemplates.id }).from(briefingTemplates).where(eq(briefingTemplates.isDefault, true)).limit(1);
   if (!existingTemplate) {

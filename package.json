@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "workspaces": ["apps/*", "packages/*"],
+  "packageManager": "pnpm@9.5.0",
   "scripts": {
     "dev": "pnpm --filter @pulso/web dev",
     "build": "pnpm --filter @pulso/web build",

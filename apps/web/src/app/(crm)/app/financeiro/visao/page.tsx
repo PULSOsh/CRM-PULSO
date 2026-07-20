@@ -45,7 +45,7 @@ export default async function FinanceOverviewPage() {
             : "hover:shadow-rose-500/10 hover:border-rose-500/30";
           
           return (
-            <Card key={m.label} className={`relative overflow-hidden p-6 border border-white/5 bg-black/40 backdrop-blur-xl transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl ${bgHover}`}>
+            <div key={m.label} className={`relative overflow-hidden rounded-3xl p-6 border border-white/10 bg-black/50 backdrop-blur-2xl transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl ${bgHover}`}>
               <div className="absolute top-0 right-0 p-4 opacity-5">
                 <Icon className="size-24" />
               </div>
@@ -61,12 +61,12 @@ export default async function FinanceOverviewPage() {
                   {currency(m.value)}
                 </p>
               </div>
-            </Card>
+            </div>
           );
         })}
         
         {/* Vencidos Card */}
-        <Card className="relative overflow-hidden p-6 border border-rose-500/20 bg-rose-950/20 backdrop-blur-xl transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-rose-500/20 hover:border-rose-500/50">
+        <div className="relative overflow-hidden rounded-3xl p-6 border border-rose-500/20 bg-rose-950/20 backdrop-blur-2xl transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-rose-500/20 hover:border-rose-500/50">
           <div className="absolute top-0 right-0 p-4 opacity-5">
             <AlertOctagon className="size-24 text-rose-500" />
           </div>
@@ -79,13 +79,13 @@ export default async function FinanceOverviewPage() {
             <p className="text-xs font-bold text-rose-500/80 uppercase tracking-widest">Inadimplência / Atrasos</p>
             <p className="money-value mt-2 text-3xl font-black tracking-tighter text-rose-500">{summary.overdueCount}</p>
           </div>
-        </Card>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3 mt-8">
         
         {/* Dívidas Mensais & Recorrências (Projeção) */}
-        <Card className="lg:col-span-1 p-6 border border-orange-500/20 bg-gradient-to-br from-black/60 to-orange-950/20 backdrop-blur-xl shadow-2xl relative overflow-hidden group">
+        <div className="lg:col-span-1 rounded-3xl p-6 border border-orange-500/20 bg-gradient-to-br from-black/80 to-orange-950/30 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
           <div className="absolute inset-0 bg-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
           
           <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6 relative z-10">
@@ -130,16 +130,16 @@ export default async function FinanceOverviewPage() {
               Gerenciar Contratos
             </Link>
           </div>
-        </Card>
+        </div>
 
         {/* Fluxo de Caixa (Gráfico) */}
-        <Card className="lg:col-span-2 p-6 border border-white/10 bg-black/40 backdrop-blur-xl shadow-2xl">
+        <div className="lg:col-span-2 rounded-3xl p-6 border border-white/10 bg-black/50 backdrop-blur-2xl shadow-2xl">
           <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-8">
             <div>
               <h2 className="font-extrabold text-lg flex items-center gap-2 text-white">Fluxo de Caixa</h2>
               <p className="mt-1 text-[11px] font-medium text-gray-400 uppercase tracking-wider">Histórico dos últimos 14 dias.</p>
             </div>
-            <Badge tone="neutral" className="bg-white/5 border-white/10">Realizado</Badge>
+            <Badge tone="neutral" className="bg-white/5 border-white/10 text-gray-300">Realizado</Badge>
           </div>
           
           <div className="flex h-56 items-end gap-2 sm:gap-3 px-1 sm:px-2">
@@ -155,14 +155,14 @@ export default async function FinanceOverviewPage() {
               return (
                 <div key={d.day} className="group relative flex flex-1 flex-col justify-end gap-1 h-full cursor-crosshair">
                   {/* Tooltip */}
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-max rounded-xl bg-gray-900 border border-white/10 px-4 py-3 text-sm text-white opacity-0 transition-opacity group-hover:opacity-100 shadow-2xl pointer-events-none z-20 backdrop-blur-xl">
-                    <p className="font-bold text-gray-300 text-xs uppercase tracking-wider mb-1">{new Date(d.day).toLocaleDateString("pt-BR")}</p>
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-max rounded-xl bg-black/90 border border-white/10 px-4 py-3 text-sm text-white opacity-0 transition-opacity group-hover:opacity-100 shadow-2xl pointer-events-none z-20 backdrop-blur-xl">
+                    <p className="font-bold text-gray-400 text-xs uppercase tracking-wider mb-1">{new Date(d.day).toLocaleDateString("pt-BR")}</p>
                     <p className={`font-black tracking-tighter ${isPositive ? "text-orange-400" : "text-rose-400"}`}>{currency(d.net)}</p>
                   </div>
                   
                   {/* Bar */}
                   <div className="relative w-full rounded-t-lg overflow-hidden transition-all duration-300 group-hover:brightness-125 group-hover:scale-y-105 origin-bottom" style={{ height: `${height}%` }}>
-                    <div className={`absolute inset-0 ${barGradient} opacity-80 group-hover:opacity-100`} />
+                    <div className={`absolute inset-0 ${barGradient} opacity-90 group-hover:opacity-100`} />
                   </div>
                 </div>
               );
@@ -172,7 +172,7 @@ export default async function FinanceOverviewPage() {
             <span>{cashFlow[0] && new Date(cashFlow[0].day).toLocaleDateString("pt-BR")}</span>
             <span>{cashFlow.at(-1) && new Date(cashFlow.at(-1)!.day).toLocaleDateString("pt-BR")}</span>
           </div>
-        </Card>
+        </div>
       </div>
     </>
   );

@@ -46,7 +46,20 @@ export async function createBriefing(_prev: BriefingActionState, formData: FormD
   const [opportunity] = await db.select().from(schema.opportunities).where(eq(schema.opportunities.id, parsed.data.opportunityId)).limit(1);
   if (!opportunity) return { error: "Oportunidade não encontrada." };
 
-  const [template] = await db.select().from(schema.briefingTemplates).where(eq(schema.briefingTemplates.isDefault, true)).limit(1);
+  let template = null;
+  if (parsed.data.productId) {
+    const [product] = await db.select({ briefingTemplateId: schema.products.briefingTemplateId }).from(schema.products).where(eq(schema.products.id, parsed.data.productId)).limit(1);
+    if (product?.briefingTemplateId) {
+      const [t] = await db.select().from(schema.briefingTemplates).where(eq(schema.briefingTemplates.id, product.briefingTemplateId)).limit(1);
+      template = t;
+    }
+  }
+
+  if (!template) {
+    const [t] = await db.select().from(schema.briefingTemplates).where(eq(schema.briefingTemplates.isDefault, true)).limit(1);
+    template = t;
+  }
+
   if (!template) return { error: "Nenhum template de briefing configurado." };
 
   const year = new Date().getFullYear();

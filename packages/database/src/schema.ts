@@ -240,6 +240,7 @@ export const products = pgTable("products", {
   estimatedCost: numeric("estimated_cost", { precision: 14, scale: 2 }).default("0").notNull(),
   minimumMargin: numeric("minimum_margin", { precision: 5, scale: 2 }).default("0").notNull(),
   allowBriefingSkip: boolean("allow_briefing_skip").default(false).notNull(),
+  briefingTemplateId: uuid("briefing_template_id").references(() => briefingTemplates.id),
   configuration: jsonb("configuration").$type<Record<string, unknown>>().default({}),
   status: recordStatus("status").default("active").notNull(),
   ...timestamps,

@@ -1,7 +1,7 @@
 "use client";
 
 import { PageHeader } from "@/components/page-header";
-import { Card } from "@pulso/ui";
+import { Card, Label, Input, Textarea, Select } from "@pulso/ui";
 import { useActionState } from "react";
 import { createProduct, type ProductActionState } from "../actions";
 
@@ -13,55 +13,63 @@ export default function NewProductPage() {
   return (
     <>
       <PageHeader eyebrow="Comercial" title="Novo produto" description="Adicione um produto ou serviço ao catálogo." />
-      <Card className="max-w-2xl p-6">
-        <form className="space-y-4" action={formAction}>
-          <div className="grid gap-4 sm:grid-cols-2">
+      <Card className="max-w-2xl overflow-hidden">
+        <div className="border-b border-[var(--line)] bg-[var(--soft)] px-6 py-4">
+          <h2 className="font-extrabold text-[var(--carbon)]">Dados do Produto</h2>
+          <p className="mt-1 text-xs text-[var(--muted)]">Adicione um produto ou serviço ao catálogo.</p>
+        </div>
+        <form className="p-6 space-y-5" action={formAction}>
+          <div className="grid gap-5 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="code">Código</label>
-              <input id="code" name="code" required placeholder="PROD-013" className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
+              <Label htmlFor="code">Código</Label>
+              <Input id="code" name="code" required placeholder="Ex: PROD-013" />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="category">Categoria</label>
-              <input id="category" name="category" required className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
+              <Label htmlFor="category">Categoria</Label>
+              <Input id="category" name="category" required placeholder="Ex: Desenvolvimento" />
             </div>
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="name">Nome</label>
-            <input id="name" name="name" required className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
+            <Label htmlFor="name">Nome do Produto</Label>
+            <Input id="name" name="name" required placeholder="Ex: Site Institucional" />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="description">Descrição</label>
-            <textarea id="description" name="description" rows={3} className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
+            <Label htmlFor="description">Descrição</Label>
+            <Textarea id="description" name="description" rows={3} placeholder="Descreva os detalhes do serviço ou produto..." />
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-5 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="basePrice">Preço base (R$)</label>
-              <input id="basePrice" name="basePrice" required inputMode="decimal" placeholder="1500,00" className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
+              <Label htmlFor="basePrice">Preço base (R$)</Label>
+              <Input id="basePrice" name="basePrice" required inputMode="decimal" placeholder="1500,00" />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="billingType">Cobrança</label>
-              <select id="billingType" name="billingType" className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]">
+              <Label htmlFor="billingType">Tipo de Cobrança</Label>
+              <Select id="billingType" name="billingType">
                 <option value="one_time">Pagamento único</option>
                 <option value="recurring">Recorrente</option>
-              </select>
+              </Select>
             </div>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-5 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="estimatedHours">Horas estimadas</label>
-              <input id="estimatedHours" name="estimatedHours" inputMode="decimal" className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
+              <Label htmlFor="estimatedHours">Horas estimadas</Label>
+              <Input id="estimatedHours" name="estimatedHours" inputMode="decimal" placeholder="Ex: 40" />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="minimumMargin">Margem mínima (%)</label>
-              <input id="minimumMargin" name="minimumMargin" inputMode="decimal" className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
+              <Label htmlFor="minimumMargin">Margem mínima (%)</Label>
+              <Input id="minimumMargin" name="minimumMargin" inputMode="decimal" placeholder="Ex: 20" />
             </div>
           </div>
-          <label className="flex items-center gap-2 text-sm font-semibold">
-            <input type="checkbox" name="allowBriefingSkip" className="size-4" />
+          <label className="flex items-center gap-3 text-sm font-semibold text-[var(--carbon)] cursor-pointer">
+            <input type="checkbox" name="allowBriefingSkip" className="size-4 rounded border-[var(--line)] text-[var(--signal)] focus:ring-[var(--signal)]" />
             Permite pular briefing (serviço simples)
           </label>
-          {state.error && <p role="alert" className="rounded-lg bg-[color:#b3261e/.08] px-3 py-2 text-sm font-semibold text-[#b3261e]">{state.error}</p>}
-          <button type="submit" disabled={pending} className="primary-button w-full justify-center sm:w-auto">{pending ? "Salvando..." : "Criar produto"}</button>
+          {state.error && <p role="alert" className="rounded-xl border border-[#b3261e]/20 bg-[color:#b3261e/.08] px-4 py-3 text-sm font-semibold text-[#b3261e]">{state.error}</p>}
+          <div className="pt-2">
+            <button type="submit" disabled={pending} className="primary-button w-full justify-center sm:w-auto">
+              {pending ? "Salvando..." : "Criar produto"}
+            </button>
+          </div>
         </form>
       </Card>
     </>

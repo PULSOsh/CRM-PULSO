@@ -22,7 +22,8 @@ const nextConfig: NextConfig = {
   ],
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
-  }
+  },
+  turbopack: {}
 };
 
 const withSerwist = (require("@serwist/next").default)({

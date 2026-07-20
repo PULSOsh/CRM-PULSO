@@ -1,13 +1,23 @@
 import { db, schema } from "@pulso/database";
 import { desc, eq } from "drizzle-orm";
 import { PageHeader } from "@/components/page-header";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge, Button } from "@pulso/ui";
 import { Check, Mail, ExternalLink, RefreshCw } from "lucide-react";
 import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { markAllNotificationsAsRead, markNotificationAsRead, resendNotification } from "./actions";
+
+function formatRelativeTime(date: Date) {
+  const diff = Date.now() - date.getTime();
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) return `há ${days} dia${days > 1 ? "s" : ""}`;
+  if (hours > 0) return `há ${hours} hora${hours > 1 ? "s" : ""}`;
+  if (minutes > 0) return `há ${minutes} minuto${minutes > 1 ? "s" : ""}`;
+  return "agora mesmo";
+}
 
 export default async function NotificacoesPage({ searchParams }: { searchParams: Promise<{ filter?: string }> }) {
   const { filter } = await searchParams;
@@ -20,33 +30,34 @@ export default async function NotificacoesPage({ searchParams }: { searchParams:
   });
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6">
       <PageHeader
         title="Central de Notificações"
         description="Acompanhe alertas administrativos e de eventos do sistema"
-      >
-        <div className="flex gap-2">
-          <Button asChild variant={showUnreadOnly ? "outline" : "default"}>
-            <Link href="/app/inteligencia/notificacoes?filter=all">Todas</Link>
-          </Button>
-          <Button asChild variant={showUnreadOnly ? "default" : "outline"}>
-            <Link href="/app/inteligencia/notificacoes">Não lidas</Link>
-          </Button>
-          <form action={markAllNotificationsAsRead}>
-            <Button variant="secondary" type="submit">
-              <Check className="w-4 h-4 mr-2" />
-              Marcar lidas
-            </Button>
-          </form>
-        </div>
-      </PageHeader>
+        actions={
+          <>
+            <Link href="/app/inteligencia/notificacoes?filter=all" className={`inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-bold transition ${!showUnreadOnly ? "bg-[var(--signal)] text-white" : "border border-[var(--line)] bg-[var(--surface)] text-[var(--carbon)] hover:brightness-95"}`}>
+              Todas
+            </Link>
+            <Link href="/app/inteligencia/notificacoes" className={`inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-bold transition ${showUnreadOnly ? "bg-[var(--signal)] text-white" : "border border-[var(--line)] bg-[var(--surface)] text-[var(--carbon)] hover:brightness-95"}`}>
+              Não lidas
+            </Link>
+            <form action={async () => { "use server"; await markAllNotificationsAsRead(); }}>
+              <button type="submit" className="inline-flex items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--surface)] px-4 py-2 text-sm font-bold text-[var(--carbon)] transition hover:brightness-95">
+                <Check className="mr-2 size-4" />
+                Marcar lidas
+              </button>
+            </form>
+          </>
+        }
+      />
 
       <div className="space-y-4">
         {notifications.length === 0 ? (
-          <div className="text-center py-12 border rounded-lg bg-muted/20">
-            <Mail className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium">Nenhuma notificação</h3>
-            <p className="text-sm text-muted-foreground">
+          <div className="rounded-xl border border-[var(--line)] bg-[var(--soft)] py-12 text-center">
+            <Mail className="mx-auto mb-4 size-12 text-[var(--muted)]" />
+            <h3 className="text-lg font-medium text-[var(--carbon)]">Nenhuma notificação</h3>
+            <p className="text-sm text-[var(--muted)]">
               Você está em dia com os alertas do sistema.
             </p>
           </div>
@@ -54,51 +65,49 @@ export default async function NotificacoesPage({ searchParams }: { searchParams:
           notifications.map((notif) => (
             <div
               key={notif.id}
-              className={`p-4 border rounded-lg transition-colors ${notif.isRead ? "bg-background" : "bg-primary/5 border-primary/20"}`}
+              className={`rounded-xl border border-[var(--line)] p-5 transition-colors ${notif.isRead ? "bg-[var(--surface)]" : "bg-[var(--signal)]/5 border-[var(--signal)]/20"}`}
             >
-              <div className="flex justify-between items-start mb-2">
-                <div className="flex items-center gap-2">
-                  <h4 className="font-medium text-lg">{notif.title}</h4>
-                  {!notif.isRead && <Badge>Nova</Badge>}
-                  {notif.telegramStatus === "sent" && <Badge variant="secondary" className="bg-blue-100 text-blue-800">Telegram</Badge>}
-                  {notif.telegramStatus === "error" && <Badge variant="destructive">Falha Telegram</Badge>}
+              <div className="mb-3 flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <h4 className="text-lg font-bold text-[var(--carbon)]">{notif.title}</h4>
+                  {!notif.isRead && <Badge tone="signal">Nova</Badge>}
+                  {notif.telegramStatus === "sent" && <Badge tone="info">Telegram</Badge>}
+                  {notif.telegramStatus === "error" && <Badge tone="danger">Falha Telegram</Badge>}
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true, locale: ptBR })}
+                <div className="text-sm font-medium text-[var(--muted)]">
+                  {formatRelativeTime(new Date(notif.createdAt))}
                 </div>
               </div>
-              <p className="text-sm mb-4 whitespace-pre-wrap">{notif.summary}</p>
+              <p className="mb-5 whitespace-pre-wrap text-sm text-[var(--carbon)]">{notif.summary}</p>
               
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 {notif.actionUrl && (
-                  <Button asChild variant="outline" size="sm">
-                    <Link href={notif.actionUrl}>
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Acessar
-                    </Link>
-                  </Button>
+                  <Link href={notif.actionUrl} className="inline-flex items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 py-1.5 text-xs font-bold text-[var(--carbon)] transition hover:brightness-95">
+                    <ExternalLink className="mr-1.5 size-3" />
+                    Acessar
+                  </Link>
                 )}
                 {!notif.isRead && (
-                  <form action={markNotificationAsRead.bind(null, notif.id)}>
-                    <Button variant="ghost" size="sm" type="submit">
-                      <Check className="w-4 h-4 mr-2" />
+                  <form action={async () => { "use server"; await markNotificationAsRead(notif.id); }}>
+                    <button type="submit" className="inline-flex items-center justify-center rounded-xl px-3 py-1.5 text-xs font-bold text-[var(--carbon)] transition hover:bg-[var(--soft)]">
+                      <Check className="mr-1.5 size-3" />
                       Marcar como lida
-                    </Button>
+                    </button>
                   </form>
                 )}
                 {notif.telegramStatus === "error" && (
-                  <form action={resendNotification.bind(null, notif.id)}>
-                    <Button variant="ghost" size="sm" type="submit" className="text-destructive">
-                      <RefreshCw className="w-4 h-4 mr-2" />
+                  <form action={async () => { "use server"; await resendNotification(notif.id); }}>
+                    <button type="submit" className="inline-flex items-center justify-center rounded-xl px-3 py-1.5 text-xs font-bold text-[color:#b3261e] transition hover:bg-[color:#b3261e]/.08">
+                      <RefreshCw className="mr-1.5 size-3" />
                       Tentar Telegram novamente
-                    </Button>
+                    </button>
                   </form>
                 )}
               </div>
               
               {notif.telegramLastError && (
-                <div className="mt-4 p-3 bg-destructive/10 text-destructive text-xs rounded border border-destructive/20">
-                  <span className="font-semibold">Erro no Telegram:</span> {notif.telegramLastError}
+                <div className="mt-4 rounded-xl border border-[#b3261e]/20 bg-[color:#b3261e]/.05 p-3 text-xs text-[#b3261e]">
+                  <span className="font-bold">Erro no Telegram:</span> {notif.telegramLastError}
                 </div>
               )}
             </div>

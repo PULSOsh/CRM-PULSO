@@ -81,12 +81,12 @@ async function executeCommand(cmd: ParsedCommand, chatId: string, telegram: Http
 
     if (cmd.type === TELEGRAM_COMMAND.SEARCH) {
       const projectsP = db.select().from(schema.projects).where(ilike(schema.projects.name, `%${cmd.term}%`)).limit(8);
-      const companiesP = db.select().from(schema.companies).where(ilike(schema.companies.name, `%${cmd.term}%`)).limit(8);
+      const companiesP = db.select().from(schema.companies).where(ilike(schema.companies.tradeName, `%${cmd.term}%`)).limit(8);
       const [projects, companies] = await Promise.all([projectsP, companiesP]);
       
       let text = `*Resultados para "${cmd.term}":*\n\n`;
       if (companies.length > 0) {
-        text += `*Empresas:*\n` + companies.map(c => `• ${c.name}`).join("\n") + "\n\n";
+        text += `*Empresas:*\n` + companies.map(c => `• ${c.tradeName}`).join("\n") + "\n\n";
       }
       if (projects.length > 0) {
         text += `*Projetos:*\n` + projects.map(p => `• ${p.name}`).join("\n") + "\n\n";
@@ -111,7 +111,7 @@ async function executeCommand(cmd: ParsedCommand, chatId: string, telegram: Http
 
       const [action] = await db.insert(schema.telegramPendingActions).values({
         chatId,
-        actionType: cmd.type === TELEGRAM_COMMAND.TASK ? "create_task" : "create_note",
+        command: cmd.type === TELEGRAM_COMMAND.TASK ? "create_task" : "create_note",
         payload,
         expiresAt
       }).returning();
@@ -206,7 +206,7 @@ async function handleCallbackQuery(callbackQuery: any, config: { token: string; 
     const pending = updated[0];
 
     try {
-      if (pending.actionType === "create_task") {
+      if (pending.command === "create_task") {
         const payload = pending.payload as { title: string; dueAt: string };
         const [task] = await db.insert(schema.tasks).values({
           title: payload.title,
@@ -225,12 +225,14 @@ async function handleCallbackQuery(callbackQuery: any, config: { token: string; 
         });
 
         await telegram.sendMessage({ chat_id: chatId, text: "Tarefa criada com sucesso!" });
-      } else if (pending.actionType === "create_note") {
+      } else if (pending.command === "create_note") {
         const payload = pending.payload as { summary: string };
         const [activity] = await db.insert(schema.activities).values({
           type: "note",
           summary: payload.summary,
-          createdBy: "system"
+          createdBy: "system",
+          entityType: "system",
+          entityId: "00000000-0000-0000-0000-000000000000"
         }).returning();
 
         await recordAuditEvent({

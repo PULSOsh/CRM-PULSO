@@ -22,7 +22,7 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen lg:flex">
       <Sidebar user={session.user as any} unreadCount={unreadCount} />
       <div className="min-w-0 flex-1">
-        <Topbar />
+        <Topbar isDemo={process.env.DEMO_MODE === "true"} />
         <main className="mx-auto w-full max-w-[1600px] p-4 pb-24 md:p-6 lg:p-8">{children}</main>
       </div>
       <MobileNav unreadCount={unreadCount} />

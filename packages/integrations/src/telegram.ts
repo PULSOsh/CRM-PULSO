@@ -87,7 +87,7 @@ export class HttpTelegramProvider {
     return this.callApi<TelegramWebhookInfo>("getWebhookInfo");
   }
 
-  async setWebhook(input: { url: string; secret_token?: string }): Promise<boolean> {
+  async setWebhook(input: { url: string; secret_token?: string; allowed_updates?: string[] }): Promise<boolean> {
     return this.callApi<boolean>("setWebhook", input);
   }
 

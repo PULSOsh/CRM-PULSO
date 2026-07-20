@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { PulsoLogo } from "./logo";
 
-export function Topbar() {
+export function Topbar({ isDemo }: { isDemo?: boolean }) {
   const router = useRouter();
   const [privateMode, setPrivateMode] = useState(false);
   const [dark, setDark] = useState(false);
@@ -28,6 +28,11 @@ export function Topbar() {
         <Search className="size-4 shrink-0" /><span className="truncate">Buscar clientes, projetos, propostas...</span>
         <span className="ml-auto hidden items-center gap-1 rounded-md border border-[var(--line)] px-2 py-0.5 font-mono text-[10px] md:flex"><Command className="size-3" />K</span>
       </button>
+      {isDemo && (
+        <div className="hidden items-center gap-1.5 rounded-full border border-[var(--signal)]/30 bg-[var(--signal)]/10 px-3 py-1 font-mono text-[10px] font-bold tracking-widest text-[var(--signal)] md:flex">
+          MODO DEMONSTRAÇÃO
+        </div>
+      )}
       <button className="grid size-9 place-items-center rounded-xl border border-[var(--line)] bg-[var(--surface)]" onClick={() => setPrivateMode(v => !v)} title="Ocultar valores">
         <EyeOff className={`size-4 ${privateMode ? "text-[var(--signal)]" : ""}`} />
       </button>

@@ -1,7 +1,7 @@
 "use client";
 
 import { PageHeader } from "@/components/page-header";
-import { Card } from "@pulso/ui";
+import { Card, Label, Input, Textarea } from "@pulso/ui";
 import { useActionState } from "react";
 import { createCompany, type CompanyActionState } from "../../actions";
 
@@ -13,40 +13,48 @@ export default function NewCompanyPage() {
   return (
     <>
       <PageHeader eyebrow="Comercial" title="Nova empresa" description="Registre uma empresa cliente ou parceira." />
-      <Card className="max-w-2xl p-6">
-        <form className="space-y-4" action={formAction}>
+      <Card className="max-w-2xl overflow-hidden">
+        <div className="border-b border-[var(--line)] bg-[var(--soft)] px-6 py-4">
+          <h2 className="font-extrabold text-[var(--carbon)]">Dados da Empresa</h2>
+          <p className="mt-1 text-xs text-[var(--muted)]">Registre as informações de uma empresa cliente ou parceira.</p>
+        </div>
+        <form className="p-6 space-y-5" action={formAction}>
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="tradeName">Nome fantasia</label>
-            <input id="tradeName" name="tradeName" required className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
+            <Label htmlFor="tradeName">Nome fantasia</Label>
+            <Input id="tradeName" name="tradeName" required placeholder="Ex: Acme Corp" />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="legalName">Razão social</label>
-            <input id="legalName" name="legalName" className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
+            <Label htmlFor="legalName">Razão social</Label>
+            <Input id="legalName" name="legalName" placeholder="Acme Corporation LTDA" />
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-5 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="document">CNPJ</label>
-              <input id="document" name="document" className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
+              <Label htmlFor="document">CNPJ</Label>
+              <Input id="document" name="document" placeholder="00.000.000/0000-00" />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="segment">Segmento</label>
-              <input id="segment" name="segment" className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
+              <Label htmlFor="segment">Segmento</Label>
+              <Input id="segment" name="segment" placeholder="Ex: Tecnologia, Varejo" />
             </div>
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="website">Site</label>
-            <input id="website" name="website" className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
+            <Label htmlFor="website">Site</Label>
+            <Input id="website" name="website" placeholder="https://www.exemplo.com.br" />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="notes">Notas</label>
-            <textarea id="notes" name="notes" rows={3} className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
+            <Label htmlFor="notes">Notas adicionais</Label>
+            <Textarea id="notes" name="notes" rows={3} placeholder="Informações relevantes sobre a empresa..." />
           </div>
           {state.error && (
-            <p role="alert" className="rounded-lg bg-[color:#b3261e/.08] px-3 py-2 text-sm font-semibold text-[#b3261e]">
+            <p role="alert" className="rounded-xl border border-[#b3261e]/20 bg-[color:#b3261e/.08] px-4 py-3 text-sm font-semibold text-[#b3261e]">
               {state.error}{state.duplicateId && <a href={`/app/comercial/contatos/empresas/${state.duplicateId}`} className="ml-2 underline">Ver empresa existente</a>}
             </p>
           )}
-          <button type="submit" disabled={pending} className="primary-button w-full justify-center sm:w-auto">{pending ? "Salvando..." : "Criar empresa"}</button>
+          <div className="pt-2">
+            <button type="submit" disabled={pending} className="primary-button w-full justify-center sm:w-auto">
+              {pending ? "Salvando..." : "Criar empresa"}
+            </button>
+          </div>
         </form>
       </Card>
     </>

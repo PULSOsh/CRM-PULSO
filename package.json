@@ -5,18 +5,18 @@
   "type": "module",
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
-    "dev": "npm run dev -w @pulso/web",
-    "build": "npm run build -w @pulso/web",
-    "start": "npm run start -w @pulso/web",
-    "lint": "npm run lint -w @pulso/web",
-    "typecheck": "npm run typecheck -w @pulso/web",
-    "test": "npm run test -w @pulso/web",
-    "test:e2e": "npm run test:e2e -w @pulso/web",
-    "db:generate": "npm run db:generate -w @pulso/database",
-    "db:migrate": "npm run db:migrate -w @pulso/database",
-    "db:studio": "npm run db:studio -w @pulso/database",
-    "db:seed": "npm run db:seed -w @pulso/database",
-    "check": "npm run typecheck && npm run test && npm run build"
+    "dev": "pnpm --filter @pulso/web dev",
+    "build": "pnpm --filter @pulso/web build",
+    "start": "pnpm --filter @pulso/web start",
+    "lint": "pnpm --filter @pulso/web lint",
+    "typecheck": "pnpm --filter @pulso/web typecheck",
+    "test": "pnpm --filter @pulso/web test",
+    "test:e2e": "pnpm --filter @pulso/web test:e2e",
+    "db:generate": "pnpm --filter @pulso/database db:generate",
+    "db:migrate": "pnpm --filter @pulso/database db:migrate",
+    "db:studio": "pnpm --filter @pulso/database db:studio",
+    "db:seed": "pnpm --filter @pulso/database db:seed",
+    "check": "pnpm --filter @pulso/web typecheck && pnpm --filter @pulso/web test && pnpm --filter @pulso/web build"
   },
   "engines": {"node": ">=20.9"}
 }

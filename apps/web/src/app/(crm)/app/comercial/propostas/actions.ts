@@ -116,11 +116,17 @@ export async function saveDraftVersion(proposalId: string, versionId: string, _p
     await db.update(schema.proposals).set({ validUntil: parsed.validUntil, updatedAt: new Date() }).where(eq(schema.proposals.id, proposalId));
   }
 
-  revalidatePath(`/app/comercial/propostas/${proposalId}`);
+  if (formData.get("action") === "publish") {
+    if (content.scopeItems.length === 0) return { error: "Adicione pelo menos um item de escopo antes de publicar." };
+    await publishVersion(proposalId, versionId, false); // Pass false or handle revalidation differently if needed
+  } else {
+    revalidatePath(`/app/comercial/propostas/${proposalId}`);
+  }
+
   return {};
 }
 
-export async function publishVersion(proposalId: string, versionId: string) {
+export async function publishVersion(proposalId: string, versionId: string, shouldRevalidate = true) {
   await requireSession();
 
   const [version] = await db.select().from(schema.proposalVersions).where(eq(schema.proposalVersions.id, versionId)).limit(1);
@@ -152,8 +158,10 @@ export async function publishVersion(proposalId: string, versionId: string) {
 
   await recordAuditEvent({ actorType: "user", action: "proposal.published", entityType: "proposal", entityId: proposalId, after: { version: version.version, total } });
 
-  revalidatePath("/app/comercial/propostas");
-  revalidatePath(`/app/comercial/propostas/${proposalId}`);
+  if (shouldRevalidate) {
+    revalidatePath("/app/comercial/propostas");
+    revalidatePath(`/app/comercial/propostas/${proposalId}`);
+  }
 }
 
 export async function createNewVersion(proposalId: string) {

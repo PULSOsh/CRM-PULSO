@@ -124,7 +124,10 @@ export function ProposalEditor({
       </div>
 
       {state.error && <p role="alert" className="rounded-lg bg-[color:#b3261e/.08] px-3 py-2 text-sm font-semibold text-[#b3261e]">{state.error}</p>}
-      <button type="submit" disabled={pending} className="secondary-button">{pending ? "Salvando..." : "Salvar rascunho"}</button>
+      <div className="flex items-center gap-3">
+        <button type="submit" name="action" value="save" disabled={pending} className="secondary-button">{pending ? "Processando..." : "Salvar rascunho"}</button>
+        <button type="submit" name="action" value="publish" disabled={pending} className="primary-button">{pending ? "Processando..." : "Salvar e Publicar"}</button>
+      </div>
     </form>
   );
 }

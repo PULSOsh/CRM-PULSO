@@ -40,11 +40,6 @@ export default async function ProposalDetailPage({
         title={opportunity?.title ?? "Proposta"}
         actions={
           <>
-            {draftVersion && (
-              <form action={publishVersion.bind(null, proposal.id, draftVersion.id)}>
-                <button type="submit" className="primary-button">Publicar versão {draftVersion.version}</button>
-              </form>
-            )}
             {publishedVersion && !draftVersion && (
               <form action={createNewVersion.bind(null, proposal.id)}>
                 <button type="submit" className="secondary-button">Criar nova versão</button>

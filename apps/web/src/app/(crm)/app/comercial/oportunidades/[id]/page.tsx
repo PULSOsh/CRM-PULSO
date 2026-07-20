@@ -28,7 +28,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
 
   const currentStage = stages.find((s) => s.id === opportunity.stageId);
   const isOpen = opportunity.status === "open";
-  const briefingPending = !briefing || (briefing.status !== "completed" && briefing.status !== "skipped");
+  const briefingPending = !briefing || !["completed", "skipped", "analyzed"].includes(briefing.status);
 
   return (
     <>

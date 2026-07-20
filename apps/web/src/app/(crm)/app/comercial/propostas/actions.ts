@@ -46,7 +46,7 @@ export async function createProposal(_prev: ProposalActionState, formData: FormD
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Revise os campos informados." };
 
   const eligibleBriefing = await db.select({ id: schema.briefings.id }).from(schema.briefings)
-    .where(and(eq(schema.briefings.opportunityId, parsed.data.opportunityId), or(eq(schema.briefings.status, "completed"), eq(schema.briefings.status, "skipped"))))
+    .where(and(eq(schema.briefings.opportunityId, parsed.data.opportunityId), or(eq(schema.briefings.status, "completed"), eq(schema.briefings.status, "skipped"), eq(schema.briefings.status, "analyzed"))))
     .limit(1);
   if (eligibleBriefing.length === 0) {
     return { error: "Esta oportunidade não tem briefing concluído nem pulo justificado. Conclua o briefing antes de criar a proposta." };

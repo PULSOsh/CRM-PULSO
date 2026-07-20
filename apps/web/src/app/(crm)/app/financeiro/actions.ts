@@ -17,6 +17,26 @@ async function requireSession() {
   return session;
 }
 
+export async function getRecurrencesSummary(scope: string) {
+  await requireSession();
+  const rows = await db.select().from(schema.financialRecurrences).where(eq(schema.financialRecurrences.scope, scope));
+  
+  let monthlyIncome = 0;
+  let monthlyExpense = 0;
+  
+  for (const row of rows) {
+    if (row.status !== "active") continue;
+    let amount = Number(row.amount);
+    if (row.frequency === "weekly") amount *= 4.33;
+    if (row.frequency === "yearly") amount /= 12;
+    
+    if (row.direction === "income") monthlyIncome += amount;
+    else monthlyExpense += amount;
+  }
+  
+  return { monthlyIncome, monthlyExpense, balance: monthlyIncome - monthlyExpense, activeCount: rows.filter(r => r.status === "active").length };
+}
+
 function parseMoney(value: string) {
   return value.replace(/\./g, "").replace(",", ".");
 }

@@ -560,6 +560,7 @@ export const financialEntries = pgTable("financial_entries", {
   paymentMethod: text("payment_method"),
   provider: text("provider").default("manual").notNull(),
   externalId: text("external_id"),
+  recurrenceId: uuid("recurrence_id").references(() => financialRecurrences.id),
   metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}),
   ...timestamps,
 }, (table) => [

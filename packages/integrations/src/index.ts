@@ -41,7 +41,10 @@ export interface PaymentProvider {
   cancelCharge(externalId: string): Promise<void>;
 }
 
+export * from "./telegram";
+
 export interface TelegramProvider {
+  name: string;
   sendAdminAlert(input: {
     title: string;
     summary: string;

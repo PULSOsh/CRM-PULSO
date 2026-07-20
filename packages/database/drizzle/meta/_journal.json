@@ -57,6 +57,20 @@
       "when": 1784544411151,
       "tag": "0007_fearless_killraven",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1784549498604,
+      "tag": "0008_giant_khan",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1784558482519,
+      "tag": "0009_brown_galactus",
+      "breakpoints": true
     }
   ]
 }

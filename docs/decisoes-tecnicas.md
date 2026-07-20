@@ -155,3 +155,9 @@ Cada interação de suporte é uma linha em `ticket_messages` com `visibility="c
 O login do portal pede apenas e-mail e senha, sem empresa/tenant. Portanto um mesmo e-mail não pode identificar contas diferentes em empresas diferentes sem tornar o resultado ambíguo.
 
 **Decisão:** o convite normaliza o e-mail para minúsculas e rejeita qualquer conta existente no portal, independentemente da empresa. O índice composto legado `(companyId, email)` permanece no schema nesta migração para não ampliar uma alteração estrutural já aplicada no banco de desenvolvimento; como só o administrador interno cria convites, o fluxo serializado da aplicação é a fonte de integridade nesta versão. Se no futuro houver provisionamento concorrente/API pública, a restrição deve migrar para um índice único global no banco ou o login deve ganhar um identificador explícito de empresa.
+
+
+## Telegram e Notifica��es (Fase 10)
+- Provider HTTP focado com timeouts curtos.
+- Central interna funciona independente de erros da API do Telegram.
+- Comandos s�o validados por guards zod antes de tocar no banco de dados.

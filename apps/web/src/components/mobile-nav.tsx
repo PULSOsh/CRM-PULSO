@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { mobileNavigation } from "@/lib/nav";
 
-export function MobileNav() {
+export function MobileNav({ unreadCount = 0 }: { unreadCount?: number }) {
   const pathname = usePathname();
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-[var(--line)] bg-[var(--surface)] px-1 pb-[env(safe-area-inset-bottom)] lg:hidden">

@@ -81,12 +81,22 @@
 - ZapSign real.
 - AbacatePay real.
 - Google Calendar.
-- Telegram.
 - Providers reais de IA.
 - Notificações push.
 - Backup executado pela interface.
 - Conciliação ou importação bancária, que não faz parte da primeira versão.
 - Teste completo do fluxo ponta a ponta.
+
+## Fase 10: Notificações internas e Telegram
+**Status:** Concluída
+- [x] Schema `admin_notifications` e tabelas Telegram (`telegram_updates`, `telegram_pending_actions`)
+- [x] Migrações geradas e aplicadas
+- [x] Provider HTTP Telegram independente
+- [x] Lógica de `notifyAdmin` idempotente, não-bloqueante
+- [x] Central de Notificações Interna (Visualização e Ações Rápidas)
+- [x] Extração de métricas de `hoje` para envio via Telegram
+- [x] Parseador e processador de Comandos Telegram Webhook com Zod
+- [x] E2E validando isolamento e não-bloqueio ponta a ponta.
 
 ## Fase 0 — compilação e infraestrutura (concluída em 19/07/2026)
 

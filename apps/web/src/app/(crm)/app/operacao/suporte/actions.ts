@@ -50,6 +50,22 @@ const createSchema = z.object({
   description: z.string().trim().min(5, "Descreva o chamado.")
 });
 
+const TERMINAL_TICKET_STATUS = {
+  RESOLVED: "resolved",
+  CLOSED: "closed"
+} as const;
+
+const OPEN_TICKET_STATUS = {
+  NEW: "new",
+  IN_PROGRESS: "in_progress",
+  WAITING_CUSTOMER: "waiting_customer"
+} as const;
+
+const TICKET_STATUS = { ...OPEN_TICKET_STATUS, ...TERMINAL_TICKET_STATUS } as const;
+type TicketStatus = (typeof TICKET_STATUS)[keyof typeof TICKET_STATUS];
+type TerminalTicketStatus = (typeof TERMINAL_TICKET_STATUS)[keyof typeof TERMINAL_TICKET_STATUS];
+type OpenTicketStatus = (typeof OPEN_TICKET_STATUS)[keyof typeof OPEN_TICKET_STATUS];
+
 export async function createTicketInternally(formData: FormData): Promise<{ error?: string; ticketId?: string }> {
   const session = await requireSession();
   const parsed = createSchema.safeParse({ companyId: formData.get("companyId"), title: formData.get("title"), description: formData.get("description") });
@@ -58,9 +74,11 @@ export async function createTicketInternally(formData: FormData): Promise<{ erro
   const year = new Date().getFullYear();
   const sequence = await nextSequence("support", year);
   const code = formatRecordCode("support", year, sequence);
+  const now = new Date();
 
   const [ticket] = await db.insert(schema.tickets).values({
-    code, companyId: parsed.data.companyId, title: parsed.data.title, description: parsed.data.description, status: "new"
+    code, companyId: parsed.data.companyId, title: parsed.data.title, description: parsed.data.description,
+    status: OPEN_TICKET_STATUS.NEW, resolutionStartedAt: now, resolvedAt: null
   }).returning();
 
   await db.insert(schema.ticketMessages).values({
@@ -85,14 +103,34 @@ export async function replyToTicket(ticketId: string, formData: FormData) {
   revalidatePath(`/app/operacao/suporte/${ticketId}`);
 }
 
-const statusSchema = z.enum(["new", "in_progress", "waiting_customer", "resolved", "closed"]);
+const statusSchema = z.enum(Object.values(TICKET_STATUS) as [TicketStatus, ...TicketStatus[]]);
 
 export async function updateTicketStatus(ticketId: string, formData: FormData) {
   await requireSession();
   const parsed = statusSchema.safeParse(formData.get("status"));
   if (!parsed.success) throw new Error("Status inválido.");
 
-  await db.update(schema.tickets).set({ status: parsed.data, updatedAt: new Date() }).where(eq(schema.tickets.id, ticketId));
+  const [ticket] = await db.select({
+    status: schema.tickets.status,
+    resolutionStartedAt: schema.tickets.resolutionStartedAt,
+    resolvedAt: schema.tickets.resolvedAt
+  }).from(schema.tickets).where(eq(schema.tickets.id, ticketId)).limit(1);
+  if (!ticket) throw new Error("Chamado não encontrado.");
+
+  const currentStatus = statusSchema.parse(ticket.status);
+  const nextStatus = parsed.data;
+  const isCurrentTerminal = Object.values(TERMINAL_TICKET_STATUS).includes(currentStatus as TerminalTicketStatus);
+  const isNextTerminal = Object.values(TERMINAL_TICKET_STATUS).includes(nextStatus as TerminalTicketStatus);
+  const isReopening = isCurrentTerminal && Object.values(OPEN_TICKET_STATUS).includes(nextStatus as OpenTicketStatus);
+  const now = new Date();
+
+  const lifecycleUpdate = isReopening
+    ? { resolutionStartedAt: now, resolvedAt: null }
+    : isNextTerminal
+      ? { resolutionStartedAt: ticket.resolutionStartedAt ?? now, resolvedAt: ticket.resolvedAt ?? now }
+      : {};
+
+  await db.update(schema.tickets).set({ status: nextStatus, updatedAt: now, ...lifecycleUpdate }).where(eq(schema.tickets.id, ticketId));
   await recordAuditEvent({ actorType: "user", action: "ticket.status_changed", entityType: "ticket", entityId: ticketId, after: { status: parsed.data } });
   revalidatePath(`/app/operacao/suporte/${ticketId}`);
   revalidatePath("/app/operacao/suporte");

@@ -8,7 +8,7 @@ import { navigation } from "@/lib/nav";
 import { authClient } from "@/lib/auth-client";
 import { PulsoLogo } from "./logo";
 
-export function Sidebar({ user }: { user: { name: string; email: string } }) {
+export function Sidebar({ user, unreadCount = 0 }: { user: { name: string; email: string }, unreadCount?: number }) {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
@@ -36,11 +36,20 @@ export function Sidebar({ user }: { user: { name: string; email: string } }) {
               {group.items.map(item => {
                 const active = pathname === item.href;
                 const Icon = item.icon;
+                const isNotification = item.href === "/app/inteligencia/notificacoes";
                 return (
                   <Link key={item.href} href={item.href} title={collapsed ? item.label : undefined}
                     className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${active ? "bg-[var(--carbon)] text-white" : "text-[var(--muted-strong)] hover:bg-[var(--soft)] hover:text-[var(--carbon)]"} ${collapsed ? "justify-center" : ""}`}>
                     <Icon className={`size-[18px] ${active ? "text-[var(--signal)]" : ""}`} />
-                    {!collapsed && <span>{item.label}</span>}
+                    {!collapsed && <span className="flex-1">{item.label}</span>}
+                    {!collapsed && isNotification && unreadCount > 0 && (
+                      <span className="flex h-5 items-center justify-center rounded-full bg-red-500 px-2 text-[10px] font-bold text-white">
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </span>
+                    )}
+                    {collapsed && isNotification && unreadCount > 0 && (
+                      <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
+                    )}
                   </Link>
                 );
               })}

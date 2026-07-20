@@ -218,12 +218,14 @@ export const opportunities = pgTable("opportunities", {
   expectedValue: numeric("expected_value", { precision: 14, scale: 2 }).default("0").notNull(),
   probability: integer("probability").default(0).notNull(),
   nextActionAt: timestamp("next_action_at", { withTimezone: true }),
+  closedAt: timestamp("closed_at", { withTimezone: true }),
   lostReason: text("lost_reason"),
   customFields: jsonb("custom_fields").$type<Record<string, unknown>>().default({}),
   ...timestamps,
 }, (table) => [
   index("opportunities_pipeline_stage_idx").on(table.pipelineId, table.stageId),
   index("opportunities_next_action_idx").on(table.nextActionAt),
+  index("opportunities_closed_at_idx").on(table.closedAt),
 ]);
 
 export const products = pgTable("products", {
@@ -491,8 +493,13 @@ export const tickets = pgTable("tickets", {
   coverage: text("coverage").default("one_off").notNull(),
   responseDueAt: timestamp("response_due_at", { withTimezone: true }),
   resolutionDueAt: timestamp("resolution_due_at", { withTimezone: true }),
+  resolutionStartedAt: timestamp("resolution_started_at", { withTimezone: true }),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
   ...timestamps,
-});
+}, (table) => [
+  index("tickets_resolution_started_at_idx").on(table.resolutionStartedAt),
+  index("tickets_resolved_at_idx").on(table.resolvedAt),
+]);
 
 export const ticketMessages = pgTable("ticket_messages", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -638,3 +645,49 @@ export const appSettings = pgTable("app_settings", {
   onboardingCompletedAt: timestamp("onboarding_completed_at", { withTimezone: true }),
   ...timestamps,
 });
+
+export const NOTIFICATION_TELEGRAM_STATUS = {
+  PENDING: "pending",
+  SENT: "sent",
+  DISABLED: "disabled",
+  ERROR: "error",
+} as const;
+export type NotificationTelegramStatus = typeof NOTIFICATION_TELEGRAM_STATUS[keyof typeof NOTIFICATION_TELEGRAM_STATUS];
+
+export const adminNotifications = pgTable("admin_notifications", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  eventKey: varchar("event_key", { length: 180 }).notNull().unique(),
+  type: text("type").notNull(),
+  title: varchar("title", { length: 120 }).notNull(),
+  summary: varchar("summary", { length: 500 }).notNull(),
+  payload: jsonb("payload").$type<Record<string, unknown>>().default({}),
+  actionUrl: text("action_url"),
+  isRead: boolean("is_read").default(false).notNull(),
+  telegramStatus: text("telegram_status").default("pending").notNull(),
+  telegramMessageId: integer("telegram_message_id"),
+  telegramLastError: text("telegram_last_error"),
+  telegramDeliveredAt: timestamp("telegram_delivered_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [
+  index("admin_notifications_read_idx").on(table.isRead),
+  index("admin_notifications_telegram_status_idx").on(table.telegramStatus),
+]);
+
+export const telegramUpdates = pgTable("telegram_updates", {
+  updateId: integer("update_id").primaryKey(),
+  processedAt: timestamp("processed_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const telegramPendingActions = pgTable("telegram_pending_actions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  chatId: text("chat_id").notNull(),
+  command: text("command").notNull(),
+  payload: jsonb("payload").$type<Record<string, unknown>>().default({}),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+  cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [
+  index("telegram_pending_actions_chat_idx").on(table.chatId),
+]);

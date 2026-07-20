@@ -12,6 +12,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { notifyAdmin } from "@/lib/notifications";
 
 async function requirePortalUser() {
   const portalUser = await getPortalSession();
@@ -91,8 +92,19 @@ export async function decideApprovalFromPortal(approvalId: string, projectId: st
 const ticketSchema = z.object({
   title: z.string().trim().min(2, "Informe um título."),
   description: z.string().trim().min(5, "Descreva o que está acontecendo."),
-  projectId: z.string().trim().optional().or(z.literal(""))
+  projectId: z.string().trim().nullish().or(z.literal(""))
 });
+
+const TERMINAL_TICKET_STATUS = {
+  RESOLVED: "resolved",
+  CLOSED: "closed"
+} as const;
+
+const OPEN_TICKET_STATUS = {
+  NEW: "new"
+} as const;
+
+type TerminalTicketStatus = (typeof TERMINAL_TICKET_STATUS)[keyof typeof TERMINAL_TICKET_STATUS];
 
 export async function createTicketFromPortal(formData: FormData): Promise<{ error?: string; ticketId?: string }> {
   const portalUser = await requirePortalUser();
@@ -113,14 +125,24 @@ export async function createTicketFromPortal(formData: FormData): Promise<{ erro
   const year = new Date().getFullYear();
   const sequence = await nextSequence("support", year);
   const code = formatRecordCode("support", year, sequence);
+  const now = new Date();
 
   const [ticket] = await db.insert(schema.tickets).values({
     code, companyId: portalUser.companyId, projectId: parsed.data.projectId || null,
-    title: parsed.data.title, description: parsed.data.description, status: "new"
+    title: parsed.data.title, description: parsed.data.description, status: OPEN_TICKET_STATUS.NEW,
+    resolutionStartedAt: now, resolvedAt: null
   }).returning();
 
   await db.insert(schema.ticketMessages).values({
     ticketId: ticket.id, authorType: "portal_user", authorName: portalUser.name, body: parsed.data.description, visibility: "client"
+  });
+
+  await notifyAdmin({
+    eventKey: `ticket.created:${ticket.id}:${ticket.id}`,
+    type: "ticket.created",
+    title: `Novo chamado [${code}]: ${parsed.data.title}`,
+    summary: `Cliente: ${portalUser.name}\n\n${parsed.data.description.substring(0, 400)}`,
+    actionUrl: `/app/operacao/suporte/${ticket.id}`
   });
 
   await recordAuditEvent({ actorType: "anonymous", action: "ticket.created_from_portal", entityType: "ticket", entityId: ticket.id, after: { code } });
@@ -138,9 +160,25 @@ export async function replyToTicketFromPortal(ticketId: string, formData: FormDa
   const parsed = messageSchema.safeParse({ body: formData.get("body") });
   if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Revise a mensagem.");
 
-  await db.insert(schema.ticketMessages).values({ ticketId, authorType: "portal_user", authorName: portalUser.name, body: parsed.data.body, visibility: "client" });
-  if (ticket.status === "resolved" || ticket.status === "closed") {
-    await db.update(schema.tickets).set({ status: "new", updatedAt: new Date() }).where(eq(schema.tickets.id, ticketId));
+  const [message] = await db.insert(schema.ticketMessages).values({ ticketId, authorType: "portal_user", authorName: portalUser.name, body: parsed.data.body, visibility: "client" }).returning();
+  
+  if (Object.values(TERMINAL_TICKET_STATUS).includes(ticket.status as TerminalTicketStatus)) {
+    const now = new Date();
+    await db.update(schema.tickets).set({
+      status: OPEN_TICKET_STATUS.NEW,
+      resolutionStartedAt: now,
+      resolvedAt: null,
+      updatedAt: now
+    }).where(eq(schema.tickets.id, ticketId));
   }
+
+  await notifyAdmin({
+    eventKey: `ticket.reply:${ticketId}:${message.id}`,
+    type: "ticket.reply",
+    title: `Nova resposta no chamado [${ticket.code}]`,
+    summary: `Cliente: ${portalUser.name}\n\n${parsed.data.body.substring(0, 400)}`,
+    actionUrl: `/app/operacao/suporte/${ticketId}`
+  });
+
   revalidatePath(`/portal/suporte/${ticketId}`);
 }

@@ -28,5 +28,16 @@ export async function decideApproval(approvalId: string, decision: "approved" | 
     after: { decision, name: input.name }, ipAddress: input.ip ?? undefined, userAgent: input.userAgent ?? undefined
   });
 
+  if (decision === "changes_requested" && input.actor === "anonymous") {
+    const { notifyAdmin } = await import("./notifications");
+    await notifyAdmin({
+      eventKey: `approval.changes:${approvalId}:${Date.now()}`,
+      type: "approval.changes_requested",
+      title: `Aprovação "${approval.title}": Alterações solicitadas pelo cliente`,
+      summary: `Cliente: ${input.name}\n\nComentário: ${input.comment || "Nenhum comentário"}`,
+      actionUrl: `/app/operacao/aprovacoes`
+    });
+  }
+
   return approval.projectId;
 }

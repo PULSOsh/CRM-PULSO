@@ -227,3 +227,9 @@ Problemas encontrados e corrigidos durante a validaÃ§Ã£o:
 5. **Identidade ambÃ­gua por e-mail**: o login usa e-mail + senha sem seletor de empresa, enquanto o convite bloqueava duplicidade apenas dentro da mesma empresa. O fluxo agora normaliza o e-mail e impede reutilizaÃ§Ã£o global no portal.
 
 **Fase 9 fechada para publicaÃ§Ã£o.** O portal e o suporte usam banco e sessÃµes reais, sem mocks; arquivos, aprovaÃ§Ãµes e chamados respeitam as permissÃµes concedidas e notas internas foram verificadas como invisÃ­veis ao cliente.
+
+
+## Fase 10: Notificações e Telegram
+- Central interna idempotente salva as notificações.
+- O webhook foi configurado e testa X-Telegram-Bot-Api-Secret-Token.
+- Criamos comandos /hoje, /tarefa, /buscar com confirmações e expiração e persistimos Telegram no 	elegram_updates para evitar repetições.

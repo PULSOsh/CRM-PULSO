@@ -141,7 +141,8 @@ export async function setOpportunityNextAction(opportunityId: string, formData: 
 
 export async function markOpportunityWon(opportunityId: string) {
   await requireSession();
-  await db.update(schema.opportunities).set({ status: "won", updatedAt: new Date() }).where(eq(schema.opportunities.id, opportunityId));
+  const now = new Date();
+  await db.update(schema.opportunities).set({ status: "won", closedAt: now, updatedAt: now }).where(eq(schema.opportunities.id, opportunityId));
   await db.insert(schema.activities).values({ entityType: "opportunity", entityId: opportunityId, type: "status_change", summary: "Fechada — ganho", createdBy: "user" });
   await recordAuditEvent({ actorType: "user", action: "opportunity.won", entityType: "opportunity", entityId: opportunityId });
 
@@ -154,7 +155,8 @@ export async function markOpportunityLost(opportunityId: string, formData: FormD
   const reason = String(formData.get("reason") ?? "").trim();
   if (!reason) throw new Error("Motivo de perda é obrigatório.");
 
-  await db.update(schema.opportunities).set({ status: "lost", lostReason: reason, updatedAt: new Date() }).where(eq(schema.opportunities.id, opportunityId));
+  const now = new Date();
+  await db.update(schema.opportunities).set({ status: "lost", lostReason: reason, closedAt: now, updatedAt: now }).where(eq(schema.opportunities.id, opportunityId));
   await db.insert(schema.activities).values({ entityType: "opportunity", entityId: opportunityId, type: "status_change", summary: `Fechada — perdido (${reason})`, createdBy: "user" });
   await recordAuditEvent({ actorType: "user", action: "opportunity.lost", entityType: "opportunity", entityId: opportunityId, after: { reason } });
 

@@ -84,3 +84,7 @@ sudo docker exec $CONTAINER_ID sh -c "cd /app && npm run db:seed"
 - **`sudo -n docker ...`**: o usuÃ¡rio `pulso` tem sudo sem senha configurado nessa VPS; usar `-n` (non-interactive) evita que o comando fique esperando senha em sessÃ£o nÃ£o interativa.
 - **Disco cheio**: verificar `df -h /` e `sudo -n docker system df` antes de builds grandes. Limpar com `docker system prune -a` (nunca `--volumes` sem confirmar antes quais volumes existem e a quem pertencem).
 - **`tsc --noEmit` falhando em `.next/dev/types/routes.d.ts` com erro de sintaxe**: acontece depois de alternar `next dev` (usado pelos testes Playwright) e `next build` no mesmo diretÃ³rio `.next` â€” o arquivo de tipos de rotas gerado automaticamente fica inconsistente. Resolve com `rm -rf apps/web/.next` antes de rodar `npm run check` de novo. NÃ£o Ã© um bug de cÃ³digo, Ã© um artefato de build.
+
+
+## Configuração Telegram Webhook
+As chaves \TELEGRAM_BOT_TOKEN\, \TELEGRAM_CHAT_ID\ e \TELEGRAM_WEBHOOK_SECRET\ precisam estar configuradas no ambiente. Para registrar o webhook, acesse a página de Configurações -> Integrações e ative o botão de 'Testar e Configurar'.

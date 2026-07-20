@@ -7,6 +7,7 @@ import { and, desc, eq, isNotNull } from "drizzle-orm";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { notifyAdmin } from "@/lib/notifications";
 
 async function loadActiveVersion(proposalId: string) {
   const [version] = await db.select().from(schema.proposalVersions)
@@ -121,12 +122,20 @@ export async function requestAlternativeCondition(proposalId: string, versionId:
   if (proposal.publicTokenHash !== hashPublicToken(token)) throw new Error("Link inválido ou expirado.");
 
   // Não altera a proposta vigente -- só registra o pedido para o administrador decidir.
-  await db.insert(schema.proposalChangeRequests).values({
+  const [request] = await db.insert(schema.proposalChangeRequests).values({
     proposalId, proposalVersionId: versionId,
     requestedPaymentLabel: input.label,
     requestedEntry: input.entry || null,
     requestedInstallments: input.installments,
     comment: input.comment || null
+  }).returning();
+
+  await notifyAdmin({
+    eventKey: `proposal.alternative:${proposalId}:${request.id}`,
+    type: "proposal.alternative_condition_requested",
+    title: `Proposta ${proposal.code}: Cliente solicitou condição alternativa`,
+    summary: `Condição solicitada: ${input.label}\nEntrada: ${input.entry || "Não"}\nParcelas: ${input.installments}\nComentário: ${input.comment || "Nenhum"}`,
+    actionUrl: `/app/comercial/propostas/${proposalId}`
   });
 
   await recordAuditEvent({ actorType: "anonymous", action: "proposal.alternative_condition_requested", entityType: "proposal", entityId: proposalId, after: input });

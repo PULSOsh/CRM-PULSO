@@ -179,3 +179,38 @@ export async function getOpportunityStagesForPipeline(pipelineId: string) {
   await requireSession();
   return db.select().from(schema.pipelineStages).where(eq(schema.pipelineStages.pipelineId, pipelineId)).orderBy(asc(schema.pipelineStages.position));
 }
+
+export async function skipBriefing(opportunityId: string, formData: FormData) {
+  await requireSession();
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (!reason) throw new Error("Motivo do pulo é obrigatório.");
+
+  const [briefing] = await db.select().from(schema.briefings).where(eq(schema.briefings.opportunityId, opportunityId)).limit(1);
+  if (!briefing) {
+    // If there's no briefing at all, maybe we should create one as skipped?
+    // Let's create a stub briefing marked as skipped so createProposal doesn't fail.
+    const year = new Date().getFullYear();
+    const sequence = await nextSequence("briefing", year);
+    const code = formatRecordCode("briefing", year, sequence);
+    const { generatePublicToken, generateSlug } = await import("@pulso/database/tokens");
+    const { tokenHash } = generatePublicToken();
+    const slug = generateSlug(code);
+    
+    await db.insert(schema.briefings).values({
+      code, opportunityId, publicSlug: slug, publicTokenHash: tokenHash, status: "skipped",
+      skippedAt: new Date(), skipReason: reason, progress: 100
+    });
+  } else {
+    if (briefing.status === "completed") throw new Error("O briefing já foi concluído pelo cliente.");
+    await db.update(schema.briefings).set({
+      status: "skipped", skippedAt: new Date(), skipReason: reason, progress: 100, updatedAt: new Date()
+    }).where(eq(schema.briefings.id, briefing.id));
+  }
+
+  await db.insert(schema.activities).values({
+    entityType: "opportunity", entityId: opportunityId, type: "briefing_skipped",
+    summary: `Briefing pulado pelo comercial. Motivo: ${reason}`, createdBy: "user"
+  });
+
+  revalidatePath(`/app/comercial/oportunidades/${opportunityId}`);
+}

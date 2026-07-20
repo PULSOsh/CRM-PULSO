@@ -26,7 +26,8 @@ const entrySchema = z.object({
   category: z.string().trim().optional().or(z.literal("")),
   amountExpected: z.string().trim().min(1, "Informe o valor."),
   competenceDate: z.string().trim().min(1, "Informe a data de competência."),
-  dueDate: z.string().trim().optional().or(z.literal(""))
+  dueDate: z.string().trim().optional().or(z.literal("")),
+  repeatMonths: z.string().trim().optional().or(z.literal(""))
 });
 
 export type FinancialActionState = { error?: string };
@@ -35,27 +36,46 @@ async function createEntry(scope: "company" | "personal", direction: "in" | "out
   await requireSession();
   const parsed = entrySchema.safeParse({
     description: formData.get("description"), category: formData.get("category"),
-    amountExpected: formData.get("amountExpected"), competenceDate: formData.get("competenceDate"), dueDate: formData.get("dueDate")
+    amountExpected: formData.get("amountExpected"), competenceDate: formData.get("competenceDate"), 
+    dueDate: formData.get("dueDate"), repeatMonths: formData.get("repeatMonths")
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Revise os campos informados." };
 
   const namespace = direction === "in" ? "charge" : "expense";
   const year = new Date().getFullYear();
-  const sequence = await nextSequence(namespace, year);
-  const code = formatRecordCode(namespace, year, sequence);
+  
+  const repeatCount = parsed.data.repeatMonths ? parseInt(parsed.data.repeatMonths, 10) : 1;
+  const validRepeat = isNaN(repeatCount) || repeatCount < 1 ? 1 : repeatCount;
 
-  const [entry] = await db.insert(schema.financialEntries).values({
-    code, scope, direction,
-    type: direction === "in" ? "receivable" : "payable",
-    description: parsed.data.description,
-    category: parsed.data.category || null,
-    amountExpected: parseMoney(parsed.data.amountExpected),
-    competenceDate: parsed.data.competenceDate,
-    dueDate: parsed.data.dueDate || null,
-    status: "pending"
-  }).returning();
+  for (let i = 0; i < validRepeat; i++) {
+    const sequence = await nextSequence(namespace, year);
+    const code = formatRecordCode(namespace, year, sequence);
+    
+    const competence = new Date(parsed.data.competenceDate);
+    competence.setMonth(competence.getMonth() + i);
+    
+    let due = null;
+    if (parsed.data.dueDate) {
+      const dd = new Date(parsed.data.dueDate);
+      dd.setMonth(dd.getMonth() + i);
+      due = dd.toISOString().slice(0, 10);
+    }
 
-  await recordAuditEvent({ actorType: "user", action: "financial_entry.created", entityType: "financial_entry", entityId: entry.id, after: { code, scope, direction } });
+    const descSuffix = validRepeat > 1 ? ` (${i + 1}/${validRepeat})` : "";
+
+    const [entry] = await db.insert(schema.financialEntries).values({
+      code, scope, direction,
+      type: direction === "in" ? "receivable" : "payable",
+      description: parsed.data.description + descSuffix,
+      category: parsed.data.category || null,
+      amountExpected: parseMoney(parsed.data.amountExpected),
+      competenceDate: competence.toISOString().slice(0, 10),
+      dueDate: due,
+      status: "pending"
+    }).returning();
+
+    await recordAuditEvent({ actorType: "user", action: "financial_entry.created", entityType: "financial_entry", entityId: entry.id, after: { code, scope, direction } });
+  }
 
   const basePath = scope === "personal" ? "/app/financeiro/pessoal" : direction === "in" ? "/app/financeiro/receber" : "/app/financeiro/pagar";
   revalidatePath(basePath);

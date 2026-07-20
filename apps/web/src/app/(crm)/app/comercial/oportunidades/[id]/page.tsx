@@ -3,7 +3,7 @@ import { Badge, Card } from "@pulso/ui";
 import { and, desc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
-import { getOpportunityStagesForPipeline, markOpportunityLost, markOpportunityWon, setOpportunityNextAction } from "../actions";
+import { getOpportunityStagesForPipeline, markOpportunityLost, markOpportunityWon, setOpportunityNextAction, skipBriefing } from "../actions";
 import { StageSelect } from "../stage-select";
 
 const statusTone: Record<string, "neutral" | "signal" | "success" | "warning"> = {
@@ -17,16 +17,18 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
   const [opportunity] = await db.select().from(schema.opportunities).where(eq(schema.opportunities.id, id)).limit(1);
   if (!opportunity) notFound();
 
-  const [contact, stages, activities] = await Promise.all([
+  const [contact, stages, activities, briefing] = await Promise.all([
     opportunity.contactId ? db.select().from(schema.contacts).where(eq(schema.contacts.id, opportunity.contactId)).limit(1).then((r) => r[0]) : null,
     getOpportunityStagesForPipeline(opportunity.pipelineId),
     db.select().from(schema.activities)
       .where(and(eq(schema.activities.entityType, "opportunity"), eq(schema.activities.entityId, id)))
-      .orderBy(desc(schema.activities.occurredAt)).limit(20)
+      .orderBy(desc(schema.activities.occurredAt)).limit(20),
+    db.select().from(schema.briefings).where(eq(schema.briefings.opportunityId, id)).limit(1).then((r) => r[0])
   ]);
 
   const currentStage = stages.find((s) => s.id === opportunity.stageId);
   const isOpen = opportunity.status === "open";
+  const briefingPending = !briefing || (briefing.status !== "completed" && briefing.status !== "skipped");
 
   return (
     <>
@@ -53,11 +55,30 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
       />
 
       <div className="grid gap-6 lg:grid-cols-[1.4fr_.6fr]">
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="font-extrabold">Visão geral</h2>
-            <Badge tone={statusTone[opportunity.status]}>{statusLabel[opportunity.status]}</Badge>
-          </div>
+        <div className="space-y-6">
+          {isOpen && briefingPending && (
+            <div className="rounded-2xl border border-[var(--line)] bg-[var(--warning)]/5 p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="font-extrabold text-[var(--warning)]">Briefing pendente</h3>
+                  <p className="mt-1 text-sm text-[var(--muted)]">Para gerar uma proposta, esta oportunidade precisa ter o briefing respondido pelo cliente ou ser pulado pelo comercial.</p>
+                </div>
+                <details className="shrink-0">
+                  <summary className="secondary-button cursor-pointer list-none !border-[var(--warning)]/30 !text-[var(--warning)] hover:!bg-[var(--warning)]/10">Pular Briefing</summary>
+                  <form action={skipBriefing.bind(null, opportunity.id)} className="mt-3 flex flex-col gap-2 rounded-xl bg-[var(--surface)] p-3 shadow-sm border border-[var(--line)]">
+                    <input name="reason" placeholder="Motivo (ex: Já tenho as infos)" required className="rounded-xl border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-sm outline-none focus:border-[var(--signal)]" />
+                    <button type="submit" className="primary-button justify-center">Confirmar Pulo</button>
+                  </form>
+                </details>
+              </div>
+            </div>
+          )}
+
+          <Card className="p-6">
+            <div className="flex items-center justify-between">
+              <h2 className="font-extrabold">Visão geral</h2>
+              <Badge tone={statusTone[opportunity.status]}>{statusLabel[opportunity.status]}</Badge>
+            </div>
           <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
             <div><dt className="text-xs font-bold text-[var(--muted)]">Valor previsto</dt><dd className="money-value mt-1 font-semibold">{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(opportunity.expectedValue))}</dd></div>
             <div><dt className="text-xs font-bold text-[var(--muted)]">Probabilidade</dt><dd className="mt-1 font-semibold">{opportunity.probability}%</dd></div>
@@ -91,6 +112,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
             </div>
           )}
         </Card>
+        </div>
 
         <Card className="p-6">
           <h2 className="font-extrabold">Histórico</h2>

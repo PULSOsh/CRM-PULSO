@@ -50,6 +50,11 @@ export function NewEntryForm({
           <Input id="dueDate" name="dueDate" type="date" />
         </div>
       </div>
+      <div>
+        <Label htmlFor="repeatMonths">Recorrência mensal (opcional)</Label>
+        <Input id="repeatMonths" name="repeatMonths" type="number" min="1" max="60" placeholder="Ex: 12 (repete por 12 meses)" />
+        <p className="mt-1 text-xs text-[var(--muted)]">Deixe em branco para lançamento único. Se preenchido, irá gerar as parcelas para os próximos meses.</p>
+      </div>
       {state.error && <p role="alert" className="rounded-xl border border-[#b3261e]/20 bg-[color:#b3261e/.08] px-4 py-3 text-sm font-semibold text-[#b3261e]">{state.error}</p>}
       <div className="pt-2">
         <button type="submit" disabled={pending} className="primary-button w-full justify-center sm:w-auto">

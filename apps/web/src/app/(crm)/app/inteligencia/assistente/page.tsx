@@ -1,30 +1,108 @@
 import { Badge, Card } from "@pulso/ui";
-import { Bot, BrainCircuit, Send, ShieldCheck, Sparkles } from "lucide-react";
+import { Bot, BrainCircuit, Send, ShieldCheck, Sparkles, MessageSquarePlus } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 
 export default function AiPage() {
   return (
     <>
       <PageHeader eyebrow="Inteligência assistida" title="Assistente de IA" description="Sugestões revisáveis para diagnóstico, propostas, projetos, suporte e análise financeira." />
-      <div className="grid gap-5 xl:grid-cols-[1fr_340px]">
-        <Card className="flex min-h-[600px] flex-col overflow-hidden">
-          <div className="flex items-center justify-between border-b border-[var(--line)] px-5 py-4">
-            <div className="flex items-center gap-3"><div className="grid size-10 place-items-center rounded-xl bg-[var(--carbon)] text-white"><Bot className="size-5 text-[var(--signal)]" /></div><div><h2 className="font-extrabold">Copiloto PULSO</h2><p className="text-xs text-[var(--muted)]">Provider desativado no preview</p></div></div>
-            <Badge tone="neutral">Revisão obrigatória</Badge>
+      
+      <div className="grid gap-6 xl:grid-cols-[1fr_340px] mt-6">
+        <Card className="relative flex min-h-[650px] flex-col overflow-hidden border border-[var(--line)] bg-[var(--surface)]/80 backdrop-blur-xl shadow-2xl shadow-black/10">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[var(--signal)]/5 rounded-full blur-[100px] pointer-events-none -mr-40 -mt-40"></div>
+          
+          <div className="relative z-10 flex items-center justify-between border-b border-[var(--line)] bg-[var(--surface)]/50 px-6 py-5">
+            <div className="flex items-center gap-4">
+              <div className="relative grid size-12 place-items-center rounded-xl bg-gradient-to-br from-[var(--carbon)] to-[#1a1a1a] border border-[var(--line)] shadow-lg">
+                <Bot className="size-6 text-[var(--signal)]" />
+                <div className="absolute -bottom-1 -right-1 size-3.5 rounded-full border-2 border-[var(--surface)] bg-emerald-500"></div>
+              </div>
+              <div>
+                <h2 className="font-extrabold text-lg tracking-tight">Copiloto PULSO</h2>
+                <p className="text-xs font-medium text-[var(--muted)] flex items-center gap-1 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/50"></span>
+                  Online e pronto
+                </p>
+              </div>
+            </div>
+            <Badge tone="neutral" className="shadow-sm border border-[var(--line)]">Revisão obrigatória</Badge>
           </div>
-          <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
-            <div className="grid size-16 place-items-center rounded-2xl bg-[var(--soft)]"><BrainCircuit className="size-7 text-[var(--signal)]" /></div>
-            <h3 className="mt-5 text-2xl font-extrabold tracking-[-0.04em]">Como posso ajudar?</h3>
-            <p className="mt-2 max-w-md text-sm leading-6 text-[var(--muted)]">Analise um briefing, crie o primeiro rascunho de proposta ou resuma riscos de um projeto.</p>
-            <div className="mt-6 grid w-full max-w-xl gap-2 sm:grid-cols-2">
-              {["Analisar briefing","Criar escopo","Resumir projeto","Explicar financeiro"].map(item=><button key={item} className="rounded-xl border border-[var(--line)] bg-[var(--soft)] p-3 text-sm font-bold hover:border-[var(--signal)]">{item}</button>)}
+          
+          <div className="relative z-10 flex flex-1 flex-col items-center justify-center p-8 text-center">
+            <div className="relative grid size-20 place-items-center rounded-3xl bg-[var(--signal)]/10 border border-[var(--signal)]/20 shadow-[0_0_30px_rgba(var(--signal-rgb),0.15)]">
+              <BrainCircuit className="size-10 text-[var(--signal)]" />
+              <div className="absolute inset-0 rounded-3xl border border-[var(--signal)]/30 animate-pulse"></div>
+            </div>
+            <h3 className="mt-8 text-3xl font-black tracking-tight text-[var(--text)]">Como posso ajudar?</h3>
+            <p className="mt-3 max-w-md text-sm leading-relaxed text-[var(--muted)]">Analise um briefing, crie o primeiro rascunho de proposta ou resuma riscos de um projeto com nossa IA treinada para o contexto do CRM.</p>
+            
+            <div className="mt-10 grid w-full max-w-xl gap-3 sm:grid-cols-2">
+              {[
+                { label: "Analisar briefing", icon: MessageSquarePlus },
+                { label: "Criar escopo", icon: BrainCircuit },
+                { label: "Resumir projeto", icon: Sparkles },
+                { label: "Explicar financeiro", icon: Bot }
+              ].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button key={item.label} className="group relative overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--surface)]/50 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-[var(--signal)]/50 hover:bg-[var(--signal)]/5 hover:shadow-lg hover:shadow-[var(--signal)]/10">
+                    <div className="flex items-center gap-3">
+                      <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-[var(--soft)] group-hover:bg-[var(--signal)]/20 group-hover:text-[var(--signal)] transition-colors">
+                        <Icon className="size-4" />
+                      </div>
+                      <span className="text-sm font-bold group-hover:text-[var(--text)] transition-colors">{item.label}</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
-          <div className="border-t border-[var(--line)] p-4"><div className="flex gap-2 rounded-xl border border-[var(--line)] bg-[var(--soft)] p-2"><input className="min-w-0 flex-1 bg-transparent px-2 text-sm outline-none" placeholder="Pergunte sobre um registro do CRM..." /><button className="grid size-10 place-items-center rounded-lg bg-[var(--signal)] text-white"><Send className="size-4" /></button></div></div>
+          
+          <div className="relative z-10 border-t border-[var(--line)] bg-[var(--surface)]/50 p-6">
+            <div className="mx-auto max-w-3xl flex gap-3 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-2 shadow-lg shadow-black/5 focus-within:border-[var(--signal)]/50 focus-within:ring-2 focus-within:ring-[var(--signal)]/20 transition-all">
+              <input className="min-w-0 flex-1 bg-transparent px-4 py-2 text-sm text-[var(--text)] placeholder-[var(--muted)] outline-none" placeholder="Pergunte sobre um registro do CRM ou dê um comando..." />
+              <button className="grid h-10 w-12 shrink-0 place-items-center rounded-xl bg-[var(--signal)] text-white shadow-md shadow-[var(--signal)]/20 transition-all hover:bg-[var(--signal)]/90 hover:scale-105 active:scale-95">
+                <Send className="size-4" />
+              </button>
+            </div>
+            <p className="text-center text-[10px] text-[var(--muted)] mt-3">O Copiloto pode cometer erros. Considere verificar informações importantes.</p>
+          </div>
         </Card>
-        <div className="space-y-4">
-          <Card className="p-5"><div className="flex items-center gap-3"><ShieldCheck className="size-5 text-[var(--signal)]" /><h2 className="font-extrabold">Limites de segurança</h2></div><ul className="mt-4 space-y-3 text-sm leading-5 text-[var(--muted)]"><li>• Não envia mensagens ou documentos.</li><li>• Não publica propostas.</li><li>• Não altera valores ou descontos.</li><li>• Não confirma pagamentos.</li><li>• Não conclui projetos.</li></ul></Card>
-          <Card className="p-5"><div className="flex items-center gap-3"><Sparkles className="size-5 text-[var(--signal)]" /><h2 className="font-extrabold">Arquitetura</h2></div><p className="mt-3 text-sm leading-6 text-[var(--muted)]">OpenAI, Anthropic e Gemini ficam atrás de uma camada substituível, com histórico, custo e fallback opcional.</p></Card>
+        
+        <div className="space-y-5">
+          <Card className="relative overflow-hidden p-6 border border-[var(--line)] bg-[var(--surface)]/80 backdrop-blur-md transition-all hover:border-[var(--line)]/80">
+            <div className="absolute -right-6 -top-6 size-24 rounded-full bg-[var(--warning)]/5 blur-xl"></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="grid size-10 place-items-center rounded-xl bg-[var(--warning)]/10 border border-[var(--warning)]/20">
+                  <ShieldCheck className="size-5 text-[var(--warning)]" />
+                </div>
+                <h2 className="font-extrabold text-lg">Limites de segurança</h2>
+              </div>
+              <ul className="space-y-3 text-sm font-medium leading-relaxed text-[var(--muted)]">
+                <li className="flex items-start gap-2"><div className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--muted)]"></div> Não envia mensagens ou documentos.</li>
+                <li className="flex items-start gap-2"><div className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--muted)]"></div> Não publica propostas.</li>
+                <li className="flex items-start gap-2"><div className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--muted)]"></div> Não altera valores ou descontos.</li>
+                <li className="flex items-start gap-2"><div className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--muted)]"></div> Não confirma pagamentos.</li>
+                <li className="flex items-start gap-2"><div className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--muted)]"></div> Não conclui projetos.</li>
+              </ul>
+            </div>
+          </Card>
+          
+          <Card className="relative overflow-hidden p-6 border border-[var(--line)] bg-[var(--surface)]/80 backdrop-blur-md transition-all hover:border-[var(--signal)]/30 hover:shadow-lg hover:shadow-[var(--signal)]/5 group">
+            <div className="absolute -right-6 -bottom-6 size-32 rounded-full bg-[var(--signal)]/5 blur-2xl group-hover:bg-[var(--signal)]/10 transition-colors"></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="grid size-10 place-items-center rounded-xl bg-[var(--signal)]/10 border border-[var(--signal)]/20 group-hover:scale-110 transition-transform">
+                  <Sparkles className="size-5 text-[var(--signal)]" />
+                </div>
+                <h2 className="font-extrabold text-lg">Arquitetura</h2>
+              </div>
+              <p className="text-sm font-medium leading-relaxed text-[var(--muted)]">
+                OpenAI, Anthropic e Gemini ficam atrás de uma camada substituível, com histórico, controle de custo e fallback automático.
+              </p>
+            </div>
+          </Card>
         </div>
       </div>
     </>

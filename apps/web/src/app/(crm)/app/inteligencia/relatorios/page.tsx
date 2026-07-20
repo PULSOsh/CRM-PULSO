@@ -98,10 +98,16 @@ function MetricCard({
   money?: boolean;
 }) {
   return (
-    <Card className="p-5">
-      <p className="text-xs font-bold text-[var(--muted)]">{label}</p>
-      <p className={`${money ? "money-value " : ""}mt-3 break-words text-3xl font-black tabular-nums tracking-[-0.06em]`}>{value}</p>
-      <p className="mt-2 text-xs leading-5 text-[var(--muted)]">{description}</p>
+    <Card className="relative overflow-hidden p-6 border border-[var(--line)] bg-[var(--surface)]/80 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-[var(--signal)]/50 hover:shadow-lg hover:shadow-[var(--signal)]/5">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--signal)]/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+      <div className="relative z-10">
+        <p className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider">{label}</p>
+        <p className={`${money ? "money-value " : ""}mt-3 break-words text-3xl font-black tabular-nums tracking-[-0.06em] text-[var(--text)]`}>{value}</p>
+        <p className="mt-3 flex items-start gap-2 text-xs font-medium leading-relaxed text-[var(--muted)]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--signal)]/60 mt-1 shrink-0"></span>
+          {description}
+        </p>
+      </div>
     </Card>
   );
 }
@@ -110,24 +116,29 @@ function DistributionList({ title, items, source = false }: { title: string; ite
   const max = Math.max(1, ...items.map((item) => item.count));
 
   return (
-    <Card className="p-5">
-      <h3 className="font-extrabold">{title}</h3>
+    <Card className="p-6 border border-[var(--line)] bg-[var(--surface)]/80 backdrop-blur-md">
+      <h3 className="font-extrabold text-lg flex items-center gap-2">
+        <div className="w-1 h-5 bg-[var(--signal)] rounded-full"></div>
+        {title}
+      </h3>
       {items.length === 0 ? (
-        <p className="mt-4 text-sm leading-6 text-[var(--muted)]">Nenhum registro no período selecionado.</p>
+        <div className="mt-8 flex flex-col items-center justify-center p-6 border border-dashed border-[var(--line)] rounded-xl bg-[var(--soft)]/30">
+          <p className="text-sm font-medium text-[var(--muted)]">Nenhum registro no período.</p>
+        </div>
       ) : (
-        <ul className="mt-4 space-y-3" aria-label={title}>
+        <ul className="mt-6 space-y-5" aria-label={title}>
           {items.map((item) => {
             const name = labelFromValue(source ? (item as ReportSourceCount).source : (item as ReportStatusCount).status);
             const percentageWidth = `${Math.max(4, (item.count / max) * 100)}%`;
 
             return (
-              <li key={name}>
-                <div className="flex items-baseline justify-between gap-3 text-sm">
-                  <span className="min-w-0 break-words font-semibold">{name}</span>
-                  <span className="shrink-0 font-mono text-xs text-[var(--muted)]">{item.count}</span>
+              <li key={name} className="group">
+                <div className="flex items-baseline justify-between gap-3 text-sm mb-2">
+                  <span className="min-w-0 break-words font-semibold group-hover:text-[var(--text)] transition-colors">{name}</span>
+                  <span className="shrink-0 font-mono text-xs font-bold text-[var(--muted)] group-hover:text-[var(--signal)] transition-colors">{item.count}</span>
                 </div>
-                <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--line)]" aria-hidden="true">
-                  <div className="h-full rounded-full bg-[var(--signal)]" style={{ width: percentageWidth }} />
+                <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--soft)] border border-[var(--line)]" aria-hidden="true">
+                  <div className="h-full rounded-full bg-gradient-to-r from-[var(--signal)]/80 to-[var(--signal)] transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(var(--signal-rgb),0.5)]" style={{ width: percentageWidth }} />
                 </div>
               </li>
             );

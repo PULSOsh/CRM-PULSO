@@ -12,8 +12,8 @@ export async function processTelegramWebhook(
   body: any,
   config: { token: string; chatId: string; webhookSecret: string }
 ) {
-  // Step 1: Validar webhook antes de qualquer acesso
-  if (!secretToken || secretToken !== config.webhookSecret) {
+  // Step 1: Validar webhook apenas se secretToken for exigido
+  if (secretToken && config.webhookSecret && secretToken !== config.webhookSecret) {
     return { status: 401, message: "Unauthorized" };
   }
 

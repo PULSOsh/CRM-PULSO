@@ -1,19 +1,31 @@
+import Image from "next/image";
+
 export function PulsoLogo({ compact = false }: { compact?: boolean }) {
-  return (
-    <div className="flex items-center gap-2">
-      <div className="grid size-9 place-items-center rounded-xl bg-[var(--carbon)] text-sm font-black text-white">
-        P<span className="text-[var(--signal)]">.</span>
+  if (compact) {
+    return (
+      <div className="flex h-10 items-center justify-center">
+        <Image 
+          src="/logo-symbol.svg" 
+          alt="PULSO." 
+          width={28} 
+          height={28} 
+          className="h-7 w-auto" 
+          priority 
+        />
       </div>
-      {!compact && (
-        <div className="leading-none">
-          <div className="text-[17px] font-extrabold tracking-[-0.05em]">
-            PULSO<span className="text-[var(--signal)]">.</span>
-          </div>
-          <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--muted)]">
-            CRM operacional
-          </div>
-        </div>
-      )}
+    );
+  }
+
+  return (
+    <div className="flex h-10 items-center">
+      <Image 
+        src="/logo-horizontal.svg" 
+        alt="PULSO. CRM" 
+        width={140} 
+        height={28} 
+        className="h-7 w-auto" 
+        priority 
+      />
     </div>
   );
 }

@@ -37,6 +37,39 @@ const emptyContent: ProposalContent = {
   ]
 };
 
+function buildBriefingDataText(questionsSnapshot: any[], responses: Record<string, unknown>) {
+  if (!responses || Object.keys(responses).length === 0) {
+    return "Nenhuma resposta registrada no briefing.";
+  }
+
+  const lines: string[] = [];
+  const processedKeys = new Set<string>();
+
+  if (Array.isArray(questionsSnapshot) && questionsSnapshot.length > 0) {
+    for (const q of questionsSnapshot) {
+      const keyCandidates = [q.id, q.fieldKey, q.key, q.name].filter(Boolean);
+      let val: any = undefined;
+      for (const k of keyCandidates) {
+        if (responses[k] !== undefined) {
+          val = responses[k];
+          processedKeys.add(k);
+          break;
+        }
+      }
+      const valStr = Array.isArray(val) ? val.join(", ") : (val !== undefined && val !== null ? String(val) : "—");
+      lines.push(`Pergunta: ${q.label || q.id}\nResposta: ${valStr}`);
+    }
+  }
+
+  for (const [k, v] of Object.entries(responses)) {
+    if (processedKeys.has(k)) continue;
+    const valStr = Array.isArray(v) ? v.join(", ") : (v !== undefined && v !== null ? String(v) : "—");
+    lines.push(`Campo (${k}): ${valStr}`);
+  }
+
+  return lines.join("\n\n");
+}
+
 export type ProposalActionState = { error?: string };
 
 const createSchema = z.object({ opportunityId: z.string().trim().min(1, "Selecione uma oportunidade.") });
@@ -72,12 +105,9 @@ export async function createProposal(_prev: ProposalActionState, formData: FormD
   
   if (eligibleBriefing[0].status === "completed" || eligibleBriefing[0].status === "analyzed") {
     try {
-      const questions = eligibleBriefing[0].questionsSnapshot ?? [];
+      const questions = (eligibleBriefing[0].questionsSnapshot as any[]) ?? [];
       const responses = (eligibleBriefing[0].responses as Record<string, unknown>) ?? {};
-      const briefingData = questions.map((q: any) => {
-        const value = responses[q.id];
-        return `Q: ${q.label}\nR: ${Array.isArray(value) ? value.join(", ") : value || "—"}`;
-      }).join("\n\n");
+      const briefingData = buildBriefingDataText(questions, responses);
       
       const draft = await generateProposalDraftFromBriefing(briefingData);
       
@@ -95,7 +125,6 @@ export async function createProposal(_prev: ProposalActionState, formData: FormD
       };
     } catch (e) {
       console.error("AI Generation failed on createProposal", e);
-      // Fallback to empty content if AI fails
     }
   }
 
@@ -321,12 +350,9 @@ export async function generateAIContentForProposal(proposalId: string, versionId
     return { error: 'Briefing não concluído para esta oportunidade.' };
   }
 
-  const questions = briefing.questionsSnapshot ?? [];
+  const questions = (briefing.questionsSnapshot as any[]) ?? [];
   const responses = (briefing.responses as Record<string, unknown>) ?? {};
-  const briefingData = questions.map((q: any) => {
-    const val = responses[q.id];
-    return `Q: ${q.label}\nR: ${Array.isArray(val) ? val.join(', ') : val || '—'}`;
-  }).join('\n\n');
+  const briefingData = buildBriefingDataText(questions, responses);
 
   try {
     const draft = await generateProposalDraftFromBriefing(briefingData);

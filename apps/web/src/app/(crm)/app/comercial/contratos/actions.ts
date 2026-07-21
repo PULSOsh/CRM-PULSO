@@ -46,6 +46,30 @@ Este contrato poderá ser rescindido por qualquer das partes mediante aviso pré
 (Revise e ajuste este texto antes de enviar para assinatura.)`;
 }
 
+function buildProposalFullText(versionContent: any, totalValue: number, paymentSummary: string) {
+  const scopeStr = (versionContent.scopeItems || [])
+    .map((i: any, idx: number) => `${idx + 1}. ${i.label}${i.description ? ` - ${i.description}` : ''} (R$ ${i.price})`)
+    .join("\n");
+
+  const addonsStr = (versionContent.addons || [])
+    .map((a: any) => `- ${a.label}${a.description ? ` - ${a.description}` : ''} (R$ ${a.price})`)
+    .join("\n");
+
+  const paymentStr = (versionContent.paymentConditions || [])
+    .map((p: any) => `- ${p.label} (${p.installments}x)`)
+    .join("\n");
+
+  return [
+    `INTRODUÇÃO: ${versionContent.intro || '—'}`,
+    `CONTEXTO DO CLIENTE: ${versionContent.context || '—'}`,
+    `ESCOPO COMPLETO DOS SERVIÇOS:\n${scopeStr || 'Nenhum item listado.'}`,
+    addonsStr ? `OPCIONAIS/ADDONS:\n${addonsStr}` : '',
+    `VALOR TOTAL DA PROPOSTA: R$ ${totalValue.toFixed(2)}`,
+    `CONDIÇÕES DE PAGAMENTO:\n${paymentStr || paymentSummary}`,
+    versionContent.termsSummary ? `TERMOS E GARANTIAS: ${versionContent.termsSummary}` : ''
+  ].filter(Boolean).join("\n\n");
+}
+
 export async function createContractFromProposal(proposalId: string): Promise<{ error?: string; contractId?: string }> {
   await requireSession();
 
@@ -74,11 +98,7 @@ export async function createContractFromProposal(proposalId: string): Promise<{ 
   const code = formatRecordCode("contract", year, sequence);
   
   try {
-    const proposalData = JSON.stringify({ 
-      scope: version.content.scopeItems.map(i => i.label + (i.description ? ': ' + i.description : '')).join('\n'), 
-      total: content.totalValue, 
-      payment: content.paymentSummary 
-    }, null, 2);
+    const proposalData = buildProposalFullText(version.content, content.totalValue, content.paymentSummary);
     content.clauses = await generateContractClausesFromProposal(proposalData, code);
   } catch (e) {
     console.error("Failed to generate AI clauses on contract creation", e);
@@ -228,11 +248,8 @@ export async function generateAIClausesForContract(contractId: string) {
   const [version] = await db.select().from(schema.proposalVersions).where(eq(schema.proposalVersions.id, contract.proposalVersionId)).limit(1);
   if (!version) return { error: "Versão da proposta não encontrada." };
 
-  const proposalData = JSON.stringify({ 
-    scope: version.content.scopeItems.map(i => i.label + (i.description ? ': ' + i.description : '')).join('\n'), 
-    total: contract.content.totalValue, 
-    payment: contract.content.paymentSummary 
-  }, null, 2);
+  const contractContent = contract.content as ContractContent;
+  const proposalData = buildProposalFullText(version.content, Number(contractContent?.totalValue || 0), contractContent?.paymentSummary || "");
 
   try {
     const clauses = await generateContractClausesFromProposal(proposalData, contract.code);

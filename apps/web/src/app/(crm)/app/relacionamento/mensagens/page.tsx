@@ -27,7 +27,7 @@ export default function MensagensPage() {
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-500" />
               <input 
                 placeholder="Buscar mensagens..." 
-                className="w-full rounded-xl border border-white/10 bg-white/5 py-2 pl-9 pr-4 text-sm text-white placeholder:text-gray-500 outline-none focus:border-orange-500 transition-colors"
+                className="w-full rounded-xl border border-white/10 bg-white/5 py-2 pl-9 pr-4 text-sm text-white placeholder:text-gray-500 outline-none focus:border-[var(--signal)] transition-colors"
               />
             </div>
           </div>
@@ -35,7 +35,7 @@ export default function MensagensPage() {
           <div className="flex-1 overflow-y-auto scrollbar-thin">
             {DUMMY_CHATS.map((chat) => (
               <div key={chat.id} className={`flex cursor-pointer gap-3 border-b border-white/5 p-4 transition-colors hover:bg-white/5 ${chat.unread ? "bg-white/5" : ""}`}>
-                <div className="grid size-10 shrink-0 place-items-center rounded-full bg-orange-500/20 text-orange-500 font-bold">
+                <div className="grid size-10 shrink-0 place-items-center rounded-full bg-[var(--signal)]/20 text-[var(--signal)] font-bold">
                   {chat.name.charAt(0)}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -47,7 +47,7 @@ export default function MensagensPage() {
                   <p className={`mt-1 truncate text-xs ${chat.unread ? "font-medium text-gray-300" : "text-gray-500"}`}>{chat.message}</p>
                 </div>
                 {chat.unread > 0 && (
-                  <div className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-orange-500 px-1.5 text-[10px] font-bold text-white">
+                  <div className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[var(--signal)] px-1.5 text-[10px] font-bold text-white">
                     {chat.unread}
                   </div>
                 )}
@@ -61,7 +61,7 @@ export default function MensagensPage() {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/10 bg-black/20 p-4">
             <div className="flex items-center gap-3">
-              <div className="grid size-10 shrink-0 place-items-center rounded-full bg-orange-500/20 text-orange-500 font-bold">M</div>
+              <div className="grid size-10 shrink-0 place-items-center rounded-full bg-[var(--signal)]/20 text-[var(--signal)] font-bold">M</div>
               <div>
                 <p className="font-extrabold text-white">Maria Silva</p>
                 <p className="text-xs text-gray-400">TechCorp • Última vez hoje às 10:35</p>
@@ -86,7 +86,7 @@ export default function MensagensPage() {
             </div>
             
             <div className="flex justify-end">
-              <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-orange-500 p-4 text-sm text-white shadow-lg shadow-orange-500/20">
+              <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-[var(--signal)] p-4 text-sm text-white shadow-lg shadow-orange-500/20">
                 Olá Maria! Tudo ótimo. Claro, ficarei feliz em apresentar. Tem disponibilidade para uma breve call amanhã?
                 <span className="mt-1 block text-right text-[10px] text-white/70">10:29</span>
               </div>
@@ -105,9 +105,9 @@ export default function MensagensPage() {
             <div className="flex gap-3">
               <input 
                 placeholder="Digite sua mensagem..." 
-                className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-gray-500 outline-none focus:border-orange-500 transition-colors"
+                className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-gray-500 outline-none focus:border-[var(--signal)] transition-colors"
               />
-              <button className="flex items-center gap-2 rounded-xl bg-orange-500 px-5 font-bold text-white transition-all hover:bg-orange-600 shadow-lg shadow-orange-500/20">
+              <button className="flex items-center gap-2 rounded-xl bg-[var(--signal)] px-5 font-bold text-white transition-all hover:bg-orange-600 shadow-lg shadow-orange-500/20">
                 <Send className="size-4" /> Enviar
               </button>
             </div>

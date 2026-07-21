@@ -115,7 +115,7 @@ export default async function ContractDetailPage({
                   </div>
                   {isDraft && s.role !== "pulso" && (
                     <form action={removeSignatory.bind(null, contract.id, s.id)} className="mt-2">
-                      <button type="submit" className="text-xs font-bold text-[var(--muted)] hover:text-[#b3261e]">Remover</button>
+                      <button type="submit" className="text-xs font-bold text-[var(--muted)] hover:text-[var(--error)]">Remover</button>
                     </form>
                   )}
                 </div>

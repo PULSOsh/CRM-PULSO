@@ -146,7 +146,7 @@ export function BriefingForm({
           </div>
         ))}
 
-        {error && <p role="alert" className="rounded-lg bg-[color:#b3261e/.08] px-3 py-2 text-sm font-semibold text-[#b3261e]">{error}</p>}
+        {error && <p role="alert" className="rounded-lg bg-[color:var(--error)/.08] px-3 py-2 text-sm font-semibold text-[var(--error)]">{error}</p>}
 
         <div className="flex items-center justify-between border-t border-[var(--line)] pt-5">
           <span className="flex items-center gap-2 text-xs font-bold text-[var(--muted)]">

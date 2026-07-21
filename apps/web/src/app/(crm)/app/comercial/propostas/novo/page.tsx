@@ -17,7 +17,7 @@ export default function NewProposalPage() {
       <Card className="max-w-xl p-6">
         <form className="space-y-4" action={formAction}>
           <OpportunityPicker searchAction={searchOpportunitiesForProposal} />
-          {state.error && <p role="alert" className="rounded-lg bg-[color:#b3261e/.08] px-3 py-2 text-sm font-semibold text-[#b3261e]">{state.error}</p>}
+          {state.error && <p role="alert" className="rounded-lg bg-[color:var(--error)/.08] px-3 py-2 text-sm font-semibold text-[var(--error)]">{state.error}</p>}
           <button type="submit" disabled={pending} className="primary-button w-full justify-center sm:w-auto">{pending ? "Criando..." : "Criar rascunho de proposta"}</button>
         </form>
       </Card>

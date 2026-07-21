@@ -73,7 +73,7 @@ export function ProposalEditor({
                 className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
               <input type="number" step="0.01" value={item.price} onChange={(e) => updateItem("scopeItems", item.id, { price: Number(e.target.value) })} placeholder="Preço"
                 className="w-32 shrink-0 rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
-              <button type="button" onClick={() => removeItem("scopeItems", item.id)} className="grid size-10 shrink-0 place-items-center rounded-xl border border-[var(--line)] text-[var(--muted)] hover:text-[#b3261e]"><Trash2 className="size-4" /></button>
+              <button type="button" onClick={() => removeItem("scopeItems", item.id)} className="grid size-10 shrink-0 place-items-center rounded-xl border border-[var(--line)] text-[var(--muted)] hover:text-[var(--error)]"><Trash2 className="size-4" /></button>
             </div>
           ))}
           {content.scopeItems.length === 0 && <p className="text-xs text-[var(--muted)]">Nenhum item adicionado ainda.</p>}
@@ -93,7 +93,7 @@ export function ProposalEditor({
                 className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
               <input type="number" step="0.01" value={addon.price} onChange={(e) => updateItem("addons", addon.id, { price: Number(e.target.value) })} placeholder="Preço"
                 className="w-32 shrink-0 rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
-              <button type="button" onClick={() => removeItem("addons", addon.id)} className="grid size-10 shrink-0 place-items-center rounded-xl border border-[var(--line)] text-[var(--muted)] hover:text-[#b3261e]"><Trash2 className="size-4" /></button>
+              <button type="button" onClick={() => removeItem("addons", addon.id)} className="grid size-10 shrink-0 place-items-center rounded-xl border border-[var(--line)] text-[var(--muted)] hover:text-[var(--error)]"><Trash2 className="size-4" /></button>
             </div>
           ))}
         </div>
@@ -111,7 +111,7 @@ export function ProposalEditor({
                 className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
               <input type="number" value={cond.installments} onChange={(e) => updateCondition(cond.id, { installments: Number(e.target.value) })} placeholder="Parcelas"
                 className="w-28 shrink-0 rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
-              <button type="button" onClick={() => removeCondition(cond.id)} className="grid size-10 shrink-0 place-items-center rounded-xl border border-[var(--line)] text-[var(--muted)] hover:text-[#b3261e]"><Trash2 className="size-4" /></button>
+              <button type="button" onClick={() => removeCondition(cond.id)} className="grid size-10 shrink-0 place-items-center rounded-xl border border-[var(--line)] text-[var(--muted)] hover:text-[var(--error)]"><Trash2 className="size-4" /></button>
             </div>
           ))}
         </div>
@@ -123,7 +123,7 @@ export function ProposalEditor({
           className="w-full max-w-xs rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
       </div>
 
-      {state.error && <p role="alert" className="rounded-lg bg-[color:#b3261e/.08] px-3 py-2 text-sm font-semibold text-[#b3261e]">{state.error}</p>}
+      {state.error && <p role="alert" className="rounded-lg bg-[color:var(--error)/.08] px-3 py-2 text-sm font-semibold text-[var(--error)]">{state.error}</p>}
       <div className="flex items-center gap-3">
         <button type="submit" name="action" value="save" disabled={pending} className="secondary-button">{pending ? "Processando..." : "Salvar rascunho"}</button>
         <button type="submit" name="action" value="publish" disabled={pending} className="primary-button">{pending ? "Processando..." : "Salvar e Publicar"}</button>

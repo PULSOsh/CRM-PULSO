@@ -41,7 +41,7 @@ export function CreateBriefingForm({ products }: { products: { id: string; name:
           {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
       </div>
-      {state.error && <p role="alert" className="rounded-lg bg-[color:#b3261e/.08] px-3 py-2 text-sm font-semibold text-[#b3261e]">{state.error}</p>}
+      {state.error && <p role="alert" className="rounded-lg bg-[color:var(--error)/.08] px-3 py-2 text-sm font-semibold text-[var(--error)]">{state.error}</p>}
       <button type="submit" disabled={pending} className="primary-button w-full justify-center sm:w-auto">{pending ? "Gerando..." : "Gerar link do briefing"}</button>
     </form>
   );
@@ -72,7 +72,7 @@ export function SkipBriefingForm({ eligibleProducts }: { eligibleProducts: { id:
         <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="reason">Justificativa (obrigatória, auditada)</label>
         <textarea id="reason" name="reason" required rows={2} className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
       </div>
-      {state.error && <p role="alert" className="rounded-lg bg-[color:#b3261e/.08] px-3 py-2 text-sm font-semibold text-[#b3261e]">{state.error}</p>}
+      {state.error && <p role="alert" className="rounded-lg bg-[color:var(--error)/.08] px-3 py-2 text-sm font-semibold text-[var(--error)]">{state.error}</p>}
       <button type="submit" disabled={pending} className="secondary-button w-full justify-center sm:w-auto">{pending ? "Registrando..." : "Pular briefing"}</button>
     </form>
   );

@@ -23,7 +23,7 @@ export default async function RecurrencesPage() {
       <PageHeader eyebrow="Financeiro" title="Dívidas Mensais & Recorrentes" description="Gerencie suas contas fixas mensais e contratos de receita recorrente." />
 
       <details className="mb-5 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5 backdrop-blur-md">
-        <summary className="cursor-pointer text-sm font-extrabold text-[var(--foreground)] hover:text-orange-500 transition-colors">+ Nova Recorrência</summary>
+        <summary className="cursor-pointer text-sm font-extrabold text-[var(--foreground)] hover:text-[var(--signal)] transition-colors">+ Nova Recorrência</summary>
         <div className="mt-4"><NewRecurrenceForm action={createRecurrence} submitLabel="Salvar Contrato" /></div>
       </details>
 

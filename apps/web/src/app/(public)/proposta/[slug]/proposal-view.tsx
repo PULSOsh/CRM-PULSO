@@ -62,9 +62,9 @@ export function ProposalView({ proposal, version, token, opportunityTitle }: {
   }
 
   return (
-    <main className="font-sans antialiased text-white bg-[#11110f] min-h-screen selection:bg-orange-500/30">
+    <main className="font-sans antialiased text-white bg-[#11110f] min-h-screen selection:bg-[var(--signal)]/30">
       {mode === "alt-requested" && (
-        <div className="bg-orange-500 px-4 py-3 text-center text-sm font-bold text-white z-50 sticky top-0">
+        <div className="bg-[var(--signal)] px-4 py-3 text-center text-sm font-bold text-white z-50 sticky top-0">
           Pedido enviado! A proposta atual continua válida até recebermos uma resposta.
         </div>
       )}
@@ -72,10 +72,10 @@ export function ProposalView({ proposal, version, token, opportunityTitle }: {
       {/* Immersive Hero Section */}
       <section className="relative overflow-hidden px-4 py-24 md:py-32 lg:py-40 bg-gradient-to-b from-[#11110f] via-black to-[#11110f]">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-orange-500/20 via-black/0 to-transparent pointer-events-none" />
-        <div className="absolute right-0 top-0 w-1/3 h-1/2 bg-orange-500/10 blur-[150px] rounded-full pointer-events-none" />
+        <div className="absolute right-0 top-0 w-1/3 h-1/2 bg-[var(--signal)]/10 blur-[150px] rounded-full pointer-events-none" />
         
         <div className="relative mx-auto max-w-6xl z-10 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-orange-500/30 bg-orange-500/10 text-orange-400 font-mono text-[10px] font-bold uppercase tracking-[0.2em] mb-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--signal)]/30 bg-[var(--signal)]/10 text-orange-400 font-mono text-[10px] font-bold uppercase tracking-[0.2em] mb-8">
             <Zap className="size-3.5 fill-orange-500/50" />
             Proposta Comercial
           </div>
@@ -88,7 +88,7 @@ export function ProposalView({ proposal, version, token, opportunityTitle }: {
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Investimento a partir de</p>
             <p className="money-value mt-2 text-5xl font-black text-white">{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(subtotal)}</p>
             {proposal.validUntil && (
-              <p className="mt-4 flex items-center justify-center gap-2 text-xs font-bold text-orange-500/80 bg-orange-500/10 px-3 py-1.5 rounded-full">
+              <p className="mt-4 flex items-center justify-center gap-2 text-xs font-bold text-[var(--signal)]/80 bg-[var(--signal)]/10 px-3 py-1.5 rounded-full">
                 <Clock3 className="size-4" /> Válida até {new Date(proposal.validUntil).toLocaleDateString("pt-BR")}
               </p>
             )}
@@ -103,8 +103,8 @@ export function ProposalView({ proposal, version, token, opportunityTitle }: {
             {content.context && (
               <article className="prose prose-invert prose-lg max-w-none">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="h-[2px] w-8 bg-orange-500" />
-                  <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-orange-500">Contexto entendido</p>
+                  <div className="h-[2px] w-8 bg-[var(--signal)]" />
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[var(--signal)]">Contexto entendido</p>
                 </div>
                 <h2 className="text-3xl font-black tracking-tight text-white mb-6">Onde estamos agora</h2>
                 <div className="text-gray-400 leading-relaxed whitespace-pre-wrap">{content.context}</div>
@@ -114,8 +114,8 @@ export function ProposalView({ proposal, version, token, opportunityTitle }: {
             {content.intro && (
               <article className="prose prose-invert prose-lg max-w-none">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="h-[2px] w-8 bg-orange-500" />
-                  <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-orange-500">Nossa Solução</p>
+                  <div className="h-[2px] w-8 bg-[var(--signal)]" />
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[var(--signal)]">Nossa Solução</p>
                 </div>
                 <h2 className="text-3xl font-black tracking-tight text-white mb-6">Como vamos resolver isso</h2>
                 <div className="text-gray-400 leading-relaxed whitespace-pre-wrap">{content.intro}</div>
@@ -124,8 +124,8 @@ export function ProposalView({ proposal, version, token, opportunityTitle }: {
 
             <article>
               <div className="flex items-center gap-3 mb-6">
-                <div className="h-[2px] w-8 bg-orange-500" />
-                <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-orange-500">Escopo</p>
+                <div className="h-[2px] w-8 bg-[var(--signal)]" />
+                <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[var(--signal)]">Escopo</p>
               </div>
               <h2 className="text-3xl font-black tracking-tight text-white mb-8">O que está incluído</h2>
               
@@ -136,7 +136,7 @@ export function ProposalView({ proposal, version, token, opportunityTitle }: {
                       <Check className="size-16 text-white" />
                     </div>
                     <div className="relative z-10">
-                      <span className="inline-flex size-8 items-center justify-center rounded-full bg-orange-500/20 text-orange-500 mb-4">
+                      <span className="inline-flex size-8 items-center justify-center rounded-full bg-[var(--signal)]/20 text-[var(--signal)] mb-4">
                         <Check className="size-4 font-bold" />
                       </span>
                       <h3 className="text-lg font-bold text-white mb-2">{item.label}</h3>
@@ -150,8 +150,8 @@ export function ProposalView({ proposal, version, token, opportunityTitle }: {
             {content.addons.length > 0 && (
               <article>
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="h-[2px] w-8 bg-orange-500" />
-                  <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-orange-500">Adicionais</p>
+                  <div className="h-[2px] w-8 bg-[var(--signal)]" />
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[var(--signal)]">Adicionais</p>
                 </div>
                 <h2 className="text-3xl font-black tracking-tight text-white mb-8">Turbine a solução</h2>
                 <div className="space-y-3">
@@ -159,8 +159,8 @@ export function ProposalView({ proposal, version, token, opportunityTitle }: {
                     const active = selectedAddons.includes(addon.id);
                     return (
                       <button key={addon.id} type="button" onClick={() => toggleAddon(addon.id)}
-                        className={`flex w-full items-center gap-5 rounded-2xl border p-5 text-left transition-all duration-300 ${active ? "border-orange-500/50 bg-orange-500/10 shadow-[0_0_30px_rgba(249,115,22,0.15)]" : "border-white/5 bg-white/5 hover:border-white/20 hover:bg-white/10"}`}>
-                        <span className={`grid size-6 shrink-0 place-items-center rounded-md border transition-colors ${active ? "border-orange-500 bg-orange-500 text-white" : "border-white/20"}`}>
+                        className={`flex w-full items-center gap-5 rounded-2xl border p-5 text-left transition-all duration-300 ${active ? "border-[var(--signal)]/50 bg-[var(--signal)]/10 shadow-[0_0_30px_rgba(249,115,22,0.15)]" : "border-white/5 bg-white/5 hover:border-white/20 hover:bg-white/10"}`}>
+                        <span className={`grid size-6 shrink-0 place-items-center rounded-md border transition-colors ${active ? "border-[var(--signal)] bg-[var(--signal)] text-white" : "border-white/20"}`}>
                           {active && <Check className="size-4" />}
                         </span>
                         <div className="flex-1">
@@ -180,7 +180,7 @@ export function ProposalView({ proposal, version, token, opportunityTitle }: {
 
           <aside className="h-fit rounded-3xl border border-white/10 bg-black/50 backdrop-blur-3xl p-8 shadow-2xl lg:sticky lg:top-8 relative overflow-hidden">
             {/* Ambient glow in sidebar */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/20 blur-[100px] rounded-full pointer-events-none" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--signal)]/20 blur-[100px] rounded-full pointer-events-none" />
             
             <h2 className="text-xl font-black text-white relative z-10">Resumo e aceite</h2>
             
@@ -206,7 +206,7 @@ export function ProposalView({ proposal, version, token, opportunityTitle }: {
               {content.paymentConditions.length > 0 && (
                 <label className="mt-6 block text-xs font-bold text-gray-400 uppercase tracking-wider">
                   Condição de pagamento
-                  <select value={paymentId} onChange={(e) => setPaymentId(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 p-4 text-white font-bold outline-none focus:border-orange-500 transition-colors cursor-pointer appearance-none">
+                  <select value={paymentId} onChange={(e) => setPaymentId(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 p-4 text-white font-bold outline-none focus:border-[var(--signal)] transition-colors cursor-pointer appearance-none">
                     {content.paymentConditions.map((p) => <option key={p.id} value={p.id} className="bg-black text-white">{p.label}</option>)}
                   </select>
                 </label>
@@ -226,11 +226,11 @@ export function ProposalView({ proposal, version, token, opportunityTitle }: {
               </div>
 
               <div className="mt-8 space-y-3">
-                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome completo" className="w-full rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white placeholder:text-gray-500 outline-none focus:border-orange-500 transition-colors" />
-                <input value={document} onChange={(e) => setDocument(e.target.value)} placeholder="CPF/CNPJ (opcional)" className="w-full rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white placeholder:text-gray-500 outline-none focus:border-orange-500 transition-colors" />
+                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome completo" className="w-full rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white placeholder:text-gray-500 outline-none focus:border-[var(--signal)] transition-colors" />
+                <input value={document} onChange={(e) => setDocument(e.target.value)} placeholder="CPF/CNPJ (opcional)" className="w-full rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white placeholder:text-gray-500 outline-none focus:border-[var(--signal)] transition-colors" />
                 
                 <label className="flex items-start gap-3 text-xs leading-5 text-gray-400 mt-4 cursor-pointer p-2 hover:bg-white/5 rounded-lg transition-colors">
-                  <div className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded border transition-colors ${declaration ? "bg-orange-500 border-orange-500 text-white" : "border-white/20"}`}>
+                  <div className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded border transition-colors ${declaration ? "bg-[var(--signal)] border-[var(--signal)] text-white" : "border-white/20"}`}>
                     {declaration && <Check className="size-3.5" />}
                   </div>
                   <input type="checkbox" checked={declaration} onChange={(e) => setDeclaration(e.target.checked)} className="sr-only" />
@@ -240,7 +240,7 @@ export function ProposalView({ proposal, version, token, opportunityTitle }: {
 
               {error && <p role="alert" className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm font-bold text-rose-400">{error}</p>}
 
-              <button onClick={handleAccept} disabled={pending || !declaration || !name} className="mt-8 w-full flex items-center justify-center gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 p-4 text-sm font-black uppercase tracking-widest text-white shadow-xl shadow-orange-500/20 transition-all disabled:opacity-50 disabled:shadow-none">
+              <button onClick={handleAccept} disabled={pending || !declaration || !name} className="mt-8 w-full flex items-center justify-center gap-2 rounded-xl bg-[var(--signal)] hover:bg-orange-600 p-4 text-sm font-black uppercase tracking-widest text-white shadow-xl shadow-orange-500/20 transition-all disabled:opacity-50 disabled:shadow-none">
                 Aceitar proposta <ChevronRight className="size-5" />
               </button>
               

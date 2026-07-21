@@ -3,7 +3,7 @@ import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
 export function Button({ className = "", ...props }: ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
-      className={`inline-flex items-center justify-center rounded-xl bg-[var(--signal)] px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      className={`inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[var(--signal)] px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
       {...props}
     />
   );
@@ -40,7 +40,7 @@ export function Label({ className = "", ...props }: React.LabelHTMLAttributes<HT
 }
 
 const inputClasses =
-  "w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-4 py-2.5 text-sm font-medium text-[var(--carbon)] shadow-sm outline-none transition-all duration-200 hover:border-[var(--muted)] focus:border-[var(--signal)] focus:ring-4 focus:ring-[var(--signal)]/10 disabled:cursor-not-allowed disabled:opacity-50 placeholder:text-[var(--muted)]";
+  "w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-4 py-2.5 text-base sm:text-sm font-medium text-[var(--carbon)] shadow-sm outline-none transition-all duration-200 hover:border-[var(--muted)] focus:border-[var(--signal)] focus:ring-4 focus:ring-[var(--signal)]/10 disabled:cursor-not-allowed disabled:opacity-50 placeholder:text-[var(--muted)]";
 
 export function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input className={`${inputClasses} ${className}`} {...props} />;

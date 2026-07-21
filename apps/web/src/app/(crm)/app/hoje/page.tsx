@@ -71,7 +71,7 @@ export default async function TodayPage() {
         })}
       </div>
       
-      <div className="grid gap-8 2xl:grid-cols-[1.35fr_.65fr]">
+      <div className="grid gap-8 xl:grid-cols-[1.35fr_.65fr]">
         <Card className="overflow-hidden border border-[var(--line)] bg-[var(--surface)]/90 backdrop-blur-xl shadow-2xl shadow-black/5">
           <div className="flex items-center justify-between border-b border-[var(--line)] bg-[var(--soft)]/50 px-6 py-5">
             <div>

@@ -39,9 +39,9 @@ export default async function FinanceOverviewPage() {
           const isPositive = m.direction === "up";
           const isBalance = m.label === "Saldo Realizado";
           // Laranja Fogo (orange-500) ou Verde para positivo, Laranja Escuro/Vermelho para negativo
-          const iconColor = isPositive ? (isBalance ? "text-orange-500" : "text-emerald-500") : "text-rose-500";
+          const iconColor = isPositive ? (isBalance ? "text-[var(--signal)]" : "text-emerald-500") : "text-rose-500";
           const bgHover = isPositive 
-            ? (isBalance ? "hover:shadow-orange-500/20 hover:border-orange-500/40" : "hover:shadow-emerald-500/10 hover:border-emerald-500/30") 
+            ? (isBalance ? "hover:shadow-orange-500/20 hover:border-[var(--signal)]/40" : "hover:shadow-emerald-500/10 hover:border-emerald-500/30") 
             : "hover:shadow-rose-500/10 hover:border-rose-500/30";
           
           return (
@@ -85,18 +85,18 @@ export default async function FinanceOverviewPage() {
       <div className="grid gap-6 lg:grid-cols-3 mt-8">
         
         {/* Dívidas Mensais & Recorrências (Projeção) */}
-        <div className="lg:col-span-1 rounded-3xl p-6 border border-orange-500/20 bg-gradient-to-br from-black/80 to-orange-950/30 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
-          <div className="absolute inset-0 bg-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+        <div className="lg:col-span-1 rounded-3xl p-6 border border-[var(--signal)]/20 bg-gradient-to-br from-black/80 to-orange-950/30 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
+          <div className="absolute inset-0 bg-[var(--signal)]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
           
           <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6 relative z-10">
             <div>
               <h2 className="font-extrabold text-lg flex items-center gap-2 text-white">
-                <Repeat className="size-5 text-orange-500" />
+                <Repeat className="size-5 text-[var(--signal)]" />
                 Contratos Fixos
               </h2>
               <p className="mt-1 text-[11px] font-medium text-gray-400 uppercase tracking-wider">Dívidas mensais & Assinaturas</p>
             </div>
-            <Badge tone="warning" className="bg-orange-500/20 text-orange-400 border-orange-500/30">Projeção</Badge>
+            <Badge tone="warning" className="bg-[var(--signal)]/20 text-orange-400 border-[var(--signal)]/30">Projeção</Badge>
           </div>
 
           <div className="space-y-6 relative z-10">
@@ -126,7 +126,7 @@ export default async function FinanceOverviewPage() {
               <p className="text-xs text-gray-500 mt-1">Baseado em {recurrences.activeCount} contratos ativos.</p>
             </div>
 
-            <Link href="/app/financeiro/recorrentes" className="block w-full text-center py-2.5 mt-4 rounded-xl bg-white/5 hover:bg-orange-500/20 border border-white/10 hover:border-orange-500/40 text-sm font-bold text-white transition-all">
+            <Link href="/app/financeiro/recorrentes" className="block w-full text-center py-2.5 mt-4 rounded-xl bg-white/5 hover:bg-[var(--signal)]/20 border border-white/10 hover:border-[var(--signal)]/40 text-sm font-bold text-white transition-all">
               Gerenciar Contratos
             </Link>
           </div>

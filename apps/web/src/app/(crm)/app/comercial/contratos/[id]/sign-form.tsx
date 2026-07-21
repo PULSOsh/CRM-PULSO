@@ -36,7 +36,7 @@ export function InternalSignForm({ contractId, signatoryId, defaultName }: { con
         <input type="checkbox" checked={declaration} onChange={(e) => setDeclaration(e.target.checked)} className="mt-0.5 size-4" />
         Declaro que li e assino este contrato.
       </label>
-      {error && <p role="alert" className="text-xs font-semibold text-[#b3261e]">{error}</p>}
+      {error && <p role="alert" className="text-xs font-semibold text-[var(--error)]">{error}</p>}
       <button type="submit" disabled={pending} className="primary-button w-full justify-center">{pending ? "Assinando..." : "Assinar"}</button>
     </form>
   );

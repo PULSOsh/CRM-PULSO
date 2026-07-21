@@ -31,8 +31,8 @@ export default function FormulariosPage() {
               </div>
               <h3 className="text-lg font-extrabold text-white">{form.title}</h3>
               <div className="mt-4 flex items-center gap-6 text-sm text-gray-400">
-                <span className="flex items-center gap-2"><Users className="size-4 text-orange-500" /> {form.submissions} respostas</span>
-                <span className="flex items-center gap-2"><Activity className="size-4 text-orange-500" /> Última: {form.lastResponse}</span>
+                <span className="flex items-center gap-2"><Users className="size-4 text-[var(--signal)]" /> {form.submissions} respostas</span>
+                <span className="flex items-center gap-2"><Activity className="size-4 text-[var(--signal)]" /> Última: {form.lastResponse}</span>
               </div>
             </div>
             

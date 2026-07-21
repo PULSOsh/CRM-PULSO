@@ -29,7 +29,7 @@ export function AIProposalButton({ briefingId }: { briefingId: string }) {
     <button 
       onClick={handleGenerate} 
       disabled={pending} 
-      className="inline-flex items-center gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 px-4 py-2 text-sm font-bold text-white transition disabled:opacity-50"
+      className="inline-flex items-center gap-2 rounded-xl bg-[var(--signal)] hover:bg-orange-600 px-4 py-2 text-sm font-bold text-white transition disabled:opacity-50"
     >
       {pending ? <Loader2 className="size-4 animate-spin" /> : <Bot className="size-4" />}
       {pending ? "A IA está gerando..." : "Gerar Proposta com IA"}

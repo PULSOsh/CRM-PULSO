@@ -33,7 +33,7 @@ export function ClientSignForm({ contractId, signatoryId, token }: { contractId:
         <input type="checkbox" checked={declaration} onChange={(e) => setDeclaration(e.target.checked)} className="mt-0.5 size-4" />
         Declaro que li e assino este contrato.
       </label>
-      {error && <p role="alert" className="rounded-lg bg-[color:#b3261e/.08] px-3 py-2 text-xs font-semibold text-[#b3261e]">{error}</p>}
+      {error && <p role="alert" className="rounded-lg bg-[color:var(--error)/.08] px-3 py-2 text-xs font-semibold text-[var(--error)]">{error}</p>}
       <button type="submit" disabled={pending} className="primary-button w-full justify-center">{pending ? "Assinando..." : "Assinar contrato"}</button>
     </form>
   );

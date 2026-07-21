@@ -5,11 +5,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { PulsoLogo } from "./logo";
+import { MobileMenuDrawer } from "./mobile-menu-drawer";
 
 export function Topbar({ isDemo }: { isDemo?: boolean }) {
   const router = useRouter();
   const [privateMode, setPrivateMode] = useState(false);
   const [dark, setDark] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => { document.documentElement.dataset.theme = dark ? "dark" : "light"; }, [dark]);
   useEffect(() => { document.documentElement.dataset.private = privateMode ? "true" : "false"; }, [privateMode]);
@@ -23,7 +25,12 @@ export function Topbar({ isDemo }: { isDemo?: boolean }) {
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-[var(--line)] bg-[color:var(--paper)/.9] px-4 backdrop-blur md:px-6">
       <div className="lg:hidden"><PulsoLogo compact /></div>
-      <button className="grid size-9 place-items-center rounded-xl border border-[var(--line)] bg-[var(--surface)] lg:hidden"><Menu className="size-4" /></button>
+      <button 
+        className="grid size-9 place-items-center rounded-xl border border-[var(--line)] bg-[var(--surface)] lg:hidden"
+        onClick={() => setMenuOpen(true)}
+      >
+        <Menu className="size-4" />
+      </button>
       <button className="flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-left text-sm text-[var(--muted)] shadow-sm md:max-w-xl">
         <Search className="size-4 shrink-0" /><span className="truncate">Buscar clientes, projetos, propostas...</span>
         <span className="ml-auto hidden items-center gap-1 rounded-md border border-[var(--line)] px-2 py-0.5 font-mono text-[10px] md:flex"><Command className="size-3" />K</span>
@@ -44,6 +51,8 @@ export function Topbar({ isDemo }: { isDemo?: boolean }) {
       <button onClick={handleLogout} aria-label="Sair" className="grid size-9 place-items-center rounded-xl border border-[var(--line)] bg-[var(--surface)] lg:hidden">
         <LogOut className="size-4" />
       </button>
+      
+      <MobileMenuDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
     </header>
   );
 }

@@ -3,6 +3,7 @@
 import { authClient } from "@/lib/auth-client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { Input, Label, Button } from "@pulso/ui";
 
 function LoginForm() {
   const router = useRouter();
@@ -35,25 +36,23 @@ function LoginForm() {
       <p className="mt-1 text-sm text-[var(--muted)]">Acesso restrito ao administrador interno da PULSO.</p>
       <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
         <div>
-          <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="email">E-mail</label>
-          <input
+          <Label htmlFor="email">E-mail</Label>
+          <Input
             id="email" type="email" required autoComplete="username" value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]"
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="password">Senha</label>
-          <input
+          <Label htmlFor="password">Senha</Label>
+          <Input
             id="password" type="password" required autoComplete="current-password" value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]"
           />
         </div>
-        {error && <p role="alert" className="rounded-lg bg-[color:#b3261e/.08] px-3 py-2 text-sm font-semibold text-[#b3261e]">{error}</p>}
-        <button type="submit" disabled={loading} className="primary-button w-full justify-center">
+        {error && <p role="alert" className="rounded-lg bg-[color:var(--error)/.08] px-3 py-2 text-sm font-semibold text-[var(--error)]">{error}</p>}
+        <Button type="submit" disabled={loading} className="w-full">
           {loading ? "Entrando..." : "Entrar"}
-        </button>
+        </Button>
       </form>
       <a href="/esqueci-senha" className="mt-4 block text-center text-sm font-bold text-[var(--muted)] hover:text-[var(--carbon)]">
         Esqueci minha senha

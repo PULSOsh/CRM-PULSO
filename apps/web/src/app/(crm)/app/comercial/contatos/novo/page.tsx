@@ -58,7 +58,7 @@ export default function NewContactPage() {
             <Textarea id="notes" name="notes" rows={3} placeholder="Informações relevantes sobre este contato..." />
           </div>
           {state.error && (
-            <p role="alert" className="rounded-xl border border-[#b3261e]/20 bg-[color:#b3261e/.08] px-4 py-3 text-sm font-semibold text-[#b3261e]">
+            <p role="alert" className="rounded-xl border border-[var(--error)]/20 bg-[color:var(--error)/.08] px-4 py-3 text-sm font-semibold text-[var(--error)]">
               {state.error}{state.duplicateId && <a href={`/app/comercial/contatos/${state.duplicateId}`} className="ml-2 underline">Ver contato existente</a>}
             </p>
           )}

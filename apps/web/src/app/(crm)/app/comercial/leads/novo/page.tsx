@@ -58,7 +58,7 @@ export default function NewLeadPage() {
             <Label htmlFor="message">Mensagem ou Contexto adicional</Label>
             <Textarea id="message" name="message" rows={4} placeholder="Insira qualquer detalhe relevante fornecido pelo lead..." />
           </div>
-          {state.error && <p role="alert" className="rounded-xl border border-[#b3261e]/20 bg-[color:#b3261e/.08] px-4 py-3 text-sm font-semibold text-[#b3261e]">{state.error}</p>}
+          {state.error && <p role="alert" className="rounded-xl border border-[var(--error)]/20 bg-[color:var(--error)/.08] px-4 py-3 text-sm font-semibold text-[var(--error)]">{state.error}</p>}
           <div className="pt-2">
             <button type="submit" disabled={pending} className="primary-button w-full justify-center sm:w-auto">
               {pending ? "Salvando..." : "Criar lead"}

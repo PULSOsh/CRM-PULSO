@@ -57,7 +57,7 @@ export function ProductEditForm({ product }: { product: Product }) {
         <input type="checkbox" name="allowBriefingSkip" defaultChecked={product.allowBriefingSkip} className="size-4" />
         Permite pular briefing (serviço simples)
       </label>
-      {state.error && <p role="alert" className="rounded-lg bg-[color:#b3261e/.08] px-3 py-2 text-sm font-semibold text-[#b3261e]">{state.error}</p>}
+      {state.error && <p role="alert" className="rounded-lg bg-[color:var(--error)/.08] px-3 py-2 text-sm font-semibold text-[var(--error)]">{state.error}</p>}
       <button type="submit" disabled={pending} className="primary-button">{pending ? "Salvando..." : "Salvar alterações"}</button>
     </form>
   );

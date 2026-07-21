@@ -41,7 +41,7 @@ export function EntryActions({ entryId, canPay }: { entryId: string; canPay: boo
         </div>
         <button type="submit" disabled={pending} className="secondary-button px-3 py-1.5 text-xs">{pending ? "..." : "Confirmar"}</button>
         <button type="button" onClick={() => setMode("none")} className="text-xs font-bold text-[var(--muted)]">Cancelar</button>
-        {error && <p role="alert" className="w-full text-xs font-semibold text-[#b3261e]">{error}</p>}
+        {error && <p role="alert" className="w-full text-xs font-semibold text-[var(--error)]">{error}</p>}
       </form>
     );
   }
@@ -52,7 +52,7 @@ export function EntryActions({ entryId, canPay }: { entryId: string; canPay: boo
         <input name="reason" required placeholder="Motivo do estorno" className="min-w-[180px] flex-1 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2 py-1.5 text-xs outline-none" />
         <button type="submit" disabled={pending} className="secondary-button px-3 py-1.5 text-xs">{pending ? "..." : "Confirmar estorno"}</button>
         <button type="button" onClick={() => setMode("none")} className="text-xs font-bold text-[var(--muted)]">Cancelar</button>
-        {error && <p role="alert" className="w-full text-xs font-semibold text-[#b3261e]">{error}</p>}
+        {error && <p role="alert" className="w-full text-xs font-semibold text-[var(--error)]">{error}</p>}
       </form>
     );
   }
@@ -60,7 +60,7 @@ export function EntryActions({ entryId, canPay }: { entryId: string; canPay: boo
   return (
     <div className="flex gap-2">
       {canPay && <button type="button" onClick={() => setMode("pay")} className="secondary-button px-3 py-1.5 text-xs">Registrar baixa</button>}
-      <button type="button" onClick={() => setMode("reverse")} className="text-xs font-bold text-[var(--muted)] hover:text-[#b3261e]">Estornar</button>
+      <button type="button" onClick={() => setMode("reverse")} className="text-xs font-bold text-[var(--muted)] hover:text-[var(--error)]">Estornar</button>
     </div>
   );
 }

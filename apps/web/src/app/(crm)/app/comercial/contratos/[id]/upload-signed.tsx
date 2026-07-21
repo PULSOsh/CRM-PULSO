@@ -33,7 +33,7 @@ export function UploadSignedDocument({ contractId }: { contractId: string }) {
         {pending ? "Enviando..." : "Enviar documento assinado (PDF, JPG ou PNG)"}
         <input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={handleChange} disabled={pending} className="hidden" />
       </label>
-      {error && <p role="alert" className="mt-2 text-xs font-semibold text-[#b3261e]">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-xs font-semibold text-[var(--error)]">{error}</p>}
     </div>
   );
 }

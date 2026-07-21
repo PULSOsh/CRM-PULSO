@@ -38,7 +38,7 @@ export function CompanyEditForm({ company }: { company: Company }) {
         <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="notes">Notas</label>
         <textarea id="notes" name="notes" rows={3} defaultValue={company.notes ?? ""} className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
       </div>
-      {state.error && <p role="alert" className="rounded-lg bg-[color:#b3261e/.08] px-3 py-2 text-sm font-semibold text-[#b3261e]">{state.error}</p>}
+      {state.error && <p role="alert" className="rounded-lg bg-[color:var(--error)/.08] px-3 py-2 text-sm font-semibold text-[var(--error)]">{state.error}</p>}
       <button type="submit" disabled={pending} className="primary-button">{pending ? "Salvando..." : "Salvar alterações"}</button>
     </form>
   );

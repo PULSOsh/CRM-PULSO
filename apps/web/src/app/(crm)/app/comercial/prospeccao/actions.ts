@@ -81,24 +81,54 @@ export async function importProspectingItems(_prev: any, formData: FormData) {
   try {
     const arrayBuffer = await file.arrayBuffer();
     const workbook = xlsx.read(arrayBuffer, { type: "buffer" });
-    const firstSheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[firstSheetName];
     
-    const rawData = xlsx.utils.sheet_to_json<string[]>(worksheet, { header: 1 });
-    
-    let headerRowIdx = -1;
-    for (let i = 0; i < rawData.length; i++) {
-      const row = rawData[i];
-      if (!row) continue;
-      const joined = row.join(" ").toLowerCase();
-      if (joined.includes("nome") || joined.includes("lead") || joined.includes("contato")) {
-        headerRowIdx = i;
+    // Find the best sheet that contains actual lead rows
+    let targetSheetName = workbook.SheetNames[0];
+    for (const name of workbook.SheetNames) {
+      if (/lead|contato|prosp|odonto/i.test(name)) {
+        targetSheetName = name;
         break;
       }
     }
+
+    let worksheet = workbook.Sheets[targetSheetName];
+    let rawData = xlsx.utils.sheet_to_json<string[]>(worksheet, { header: 1 });
     
+    let headerRowIdx = -1;
+    
+    // Helper to find header in a sheet's rawData
+    const findHeaderRow = (rows: string[][]) => {
+      for (let i = 0; i < Math.min(rows.length, 25); i++) {
+        const row = rows[i];
+        if (!row) continue;
+        const joined = row.map(cell => String(cell || "").toLowerCase()).join(" ");
+        if (joined.includes("lead") || joined.includes("nome") || joined.includes("contato") || joined.includes("empresa")) {
+          return i;
+        }
+      }
+      return -1;
+    };
+
+    headerRowIdx = findHeaderRow(rawData);
+
+    // If first sheet didn't contain headers (e.g. Dashboard), search all other sheets
     if (headerRowIdx === -1) {
-      return { error: "Não foi possível encontrar a linha de cabeçalho na planilha." };
+      for (const name of workbook.SheetNames) {
+        const sheetCandidate = workbook.Sheets[name];
+        const candidateData = xlsx.utils.sheet_to_json<string[]>(sheetCandidate, { header: 1 });
+        const idx = findHeaderRow(candidateData);
+        if (idx !== -1) {
+          targetSheetName = name;
+          worksheet = sheetCandidate;
+          rawData = candidateData;
+          headerRowIdx = idx;
+          break;
+        }
+      }
+    }
+
+    if (headerRowIdx === -1) {
+      return { error: "Não foi possível encontrar a linha de cabeçalho com leads na planilha." };
     }
 
     const headers = rawData[headerRowIdx].map(h => String(h || "").trim().toLowerCase());
@@ -112,24 +142,30 @@ export async function importProspectingItems(_prev: any, formData: FormData) {
       let phone = "";
       let email = "";
       let instagram = "";
+      let website = "";
       let segment = "";
+      let companyName = "";
       let metadata: Record<string, unknown> = {};
       let notesParts = [];
 
       for (let j = 0; j < headers.length; j++) {
         const h = headers[j];
         const rawHeader = String(rawData[headerRowIdx][j] || "").trim();
-        const val = row[j] ? String(row[j]).trim() : "";
+        const val = row[j] !== undefined && row[j] !== null ? String(row[j]).trim() : "";
         if (!val) continue;
 
-        if (h.includes("nome") || h === "lead" || h.includes("contato")) {
+        if (h === "lead" || h === "nome" || h.includes("nome do contato") || h.includes("profissional")) {
           name = val;
-        } else if (h.includes("telefone") || h.includes("whatsapp")) {
+        } else if (h.includes("empresa") || h.includes("clínica") || h.includes("clinica")) {
+          companyName = val;
+        } else if (h.includes("telefone") || h.includes("whatsapp") || h.includes("celular")) {
           phone = val;
         } else if (h.includes("email") || h.includes("e-mail")) {
           email = val;
-        } else if (h.includes("insta")) {
+        } else if (h.includes("instagram") && !h.includes("abrir") && !h.includes("pesquisar")) {
           instagram = val;
+        } else if (h.includes("website") || h.includes("site") || h.includes("link bio")) {
+          website = val;
         } else if (h.includes("cidade")) {
           metadata.cidade = val;
           segment = segment ? `${segment} - ${val}` : val;
@@ -145,21 +181,31 @@ export async function importProspectingItems(_prev: any, formData: FormData) {
           metadata.proximaAcao = val;
         } else if (h.includes("meta")) {
           metadata.meta30Dias = val;
-        } else if (h.includes("segmento") || h.includes("nicho")) {
-          segment = val;
+        } else if (h.includes("mensagem personalizada")) {
+          metadata.mensagemPersonalizada = val;
+        } else if (h.includes("especialidade") || h.includes("posicionamento") || h.includes("tipo")) {
+          metadata[rawHeader] = val;
+          if (!segment) segment = val;
         } else {
           metadata[rawHeader] = val;
           notesParts.push(`${rawHeader}: ${val}`);
         }
       }
 
+      // If name is missing, fallback to companyName
+      if (!name && companyName) {
+        name = companyName;
+      }
+
       if (name) {
         itemsToInsert.push({
           listId,
           name,
+          companyName: companyName || null,
           phone: phone || null,
           email: email || null,
           instagram: instagram || null,
+          website: website || null,
           segment: segment || null,
           notes: notesParts.length > 0 ? notesParts.join("\n") : null,
           metadata,
@@ -169,7 +215,7 @@ export async function importProspectingItems(_prev: any, formData: FormData) {
     }
 
     if (itemsToInsert.length === 0) {
-      return { error: "Nenhum item válido encontrado na planilha." };
+      return { error: "Nenhum lead válido encontrado nas linhas da planilha." };
     }
 
     for (let i = 0; i < itemsToInsert.length; i += 100) {

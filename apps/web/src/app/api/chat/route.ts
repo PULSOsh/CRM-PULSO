@@ -5,7 +5,6 @@ const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 });
 
-// AI SDK v4 sends messages with `parts` array instead of `content` string.
 function normalizeMessages(messages: any[]) {
   return messages.map((msg: any) => {
     if (typeof msg.content === 'string') {
@@ -35,7 +34,7 @@ export async function POST(req: Request) {
     const normalized = normalizeMessages(messages);
 
     const result = streamText({
-      model: google('gemini-2.5-flash'),
+      model: google('gemini-flash-latest'),
       system: `Você é o Copiloto da PULSO CRM. Você é um assistente estratégico especializado em vendas B2B, análise de negócios e estruturação de projetos.
 Seja direto, provocador (no bom sentido) e focado em gerar valor. Use formatação Markdown (negrito, listas) para tornar a leitura dinâmica.
 Não use jargões difíceis à toa. Sempre que possível, seja conciso e foque no problema/solução.

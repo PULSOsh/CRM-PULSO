@@ -42,17 +42,16 @@ export async function generateProposalDraftFromBriefing(briefingData: string): P
 
   try {
     const { text } = await generateText({
-      model: google("gemini-2.5-flash"),
+      model: google("gemini-flash-latest"),
       prompt,
     });
     
-    // Attempt to parse JSON safely by stripping possible markdown tags
     const cleanText = text.replace(/```json/g, "").replace(/```/g, "").trim();
     return JSON.parse(cleanText);
   } catch (error) {
     console.warn("Primary Gemini model failed, falling back...", error);
     const { text: fallbackText } = await generateText({
-      model: google("gemini-2.5-flash"),
+      model: google("gemini-flash-latest"),
       prompt,
     });
     const cleanFallback = fallbackText.replace(/```json/g, "").replace(/```/g, "").trim();
@@ -82,14 +81,14 @@ export async function generateContractClausesFromProposal(proposalData: string, 
 
   try {
     const { text } = await generateText({
-      model: google("gemini-2.5-flash"),
+      model: google("gemini-flash-latest"),
       prompt,
     });
     return text.trim();
   } catch (error) {
     console.warn("Primary Gemini model failed for contract, falling back...", error);
     const { text: fallbackText } = await generateText({
-      model: google("gemini-2.5-flash"),
+      model: google("gemini-flash-latest"),
       prompt,
     });
     return fallbackText.trim();

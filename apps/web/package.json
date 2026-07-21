@@ -13,6 +13,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@ai-sdk/google": "^4.0.21",
     "@ai-sdk/groq": "^4.0.12",
     "@ai-sdk/react": "^4.0.37",
     "@better-auth/drizzle-adapter": "1.6.23",

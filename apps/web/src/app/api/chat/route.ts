@@ -1,19 +1,16 @@
 import { streamText } from 'ai';
-import { createGroq } from '@ai-sdk/groq';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 
-const groq = createGroq({
-  apiKey: process.env.GROQ_API_KEY,
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 });
 
 // AI SDK v4 sends messages with `parts` array instead of `content` string.
-// We need to convert them to the format the AI provider expects.
 function normalizeMessages(messages: any[]) {
   return messages.map((msg: any) => {
-    // If message already has content as string, use it directly
     if (typeof msg.content === 'string') {
       return { role: msg.role, content: msg.content };
     }
-    // If message has parts array (AI SDK v4 UIMessage format), extract text
     if (Array.isArray(msg.parts)) {
       const text = msg.parts
         .filter((p: any) => p.type === 'text')
@@ -21,7 +18,6 @@ function normalizeMessages(messages: any[]) {
         .join('');
       return { role: msg.role, content: text };
     }
-    // If message has content as array (OpenAI format), extract text
     if (Array.isArray(msg.content)) {
       const text = msg.content
         .filter((p: any) => p.type === 'text')
@@ -39,7 +35,7 @@ export async function POST(req: Request) {
     const normalized = normalizeMessages(messages);
 
     const result = streamText({
-      model: groq('qwen-qwq-32b'),
+      model: google('gemini-2.5-flash'),
       system: `Você é o Copiloto da PULSO CRM. Você é um assistente estratégico especializado em vendas B2B, análise de negócios e estruturação de projetos.
 Seja direto, provocador (no bom sentido) e focado em gerar valor. Use formatação Markdown (negrito, listas) para tornar a leitura dinâmica.
 Não use jargões difíceis à toa. Sempre que possível, seja conciso e foque no problema/solução.

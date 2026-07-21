@@ -44,10 +44,9 @@ export async function processTelegramWebhook(
   }
 
   if (message) {
-    // Validar chatId
     const chatId = message.chat?.id?.toString();
-    if (chatId !== config.chatId) {
-      // Ignora silenciosamente, ou manda genérico se possível
+    if (!chatId) return { status: 200, message: "Missing chatId" };
+    if (config.chatId && config.chatId !== "*" && chatId !== config.chatId) {
       return { status: 200, message: "Ignored chat" };
     }
 
@@ -55,7 +54,7 @@ export async function processTelegramWebhook(
     if (typeof text !== "string") return { status: 200, message: "Ignored non-text" };
 
     const command = parseTelegramCommand(text);
-    return await executeCommand(command, config.chatId, telegram);
+    return await executeCommand(command, chatId, telegram);
   }
 
   return { status: 200, message: "Ignored update type" };
@@ -212,7 +211,8 @@ async function executeCommand(cmd: ParsedCommand, chatId: string, telegram: Http
 
 async function handleCallbackQuery(callbackQuery: any, config: { token: string; chatId: string; webhookSecret: string }, telegram: HttpTelegramProvider) {
   const chatId = callbackQuery.message?.chat?.id?.toString();
-  if (chatId !== config.chatId) {
+  if (!chatId) return { status: 200, message: "Missing callback chatId" };
+  if (config.chatId && config.chatId !== "*" && chatId !== config.chatId) {
     return { status: 200, message: "Ignored callback chat" };
   }
 

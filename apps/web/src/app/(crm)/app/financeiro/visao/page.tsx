@@ -2,6 +2,7 @@ import { Card, Badge } from "@pulso/ui";
 import { ArrowDownRight, ArrowUpRight, Wallet, ArrowDownCircle, ArrowUpCircle, AlertOctagon, Repeat, TrendingUp, TrendingDown } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { getFinancialSummary, getRecentCashFlow, getRecurrencesSummary } from "../actions";
+import { CashFlowChart } from "./cash-flow-chart";
 import Link from "next/link";
 
 const currency = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
@@ -134,7 +135,7 @@ export default async function FinanceOverviewPage() {
 
         {/* Fluxo de Caixa (Gráfico) */}
         <div className="lg:col-span-2 rounded-3xl p-6 border border-white/10 bg-black/50 backdrop-blur-2xl shadow-2xl">
-          <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-8">
+          <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
             <div>
               <h2 className="font-extrabold text-lg flex items-center gap-2 text-white">Fluxo de Caixa</h2>
               <p className="mt-1 text-[11px] font-medium text-gray-400 uppercase tracking-wider">Histórico dos últimos 14 dias.</p>
@@ -142,36 +143,7 @@ export default async function FinanceOverviewPage() {
             <Badge tone="neutral" className="bg-white/5 border-white/10 text-gray-300">Realizado</Badge>
           </div>
           
-          <div className="flex h-56 items-end gap-2 sm:gap-3 px-1 sm:px-2">
-            {cashFlow.map((d) => {
-              const isPositive = d.net >= 0;
-              const height = Math.max(4, (Math.abs(d.net) / maxAbs) * 100);
-              
-              // Laranja Fogo/Verde vs Vermelho escuro
-              const barGradient = isPositive 
-                ? "bg-gradient-to-t from-orange-500/20 to-orange-500 border-t border-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.4)]" 
-                : "bg-gradient-to-t from-rose-900/40 to-rose-600 border-t border-rose-500 shadow-[0_0_15px_rgba(225,29,72,0.3)]";
-              
-              return (
-                <div key={d.day} className="group relative flex flex-1 flex-col justify-end gap-1 h-full cursor-crosshair">
-                  {/* Tooltip */}
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-max rounded-xl bg-black/90 border border-white/10 px-4 py-3 text-sm text-white opacity-0 transition-opacity group-hover:opacity-100 shadow-2xl pointer-events-none z-20 backdrop-blur-xl">
-                    <p className="font-bold text-gray-400 text-xs uppercase tracking-wider mb-1">{new Date(d.day).toLocaleDateString("pt-BR")}</p>
-                    <p className={`font-black tracking-tighter ${isPositive ? "text-orange-400" : "text-rose-400"}`}>{currency(d.net)}</p>
-                  </div>
-                  
-                  {/* Bar */}
-                  <div className="relative w-full rounded-t-lg overflow-hidden transition-all duration-300 group-hover:brightness-125 group-hover:scale-y-105 origin-bottom" style={{ height: `${height}%` }}>
-                    <div className={`absolute inset-0 ${barGradient} opacity-90 group-hover:opacity-100`} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div className="mt-4 flex justify-between border-t border-white/10 pt-3 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">
-            <span>{cashFlow[0] && new Date(cashFlow[0].day).toLocaleDateString("pt-BR")}</span>
-            <span>{cashFlow.at(-1) && new Date(cashFlow.at(-1)!.day).toLocaleDateString("pt-BR")}</span>
-          </div>
+          <CashFlowChart data={cashFlow} />
         </div>
       </div>
     </>

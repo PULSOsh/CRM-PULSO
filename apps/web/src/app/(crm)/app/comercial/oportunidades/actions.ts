@@ -214,3 +214,9 @@ export async function skipBriefing(opportunityId: string, formData: FormData) {
 
   revalidatePath(`/app/comercial/oportunidades/${opportunityId}`);
 }
+
+export async function updateOpportunityStage(opportunityId: string, stageId: string) {
+  await requireSession();
+  await db.update(schema.opportunities).set({ stageId }).where(eq(schema.opportunities.id, opportunityId));
+  revalidatePath("/app/comercial/oportunidades");
+}

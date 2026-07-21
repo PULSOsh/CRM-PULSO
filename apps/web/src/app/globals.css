@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 :root {
   --paper:#11110f;--surface:#191917;--surface-raised:#22221f;--carbon:#f4f2ed;

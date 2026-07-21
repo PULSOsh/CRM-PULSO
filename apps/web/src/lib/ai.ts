@@ -60,3 +60,39 @@ export async function generateProposalDraftFromBriefing(briefingData: string): P
     return JSON.parse(cleanFallback);
   }
 }
+
+export async function generateContractClausesFromProposal(proposalData: string, contractCode: string): Promise<string> {
+  const prompt = `Você é um advogado especialista em direito digital e contratos de prestação de serviços B2B, atuando pela agência PULSO.
+  Com base nos dados da proposta abaixo, redija as CLÁUSULAS de um contrato comercial blindado, direto ao ponto e focado na entrega de valor, sem jargões jurídicos arcaicos desnecessários.
+  Use formatação Markdown para títulos (### Cláusula 1 - Objeto), negritos e listas.
+  O contrato deve incluir:
+  - Objeto do contrato (detalhando o escopo da proposta)
+  - Valor e condições de pagamento
+  - Obrigações da PULSO e do Contratante
+  - Prazos e Condições de Entrega
+  - Propriedade Intelectual (A PULSO cede os direitos após a quitação)
+  - Rescisão e Multa
+  - Foro (Fortaleza, CE)
+
+  O código deste contrato é: ${contractCode}
+
+  DADOS DA PROPOSTA ACEITA:
+  ${proposalData}
+  
+  Retorne APENAS o texto em Markdown das cláusulas do contrato.`;
+
+  try {
+    const { text } = await generateText({
+      model: groq("llama-3.3-70b-versatile"),
+      prompt,
+    });
+    return text.trim();
+  } catch (error) {
+    console.warn("Primary Groq model failed for contract, falling back...", error);
+    const { text: fallbackText } = await generateText({
+      model: groq("llama-3.1-8b-instant"),
+      prompt,
+    });
+    return fallbackText.trim();
+  }
+}

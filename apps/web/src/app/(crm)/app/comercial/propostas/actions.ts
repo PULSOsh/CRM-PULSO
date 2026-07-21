@@ -46,7 +46,12 @@ export async function createProposal(_prev: ProposalActionState, formData: FormD
   const parsed = createSchema.safeParse({ opportunityId: formData.get("opportunityId") });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Revise os campos informados." };
 
-  const eligibleBriefing = await db.select({ id: schema.briefings.id }).from(schema.briefings)
+  const eligibleBriefing = await db.select({ 
+    id: schema.briefings.id, 
+    status: schema.briefings.status,
+    questionsSnapshot: schema.briefings.questionsSnapshot,
+    responses: schema.briefings.responses
+  }).from(schema.briefings)
     .where(and(eq(schema.briefings.opportunityId, parsed.data.opportunityId), or(eq(schema.briefings.status, "completed"), eq(schema.briefings.status, "skipped"), eq(schema.briefings.status, "analyzed"))))
     .limit(1);
   if (eligibleBriefing.length === 0) {
@@ -63,10 +68,41 @@ export async function createProposal(_prev: ProposalActionState, formData: FormD
     code, opportunityId: parsed.data.opportunityId, publicSlug: slug, publicTokenHash: tokenHash, status: "draft"
   }).returning();
 
-  const { subtotal, total } = computeTotals(emptyContent);
+  let initialContent = { ...emptyContent };
+  
+  if (eligibleBriefing[0].status === "completed" || eligibleBriefing[0].status === "analyzed") {
+    try {
+      const questions = eligibleBriefing[0].questionsSnapshot ?? [];
+      const responses = (eligibleBriefing[0].responses as Record<string, unknown>) ?? {};
+      const briefingData = questions.map((q: any) => {
+        const value = responses[q.id];
+        return `Q: ${q.label}\nR: ${Array.isArray(value) ? value.join(", ") : value || "—"}`;
+      }).join("\n\n");
+      
+      const draft = await generateProposalDraftFromBriefing(briefingData);
+      
+      initialContent = {
+        ...initialContent,
+        intro: draft.intro,
+        context: draft.context,
+        scopeTitle: draft.scopeTitle,
+        scopeItems: draft.scopeItems.map((item, idx) => ({
+          id: `ai-item-${idx}`,
+          label: item.name,
+          description: item.description,
+          price: item.price ?? 0
+        }))
+      };
+    } catch (e) {
+      console.error("AI Generation failed on createProposal", e);
+      // Fallback to empty content if AI fails
+    }
+  }
+
+  const { subtotal, total } = computeTotals(initialContent);
   await db.insert(schema.proposalVersions).values({
-    proposalId: proposal.id, version: 1, content: emptyContent, subtotal: String(subtotal), total: String(total),
-    snapshotHash: snapshotHash(emptyContent, subtotal, total)
+    proposalId: proposal.id, version: 1, content: initialContent, subtotal: String(subtotal), total: String(total),
+    snapshotHash: snapshotHash(initialContent, subtotal, total)
   });
 
   await recordAuditEvent({ actorType: "user", action: "proposal.created", entityType: "proposal", entityId: proposal.id, after: { code } });
@@ -273,3 +309,45 @@ export async function generateAIProposal(briefingId: string) {
   return { redirect: `/app/comercial/propostas/${proposal.id}?link_token=${token}` };
 }
 
+export async function generateAIContentForProposal(proposalId: string, versionId: string) {
+  await requireSession();
+  const [version] = await db.select().from(schema.proposalVersions).where(eq(schema.proposalVersions.id, versionId)).limit(1);
+  if (!version) return { error: 'Versão não encontrada.' };
+  if (version.publishedAt) return { error: 'Versão já publicada.' };
+
+  const [proposal] = await db.select().from(schema.proposals).where(eq(schema.proposals.id, proposalId)).limit(1);
+  const [briefing] = await db.select().from(schema.briefings).where(eq(schema.briefings.opportunityId, proposal.opportunityId)).limit(1);
+  if (!briefing || (briefing.status !== 'completed' && briefing.status !== 'analyzed')) {
+    return { error: 'Briefing não concluído para esta oportunidade.' };
+  }
+
+  const questions = briefing.questionsSnapshot ?? [];
+  const responses = (briefing.responses as Record<string, unknown>) ?? {};
+  const briefingData = questions.map((q: any) => {
+    const val = responses[q.id];
+    return `Q: ${q.label}\nR: ${Array.isArray(val) ? val.join(', ') : val || '—'}`;
+  }).join('\n\n');
+
+  try {
+    const draft = await generateProposalDraftFromBriefing(briefingData);
+    const updatedContent = { 
+      ...version.content, 
+      intro: draft.intro, 
+      context: draft.context, 
+      scopeTitle: draft.scopeTitle, 
+      scopeItems: draft.scopeItems.map((item, idx) => ({ 
+        id: `ai-item-${idx}`, 
+        label: item.name, 
+        description: item.description, 
+        price: item.price ?? 0 
+      })) 
+    };
+    const { subtotal, total } = computeTotals(updatedContent);
+    await db.update(schema.proposalVersions).set({ content: updatedContent, subtotal: String(subtotal), total: String(total), updatedAt: new Date() }).where(eq(schema.proposalVersions.id, versionId));
+    revalidatePath(`/app/comercial/propostas/${proposalId}`);
+    return { success: true };
+  } catch (error) {
+    console.error('AI error', error);
+    return { error: 'Erro ao gerar conteúdo com IA.' };
+  }
+}

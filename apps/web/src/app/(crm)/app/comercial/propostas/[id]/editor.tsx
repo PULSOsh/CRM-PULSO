@@ -2,8 +2,9 @@
 
 import type { schema } from "@pulso/database";
 import { Plus, Trash2 } from "lucide-react";
-import { useActionState, useState } from "react";
-import { saveDraftVersion, type ProposalActionState } from "../actions";
+import { useActionState, useState, useTransition } from "react";
+import { saveDraftVersion, generateAIContentForProposal, type ProposalActionState } from "../actions";
+import { Sparkles } from "lucide-react";
 
 type ProposalContent = schema.ProposalContent;
 const initialState: ProposalActionState = {};
@@ -21,6 +22,18 @@ export function ProposalEditor({
   const [validUntil, setValidUntil] = useState(initialValidUntil ?? "");
   const boundAction = saveDraftVersion.bind(null, proposalId, versionId);
   const [state, formAction, pending] = useActionState(boundAction, initialState);
+  const [isGenerating, startTransition] = useTransition();
+
+  const handleGenerateAI = () => {
+    startTransition(async () => {
+      const result = await generateAIContentForProposal(proposalId, versionId);
+      if (result.error) {
+        alert(result.error);
+      } else {
+        window.location.reload(); // Reload to fetch the new content
+      }
+    });
+  };
 
   const subtotal = content.scopeItems.reduce((s, i) => s + i.price, 0);
 
@@ -125,8 +138,11 @@ export function ProposalEditor({
 
       {state.error && <p role="alert" className="rounded-lg bg-[color:var(--error)/.08] px-3 py-2 text-sm font-semibold text-[var(--error)]">{state.error}</p>}
       <div className="flex items-center gap-3">
-        <button type="submit" name="action" value="save" disabled={pending} className="secondary-button">{pending ? "Processando..." : "Salvar rascunho"}</button>
-        <button type="submit" name="action" value="publish" disabled={pending} className="primary-button">{pending ? "Processando..." : "Salvar e Publicar"}</button>
+        <button type="submit" name="action" value="save" disabled={pending || isGenerating} className="secondary-button">{pending ? "Processando..." : "Salvar rascunho"}</button>
+        <button type="submit" name="action" value="publish" disabled={pending || isGenerating} className="primary-button">{pending ? "Processando..." : "Salvar e Publicar"}</button>
+        <button type="button" onClick={handleGenerateAI} disabled={pending || isGenerating} className="secondary-button !border-[var(--signal)] !text-[var(--signal)] hover:!bg-[var(--signal)]/10 ml-auto">
+          <Sparkles className="size-4" /> {isGenerating ? "Gerando..." : "Preencher com IA"}
+        </button>
       </div>
     </form>
   );

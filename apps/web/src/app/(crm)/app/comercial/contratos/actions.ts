@@ -12,6 +12,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { generateContractClausesFromProposal } from "@/lib/ai";
 
 async function requireSession() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -71,7 +72,18 @@ export async function createContractFromProposal(proposalId: string): Promise<{ 
   const year = new Date().getFullYear();
   const sequence = await nextSequence("contract", year);
   const code = formatRecordCode("contract", year, sequence);
-  content.clauses = defaultClauses(content, code);
+  
+  try {
+    const proposalData = JSON.stringify({ 
+      scope: version.content.scopeItems.map(i => i.label + (i.description ? ': ' + i.description : '')).join('\n'), 
+      total: content.totalValue, 
+      payment: content.paymentSummary 
+    }, null, 2);
+    content.clauses = await generateContractClausesFromProposal(proposalData, code);
+  } catch (e) {
+    console.error("Failed to generate AI clauses on contract creation", e);
+    content.clauses = defaultClauses(content, code);
+  }
 
   const [contract] = await db.insert(schema.contracts).values({
     code, proposalVersionId: version.id, opportunityId: proposal.opportunityId, content, status: "draft"
@@ -204,6 +216,37 @@ export async function cancelContract(contractId: string, formData: FormData) {
 
   revalidatePath(`/app/comercial/contratos/${contractId}`);
   revalidatePath("/app/comercial/contratos");
+}
+
+export async function generateAIClausesForContract(contractId: string) {
+  await requireSession();
+  
+  const [contract] = await db.select().from(schema.contracts).where(eq(schema.contracts.id, contractId)).limit(1);
+  if (!contract) return { error: "Contrato não encontrado." };
+  if (contract.status !== "draft") return { error: "Apenas contratos em rascunho podem ser alterados pela IA." };
+
+  const [version] = await db.select().from(schema.proposalVersions).where(eq(schema.proposalVersions.id, contract.proposalVersionId)).limit(1);
+  if (!version) return { error: "Versão da proposta não encontrada." };
+
+  const proposalData = JSON.stringify({ 
+    scope: version.content.scopeItems.map(i => i.label + (i.description ? ': ' + i.description : '')).join('\n'), 
+    total: contract.content.totalValue, 
+    payment: contract.content.paymentSummary 
+  }, null, 2);
+
+  try {
+    const clauses = await generateContractClausesFromProposal(proposalData, contract.code);
+    await db.update(schema.contracts).set({
+      content: { ...contract.content, clauses },
+      updatedAt: new Date()
+    }).where(eq(schema.contracts.id, contractId));
+
+    revalidatePath(`/app/comercial/contratos/${contractId}`);
+    return { success: true };
+  } catch (error) {
+    console.error("AI error contract", error);
+    return { error: "Erro ao gerar cláusulas com IA." };
+  }
 }
 
 export async function regenerateContractLink(contractId: string): Promise<{ link: string }> {

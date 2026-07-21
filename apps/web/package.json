@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@ai-sdk/groq": "^4.0.12",
+    "@ai-sdk/react": "^4.0.37",
     "@better-auth/drizzle-adapter": "1.6.23",
     "@hello-pangea/dnd": "^18.0.1",
     "@pulso/database": "workspace:*",
@@ -38,10 +39,12 @@
     "serwist": "^9.5.11",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
+    "xlsx": "^0.18.5",
     "zod": "4.4.3"
   },
   "devDependencies": {
     "@playwright/test": "1.61.1",
+    "@tailwindcss/typography": "^0.5.20",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.0",
     "eslint": "9.39.1",

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updateContractContent } from "../actions";
+import { updateContractContent, generateAIClausesForContract } from "../actions";
+import { Sparkles } from "lucide-react";
 
 export function ClausesEditor({ contractId, initialClauses, initialType }: { contractId: string; initialClauses: string; initialType: "mrr" | "avulso" }) {
   const [clauses, setClauses] = useState(initialClauses);
@@ -17,6 +18,18 @@ export function ClausesEditor({ contractId, initialClauses, initialType }: { con
       formData.set("type", type);
       await updateContractContent(contractId, formData);
       setSaved(true);
+    });
+  }
+
+  function handleGenerateAI() {
+    setSaved(false);
+    startTransition(async () => {
+      const res = await generateAIClausesForContract(contractId);
+      if (res.error) {
+        alert(res.error);
+      } else {
+        window.location.reload();
+      }
     });
   }
 
@@ -36,6 +49,9 @@ export function ClausesEditor({ contractId, initialClauses, initialType }: { con
       />
       <div className="mt-3 flex items-center gap-3">
         <button type="button" onClick={handleSave} disabled={pending} className="secondary-button">{pending ? "Salvando..." : "Salvar cláusulas"}</button>
+        <button type="button" onClick={handleGenerateAI} disabled={pending} className="secondary-button !border-[var(--signal)] !text-[var(--signal)] hover:!bg-[var(--signal)]/10">
+          <Sparkles className="size-4" /> {pending ? "Gerando..." : "Redigir com IA"}
+        </button>
         {saved && <span className="text-xs font-bold text-[var(--signal)]">Salvo.</span>}
       </div>
     </div>

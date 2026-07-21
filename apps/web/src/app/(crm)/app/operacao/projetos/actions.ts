@@ -386,3 +386,27 @@ export async function getOpenTimer() {
     .limit(1);
   return entry ?? null;
 }
+
+export async function deleteProject(projectId: string) {
+  await requireSession();
+
+  const [project] = await db.select().from(schema.projects).where(eq(schema.projects.id, projectId)).limit(1);
+  if (!project) return;
+
+  await db.delete(schema.tasks).where(and(eq(schema.tasks.entityType, "project"), eq(schema.tasks.entityId, projectId)));
+  await db.delete(schema.files).where(and(eq(schema.files.entityType, "project"), eq(schema.files.entityId, projectId)));
+  await db.delete(schema.timeEntries).where(eq(schema.timeEntries.projectId, projectId));
+  await db.delete(schema.approvals).where(eq(schema.approvals.projectId, projectId));
+  await db.delete(schema.activities).where(and(eq(schema.activities.entityType, "project"), eq(schema.activities.entityId, projectId)));
+  
+  await db.delete(schema.projects).where(eq(schema.projects.id, projectId));
+
+  await recordAuditEvent({
+    actorType: "user",
+    action: "project.deleted",
+    entityType: "project",
+    entityId: projectId
+  });
+
+  revalidatePath("/app/operacao/projetos");
+}

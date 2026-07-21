@@ -16,6 +16,8 @@ const approvalStatusLabel: Record<string, string> = { pending: "Aguardando decis
 const approvalStatusTone: Record<string, "neutral" | "signal" | "success" | "warning"> = { pending: "signal", approved: "success", changes_requested: "warning" };
 const currency = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
+import { DeleteProjectButton } from "./delete-project-button";
+
 export default async function ProjectDetailPage({
   params, searchParams
 }: {
@@ -44,7 +46,12 @@ export default async function ProjectDetailPage({
 
   return (
     <>
-      <PageHeader eyebrow={project.code} title={project.name} description={`Orçamento ${currency(Number(project.budget))} · ${estimatedHours}h estimadas`} />
+      <PageHeader
+        eyebrow={project.code}
+        title={project.name}
+        description={`Orçamento ${currency(Number(project.budget))} · ${estimatedHours}h estimadas`}
+        actions={<DeleteProjectButton projectId={project.id} projectName={project.name} />}
+      />
 
       <Card className="mb-6 p-5">
         <div className="flex flex-wrap items-center justify-between gap-4">

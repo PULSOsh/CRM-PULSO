@@ -100,7 +100,7 @@ export default function AiPage() {
       <PageHeader
         eyebrow="Inteligência assistida"
         title="Assistente de IA"
-        description="Sugestões revisáveis para diagnóstico, propostas, projetos, suporte e análise financeira."
+        description="Sugestões revisáveis para diagnóstico, propostas, projetos, suporte e análise financeira baseadas nos seus dados reais."
       />
 
       <div className="grid gap-6 xl:grid-cols-[1fr_340px] mt-6">
@@ -114,10 +114,10 @@ export default function AiPage() {
                 <div className="absolute -bottom-1 -right-1 size-3.5 rounded-full border-2 border-[var(--surface)] bg-emerald-500"></div>
               </div>
               <div>
-                <h2 className="font-extrabold text-lg tracking-tight">Copiloto PULSO</h2>
+                <h2 className="font-extrabold text-lg tracking-tight text-[var(--text)]">Copiloto PULSO</h2>
                 <p className="text-xs font-medium text-[var(--muted)] flex items-center gap-1 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/50"></span>
-                  Online e pronto (Google Gemini)
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  Conectado aos dados do CRM
                 </p>
               </div>
             </div>
@@ -132,14 +132,14 @@ export default function AiPage() {
                   <div className="absolute inset-0 rounded-3xl border border-[var(--signal)]/30 animate-pulse"></div>
                 </div>
                 <h3 className="mt-8 text-3xl font-black tracking-tight text-[var(--text)]">Como posso ajudar?</h3>
-                <p className="mt-3 max-w-md text-sm leading-relaxed text-[var(--muted)]">Analise um briefing, crie o primeiro rascunho de proposta ou resuma riscos de um projeto com nossa IA treinada para o contexto do CRM.</p>
+                <p className="mt-3 max-w-md text-sm leading-relaxed text-[var(--muted)]">Analise briefings, consulte oportunidades do funil ou resuma os últimos contratos com o Copiloto conectado ao seu banco de dados.</p>
 
                 <div className="mt-10 grid w-full max-w-xl gap-3 sm:grid-cols-2">
                   {[
-                    { label: "Analisar briefing comercial", icon: MessageSquarePlus },
-                    { label: "Criar escopo de proposta", icon: BrainCircuit },
-                    { label: "Resumir riscos do projeto", icon: Sparkles },
-                    { label: "Explicação sobre fluxo de caixa", icon: Bot }
+                    { label: "Resumir oportunidades no funil", icon: MessageSquarePlus },
+                    { label: "Quais são as propostas recentes?", icon: BrainCircuit },
+                    { label: "Resumir últimos contratos", icon: Sparkles },
+                    { label: "Listar leads operacionais", icon: Bot }
                   ].map((item) => {
                     const Icon = item.icon;
                     return (
@@ -150,9 +150,9 @@ export default function AiPage() {
                       >
                         <div className="flex items-center gap-3">
                           <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-[var(--soft)] group-hover:bg-[var(--signal)]/20 group-hover:text-[var(--signal)] transition-colors">
-                            <Icon className="size-4" />
+                            <Icon className="size-4 text-[var(--text)] group-hover:text-[var(--signal)]" />
                           </div>
-                          <span className="text-sm font-bold group-hover:text-[var(--text)] transition-colors">{item.label}</span>
+                          <span className="text-sm font-bold text-[var(--text)] transition-colors">{item.label}</span>
                         </div>
                       </button>
                     );
@@ -162,8 +162,14 @@ export default function AiPage() {
             ) : (
               messages.map((m) => (
                 <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[85%] rounded-2xl px-5 py-4 ${m.role === "user" ? "bg-[var(--signal)] text-white font-medium" : "bg-[var(--surface)] border border-[var(--line)] text-[var(--text)]"}`}>
-                    <div className="prose prose-sm prose-invert max-w-none">
+                  <div
+                    className={`max-w-[85%] rounded-2xl px-5 py-4 ${
+                      m.role === "user"
+                        ? "bg-[var(--signal)] text-white font-semibold shadow-md"
+                        : "bg-[var(--soft)] border border-[var(--line)] text-[var(--text)] shadow-lg"
+                    }`}
+                  >
+                    <div className="prose prose-sm prose-invert max-w-none text-[var(--text)] [&_p]:text-[var(--text)] [&_li]:text-[var(--text)] [&_strong]:text-[var(--text)] [&_h1]:text-[var(--text)] [&_h2]:text-[var(--text)] [&_h3]:text-[var(--text)] [&_code]:text-[var(--signal)] [&_code]:bg-[var(--surface)] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded">
                       <ReactMarkdown>{m.content || (isLoading ? "Pensando..." : "")}</ReactMarkdown>
                     </div>
                   </div>
@@ -172,8 +178,8 @@ export default function AiPage() {
             )}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="max-w-[80%] rounded-2xl bg-[var(--surface)] border border-[var(--line)] px-5 py-4 flex items-center gap-2 text-[var(--muted)]">
-                  <Loader2 className="size-4 animate-spin text-[var(--signal)]" /> Processando resposta...
+                <div className="max-w-[80%] rounded-2xl bg-[var(--soft)] border border-[var(--line)] px-5 py-4 flex items-center gap-2 text-[var(--muted)]">
+                  <Loader2 className="size-4 animate-spin text-[var(--signal)]" /> Consultando banco de dados e gerando resposta...
                 </div>
               </div>
             )}
@@ -186,7 +192,7 @@ export default function AiPage() {
                 onChange={(e) => setInput(e.target.value)}
                 disabled={isLoading}
                 className="min-w-0 flex-1 bg-transparent px-4 py-2 text-sm text-[var(--text)] placeholder-[var(--muted)] outline-none"
-                placeholder="Pergunte sobre um registro do CRM ou dê um comando..."
+                placeholder="Pergunte sobre oportunidades, propostas, contratos ou projetos do CRM..."
               />
               <button
                 type="submit"
@@ -196,7 +202,7 @@ export default function AiPage() {
                 <Send className="size-4" />
               </button>
             </form>
-            <p className="text-center text-[10px] text-[var(--muted)] mt-3">O Copiloto pode cometer erros. Considere verificar informações importantes.</p>
+            <p className="text-center text-[10px] text-[var(--muted)] mt-3">O Copiloto acessa os dados do seu sistema. Considere verificar informações estratégicas.</p>
           </div>
         </Card>
 
@@ -208,7 +214,7 @@ export default function AiPage() {
                 <div className="grid size-10 place-items-center rounded-xl bg-[var(--warning)]/10 border border-[var(--warning)]/20">
                   <ShieldCheck className="size-5 text-[var(--warning)]" />
                 </div>
-                <h2 className="font-extrabold text-lg">Limites de segurança</h2>
+                <h2 className="font-extrabold text-lg text-[var(--text)]">Limites de segurança</h2>
               </div>
               <ul className="space-y-3 text-sm font-medium leading-relaxed text-[var(--muted)]">
                 <li className="flex items-start gap-2"><div className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--muted)]"></div> Não envia mensagens ou documentos.</li>
@@ -227,10 +233,10 @@ export default function AiPage() {
                 <div className="grid size-10 place-items-center rounded-xl bg-[var(--signal)]/10 border border-[var(--signal)]/20 group-hover:scale-110 transition-transform">
                   <Sparkles className="size-5 text-[var(--signal)]" />
                 </div>
-                <h2 className="font-extrabold text-lg">Arquitetura</h2>
+                <h2 className="font-extrabold text-lg text-[var(--text)]">Integração Direta</h2>
               </div>
               <p className="text-sm font-medium leading-relaxed text-[var(--muted)]">
-                OpenAI, Anthropic e Gemini ficam atrás de uma camada substituível, com histórico, controle de custo e fallback automático.
+                O assistente está conectado em tempo real com as tabelas de Oportunidades, Propostas, Contratos, Leads e Projetos do seu CRM.
               </p>
             </div>
           </Card>

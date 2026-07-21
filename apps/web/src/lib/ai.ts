@@ -1,8 +1,8 @@
-import { generateObject, generateText } from "ai";
-import { createGroq } from "@ai-sdk/groq";
+import { generateText } from "ai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
-const groq = createGroq({
-  apiKey: process.env.GROQ_API_KEY,
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 });
 
 type ProposalDraft = {
@@ -42,7 +42,7 @@ export async function generateProposalDraftFromBriefing(briefingData: string): P
 
   try {
     const { text } = await generateText({
-      model: groq("llama-3.3-70b-versatile"),
+      model: google("gemini-2.5-flash"),
       prompt,
     });
     
@@ -50,10 +50,9 @@ export async function generateProposalDraftFromBriefing(briefingData: string): P
     const cleanText = text.replace(/```json/g, "").replace(/```/g, "").trim();
     return JSON.parse(cleanText);
   } catch (error) {
-    console.warn("Primary Groq model failed, falling back to instant model...", error);
-    // Fallback model
+    console.warn("Primary Gemini model failed, falling back...", error);
     const { text: fallbackText } = await generateText({
-      model: groq("llama-3.1-8b-instant"),
+      model: google("gemini-2.5-flash"),
       prompt,
     });
     const cleanFallback = fallbackText.replace(/```json/g, "").replace(/```/g, "").trim();
@@ -83,14 +82,14 @@ export async function generateContractClausesFromProposal(proposalData: string, 
 
   try {
     const { text } = await generateText({
-      model: groq("llama-3.3-70b-versatile"),
+      model: google("gemini-2.5-flash"),
       prompt,
     });
     return text.trim();
   } catch (error) {
-    console.warn("Primary Groq model failed for contract, falling back...", error);
+    console.warn("Primary Gemini model failed for contract, falling back...", error);
     const { text: fallbackText } = await generateText({
-      model: groq("llama-3.1-8b-instant"),
+      model: google("gemini-2.5-flash"),
       prompt,
     });
     return fallbackText.trim();

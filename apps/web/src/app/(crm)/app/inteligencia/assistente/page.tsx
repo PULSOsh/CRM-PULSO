@@ -6,8 +6,24 @@ import { PageHeader } from "@/components/page-header";
 import { useChat } from "@ai-sdk/react";
 import ReactMarkdown from "react-markdown";
 
+import { useState } from "react";
+
 export default function AiPage() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
+  const { messages, sendMessage, status } = useChat();
+  const [input, setInput] = useState("");
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+  };
+
+  const handleSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!input.trim()) return;
+    sendMessage({ role: 'user', parts: [{ type: 'text', text: input }] });
+    setInput("");
+  };
+
+  const isLoading = status === 'streaming' || status === 'submitted';
 
   return (
     <>
@@ -70,7 +86,7 @@ export default function AiPage() {
                 <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[80%] rounded-2xl px-5 py-4 ${m.role === 'user' ? 'bg-[var(--signal)] text-white font-medium' : 'bg-[var(--surface)] border border-[var(--line)] text-[var(--text)]'}`}>
                     <div className="prose prose-sm prose-invert max-w-none">
-                      <ReactMarkdown>{m.content}</ReactMarkdown>
+                      <ReactMarkdown>{m.parts?.find(p => p.type === 'text')?.text || ''}</ReactMarkdown>
                     </div>
                   </div>
                 </div>

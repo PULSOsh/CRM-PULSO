@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { Card } from "@pulso/ui";
 
 export default function NovoProspectingPage() {
-  const [state, formAction, pending] = useActionState(createProspectingList, { error: undefined });
+  const [state, formAction, pending] = useActionState(createProspectingList, { error: "" });
 
   return (
     <>

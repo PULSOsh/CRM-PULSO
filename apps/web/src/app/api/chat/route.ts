@@ -16,5 +16,5 @@ Não use jargões difíceis à toa. Sempre que possível, seja conciso e foque n
     messages,
   });
 
-  return result.toDataStreamResponse();
+  return result.toTextStreamResponse();
 }

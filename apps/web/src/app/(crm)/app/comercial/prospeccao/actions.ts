@@ -41,7 +41,7 @@ export async function createProspectingList(_prev: any, formData: FormData) {
     name: formData.get("name"),
     description: formData.get("description"),
   });
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message || "Erro desconhecido." };
 
   const year = new Date().getFullYear();
   const sequence = await nextSequence("prospecting_list", year);

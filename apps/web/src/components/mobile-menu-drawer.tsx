@@ -34,7 +34,7 @@ export function MobileMenuDrawer({ open, onClose }: { open: boolean; onClose: ()
   return (
     <>
       <div 
-        className="fixed inset-0 z-50 bg-[color:var(--paper)/.8] backdrop-blur-sm lg:hidden transition-opacity"
+        className="fixed inset-0 z-50 bg-[var(--paper)] lg:hidden transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />

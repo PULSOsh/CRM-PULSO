@@ -98,8 +98,7 @@ function MetricCard({
   money?: boolean;
 }) {
   return (
-    <Card className="relative overflow-hidden p-6 border border-[var(--line)] bg-[var(--surface)]/80 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-[var(--signal)]/50 hover:shadow-lg hover:shadow-[var(--signal)]/5">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--signal)]/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+    <Card className="p-6 border border-[var(--line)] bg-[var(--surface)] transition-all duration-300 hover:-translate-y-1 hover:border-[var(--signal)]/50 hover:shadow-lg hover:shadow-[var(--signal)]/5">
       <div className="relative z-10">
         <p className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider">{label}</p>
         <p className={`${money ? "money-value " : ""}mt-3 break-words text-3xl font-black tabular-nums tracking-[-0.06em] text-[var(--text)]`}>{value}</p>
@@ -116,13 +115,13 @@ function DistributionList({ title, items, source = false }: { title: string; ite
   const max = Math.max(1, ...items.map((item) => item.count));
 
   return (
-    <Card className="p-6 border border-[var(--line)] bg-[var(--surface)]/80 backdrop-blur-md">
+    <Card className="p-6 border border-[var(--line)] bg-[var(--surface)]">
       <h3 className="font-extrabold text-lg flex items-center gap-2">
         <div className="w-1 h-5 bg-[var(--signal)] rounded-full"></div>
         {title}
       </h3>
       {items.length === 0 ? (
-        <div className="mt-8 flex flex-col items-center justify-center p-6 border border-dashed border-[var(--line)] rounded-xl bg-[var(--soft)]/30">
+        <div className="mt-8 flex flex-col items-center justify-center p-6 border border-dashed border-[var(--line)] rounded-xl bg-[var(--soft)]">
           <p className="text-sm font-medium text-[var(--muted)]">Nenhum registro no período.</p>
         </div>
       ) : (

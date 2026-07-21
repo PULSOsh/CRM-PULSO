@@ -23,7 +23,7 @@ export function Topbar({ isDemo }: { isDemo?: boolean }) {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-[var(--line)] bg-[color:var(--paper)/.9] px-4 backdrop-blur md:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-[var(--line)] bg-[var(--surface)] px-4  md:px-6">
       <div className="lg:hidden"><PulsoLogo compact /></div>
       <button 
         className="grid size-9 place-items-center rounded-xl border border-[var(--line)] bg-[var(--surface)] lg:hidden"

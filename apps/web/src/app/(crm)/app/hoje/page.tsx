@@ -30,7 +30,7 @@ export default async function TodayPage() {
         actions={<Link href="/app/comercial/leads/novo" className="primary-button"><Plus className="size-4" />Criar</Link>} />
       
       {unreadNotificationsCount > 0 && (
-        <div className="mb-6 rounded-2xl border border-destructive/30 bg-destructive/10 p-5 backdrop-blur-sm relative overflow-hidden group hover:border-destructive/50 transition-colors">
+        <div className="mb-6 rounded-2xl border border-destructive/30 bg-destructive/10 p-5 relative overflow-hidden group hover:border-destructive/50 transition-colors">
           <div className="absolute inset-0 bg-gradient-to-r from-destructive/0 via-destructive/5 to-destructive/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
           <div className="relative flex items-center gap-4">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-destructive text-white font-extrabold shadow-lg shadow-destructive/20">{unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}</span>
@@ -49,7 +49,7 @@ export default async function TodayPage() {
         {metrics.map((metric) => {
           const Icon = metric.icon;
           return (
-            <Card key={metric.label} className="relative overflow-hidden p-6 border border-[var(--line)] bg-[var(--surface)]/80 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-[var(--signal)]/50 hover:shadow-lg hover:shadow-[var(--signal)]/5">
+            <Card key={metric.label} className="relative overflow-hidden p-6 border border-[var(--line)] bg-[var(--surface)] transition-all duration-300 hover:-translate-y-1 hover:border-[var(--signal)]/50 hover:shadow-lg hover:shadow-[var(--signal)]/5">
               <div className="absolute top-0 right-0 p-4 opacity-5">
                 <Icon className="size-24" />
               </div>
@@ -72,7 +72,7 @@ export default async function TodayPage() {
       </div>
       
       <div className="grid gap-8 xl:grid-cols-[1.35fr_.65fr]">
-        <Card className="overflow-hidden border border-[var(--line)] bg-[var(--surface)]/90 backdrop-blur-xl shadow-2xl shadow-black/5">
+        <Card className="overflow-hidden border border-[var(--line)] bg-[var(--surface)]/90  shadow-2xl shadow-black/5">
           <div className="flex items-center justify-between border-b border-[var(--line)] bg-[var(--soft)]/50 px-6 py-5">
             <div>
               <h2 className="font-extrabold flex items-center gap-2 text-lg">
@@ -107,7 +107,7 @@ export default async function TodayPage() {
         </Card>
         
         <div className="space-y-8">
-          <Card className="p-6 border border-[var(--line)] bg-[var(--surface)]/90 backdrop-blur-xl shadow-2xl shadow-black/5">
+          <Card className="p-6 border border-[var(--line)] bg-[var(--surface)]/90  shadow-2xl shadow-black/5">
             <h2 className="font-extrabold text-lg mb-5">Ações rápidas</h2>
             <div className="grid grid-cols-2 gap-3">
               {shortcuts.map((s) => { 

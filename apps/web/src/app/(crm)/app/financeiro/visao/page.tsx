@@ -46,7 +46,7 @@ export default async function FinanceOverviewPage() {
             : "hover:shadow-rose-500/10 hover:border-rose-500/30";
           
           return (
-            <div key={m.label} className={`relative overflow-hidden rounded-3xl p-6 border border-white/10 bg-black/50 backdrop-blur-2xl transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl ${bgHover}`}>
+            <div key={m.label} className={`relative overflow-hidden rounded-3xl p-6 border border-[var(--line)] bg-[var(--surface)] transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl ${bgHover}`}>
               <div className="absolute top-0 right-0 p-4 opacity-5">
                 <Icon className="size-24" />
               </div>
@@ -67,7 +67,7 @@ export default async function FinanceOverviewPage() {
         })}
         
         {/* Vencidos Card */}
-        <div className="relative overflow-hidden rounded-3xl p-6 border border-rose-500/20 bg-rose-950/20 backdrop-blur-2xl transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-rose-500/20 hover:border-rose-500/50">
+        <div className="relative overflow-hidden rounded-3xl p-6 border border-[var(--line)] bg-[var(--surface)] transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl">
           <div className="absolute top-0 right-0 p-4 opacity-5">
             <AlertOctagon className="size-24 text-rose-500" />
           </div>
@@ -86,7 +86,7 @@ export default async function FinanceOverviewPage() {
       <div className="grid gap-6 lg:grid-cols-3 mt-8">
         
         {/* Dívidas Mensais & Recorrências (Projeção) */}
-        <div className="lg:col-span-1 rounded-3xl p-6 border border-[var(--signal)]/20 bg-gradient-to-br from-black/80 to-orange-950/30 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
+        <div className="lg:col-span-1 rounded-3xl p-6 border border-[var(--line)] bg-[var(--surface)] shadow-2xl relative overflow-hidden group">
           <div className="absolute inset-0 bg-[var(--signal)]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
           
           <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6 relative z-10">
@@ -134,7 +134,7 @@ export default async function FinanceOverviewPage() {
         </div>
 
         {/* Fluxo de Caixa (Gráfico) */}
-        <div className="lg:col-span-2 rounded-3xl p-6 border border-white/10 bg-black/50 backdrop-blur-2xl shadow-2xl">
+        <div className="lg:col-span-2 rounded-3xl p-6 border border-[var(--line)] bg-[var(--surface)] shadow-2xl">
           <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
             <div>
               <h2 className="font-extrabold text-lg flex items-center gap-2 text-white">Fluxo de Caixa</h2>

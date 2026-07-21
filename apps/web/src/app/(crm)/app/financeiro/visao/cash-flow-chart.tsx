@@ -55,7 +55,7 @@ export function CashFlowChart({ data }: { data: CashFlowData[] }) {
               if (active && payload && payload.length) {
                 const isPositive = payload[0].payload.isPositive;
                 return (
-                  <div className="rounded-xl bg-black/90 border border-white/10 px-4 py-3 text-sm text-white shadow-2xl backdrop-blur-xl">
+                  <div className="rounded-xl bg-black/90 border border-white/10 px-4 py-3 text-sm text-white shadow-2xl ">
                     <p className="font-bold text-gray-400 text-xs uppercase tracking-wider mb-1">{label}</p>
                     <p className={`font-black tracking-tighter ${isPositive ? "text-orange-400" : "text-rose-400"}`}>
                       {currency(payload[0].value as number)}

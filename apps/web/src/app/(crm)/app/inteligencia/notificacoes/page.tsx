@@ -54,7 +54,7 @@ export default async function NotificacoesPage({ searchParams }: { searchParams:
 
       <div className="space-y-4 relative z-10">
         {notifications.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--surface)]/50 backdrop-blur-sm py-16 text-center">
+          <div className="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--surface)]/50  py-16 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--soft)] border border-[var(--line)] shadow-xl mb-4">
               <Mail className="size-6 text-[var(--muted)]" />
             </div>
@@ -69,7 +69,7 @@ export default async function NotificacoesPage({ searchParams }: { searchParams:
             return (
               <div
                 key={notif.id}
-                className={`group relative overflow-hidden rounded-2xl border p-6 transition-all duration-300 ${isUnread ? "bg-[var(--surface)]/90 border-[var(--signal)]/40 shadow-lg shadow-[var(--signal)]/5" : "bg-[var(--surface)]/60 border-[var(--line)] hover:border-[var(--line)]/80"} backdrop-blur-md`}
+                className={`group relative overflow-hidden rounded-2xl border p-6 transition-all duration-300 ${isUnread ? "bg-[var(--surface)]/90 border-[var(--signal)]/40 shadow-lg shadow-[var(--signal)]/5" : "bg-[var(--surface)]/60 border-[var(--line)] hover:border-[var(--line)]/80"} `}
               >
                 {isUnread && (
                   <div className="absolute top-0 left-0 w-1 h-full bg-[var(--signal)] shadow-[0_0_10px_rgba(var(--signal-rgb),0.5)]"></div>
@@ -93,7 +93,7 @@ export default async function NotificacoesPage({ searchParams }: { searchParams:
                 
                 <div className="flex flex-wrap items-center gap-3">
                   {notif.actionUrl && (
-                    <Link href={notif.actionUrl} className="inline-flex items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--surface)]/50 backdrop-blur-sm px-4 py-2 text-xs font-bold text-[var(--text)] transition-all hover:border-[var(--signal)] hover:bg-[var(--signal)]/10 hover:text-[var(--signal)]">
+                    <Link href={notif.actionUrl} className="inline-flex items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--surface)]/50  px-4 py-2 text-xs font-bold text-[var(--text)] transition-all hover:border-[var(--signal)] hover:bg-[var(--signal)]/10 hover:text-[var(--signal)]">
                       <ExternalLink className="mr-2 size-3.5" />
                       Acessar registro
                     </Link>
@@ -117,7 +117,7 @@ export default async function NotificacoesPage({ searchParams }: { searchParams:
                 </div>
                 
                 {notif.telegramLastError && (
-                  <div className="mt-5 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-xs font-medium text-destructive backdrop-blur-sm">
+                  <div className="mt-5 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-xs font-medium text-destructive ">
                     <span className="font-bold flex items-center gap-2 mb-1"><AlertOctagon className="size-4" />Erro no Telegram</span>
                     {notif.telegramLastError}
                   </div>

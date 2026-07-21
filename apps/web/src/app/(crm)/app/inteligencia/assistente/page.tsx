@@ -8,7 +8,7 @@ export default function AiPage() {
       <PageHeader eyebrow="Inteligência assistida" title="Assistente de IA" description="Sugestões revisáveis para diagnóstico, propostas, projetos, suporte e análise financeira." />
       
       <div className="grid gap-6 xl:grid-cols-[1fr_340px] mt-6">
-        <Card className="relative flex min-h-[650px] flex-col overflow-hidden border border-[var(--line)] bg-[var(--surface)]/80 backdrop-blur-xl shadow-2xl shadow-black/10">
+        <Card className="relative flex min-h-[650px] flex-col overflow-hidden border border-[var(--line)] bg-[var(--surface)] shadow-2xl shadow-black/10">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[var(--signal)]/5 rounded-full blur-[100px] pointer-events-none -mr-40 -mt-40"></div>
           
           <div className="relative z-10 flex items-center justify-between border-b border-[var(--line)] bg-[var(--surface)]/50 px-6 py-5">
@@ -70,7 +70,7 @@ export default function AiPage() {
         </Card>
         
         <div className="space-y-5">
-          <Card className="relative overflow-hidden p-6 border border-[var(--line)] bg-[var(--surface)]/80 backdrop-blur-md transition-all hover:border-[var(--line)]/80">
+          <Card className="relative overflow-hidden p-6 border border-[var(--line)] bg-[var(--surface)] transition-all hover:border-[var(--line)]/80">
             <div className="absolute -right-6 -top-6 size-24 rounded-full bg-[var(--warning)]/5 blur-xl"></div>
             <div className="relative z-10">
               <div className="flex items-center gap-3 mb-5">
@@ -89,7 +89,7 @@ export default function AiPage() {
             </div>
           </Card>
           
-          <Card className="relative overflow-hidden p-6 border border-[var(--line)] bg-[var(--surface)]/80 backdrop-blur-md transition-all hover:border-[var(--signal)]/30 hover:shadow-lg hover:shadow-[var(--signal)]/5 group">
+          <Card className="relative overflow-hidden p-6 border border-[var(--line)] bg-[var(--surface)] transition-all hover:border-[var(--signal)]/30 hover:shadow-lg hover:shadow-[var(--signal)]/5 group">
             <div className="absolute -right-6 -bottom-6 size-32 rounded-full bg-[var(--signal)]/5 blur-2xl group-hover:bg-[var(--signal)]/10 transition-colors"></div>
             <div className="relative z-10">
               <div className="flex items-center gap-3 mb-4">

@@ -84,7 +84,7 @@ export function ProposalView({ proposal, version, token, opportunityTitle }: {
             {content.scopeTitle || "Sua proposta comercial"}
           </h1>
           
-          <div className="mt-12 inline-block rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-8 shadow-2xl">
+          <div className="mt-12 inline-block rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Investimento a partir de</p>
             <p className="money-value mt-2 text-5xl font-black text-white">{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(subtotal)}</p>
             {proposal.validUntil && (
@@ -178,7 +178,7 @@ export function ProposalView({ proposal, version, token, opportunityTitle }: {
             )}
           </div>
 
-          <aside className="h-fit rounded-3xl border border-white/10 bg-black/50 backdrop-blur-3xl p-8 shadow-2xl lg:sticky lg:top-8 relative overflow-hidden">
+          <aside className="h-fit rounded-3xl border border-white/10 bg-black/50 p-8 shadow-2xl lg:sticky lg:top-8 relative overflow-hidden">
             {/* Ambient glow in sidebar */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--signal)]/20 blur-[100px] rounded-full pointer-events-none" />
             

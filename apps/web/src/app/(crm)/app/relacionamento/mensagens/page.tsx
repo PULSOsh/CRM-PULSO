@@ -18,7 +18,7 @@ export default function MensagensPage() {
         description="Inbox unificada (WhatsApp, E-mail, Portal do Cliente)."
       />
 
-      <div className="mt-6 flex flex-1 overflow-hidden rounded-3xl border border-white/10 bg-black/20 backdrop-blur-md">
+      <div className="mt-6 flex flex-1 overflow-hidden rounded-3xl border border-white/10 bg-black/20 ">
         
         {/* Sidebar */}
         <div className="flex w-80 flex-col border-r border-white/10 bg-black/40">

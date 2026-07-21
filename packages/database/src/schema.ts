@@ -168,6 +168,7 @@ export const prospectingItems = pgTable("prospecting_items", {
   segment: text("segment"),
   status: prospectingItemStatus("status").default("not_researched").notNull(),
   notes: text("notes"),
+  metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}),
   contactId: uuid("contact_id").references(() => contacts.id),
   companyId: uuid("company_id").references(() => companies.id),
   leadId: uuid("lead_id").references(() => leads.id),

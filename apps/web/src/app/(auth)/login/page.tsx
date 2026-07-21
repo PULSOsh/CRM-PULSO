@@ -3,7 +3,6 @@
 import { authClient } from "@/lib/auth-client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { Loader2 } from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
@@ -31,54 +30,35 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex flex-col text-white">
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-black tracking-tight text-white mb-2">Bem-vindo de volta</h1>
-        <p className="text-sm font-medium text-gray-400">Acesso restrito à operação interna.</p>
-      </div>
-      
-      <form className="space-y-5" onSubmit={handleSubmit}>
-        <div className="space-y-1.5">
-          <label className="text-[11px] font-bold uppercase tracking-widest text-gray-400" htmlFor="email">E-mail</label>
+    <>
+      <h1 className="text-2xl font-extrabold tracking-[-0.03em]">Entrar</h1>
+      <p className="mt-1 text-sm text-[var(--muted)]">Acesso restrito ao administrador interno da PULSO.</p>
+      <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+        <div>
+          <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="email">E-mail</label>
           <input
             id="email" type="email" required autoComplete="username" value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-gray-600 outline-none transition-colors focus:border-orange-500 focus:bg-white/10"
-            placeholder="seu@email.com"
+            className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]"
           />
         </div>
-        
-        <div className="space-y-1.5">
-          <label className="text-[11px] font-bold uppercase tracking-widest text-gray-400" htmlFor="password">Senha</label>
+        <div>
+          <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="password">Senha</label>
           <input
             id="password" type="password" required autoComplete="current-password" value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-gray-600 outline-none transition-colors focus:border-orange-500 focus:bg-white/10"
-            placeholder="••••••••"
+            className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]"
           />
         </div>
-        
-        {error && (
-          <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-sm font-bold text-rose-400 text-center">
-            {error}
-          </div>
-        )}
-        
-        <button 
-          type="submit" 
-          disabled={loading} 
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-black uppercase tracking-widest text-white transition-all hover:bg-orange-600 focus:ring-4 focus:ring-orange-500/20 disabled:opacity-50 shadow-lg shadow-orange-500/20"
-        >
-          {loading ? <Loader2 className="size-5 animate-spin" /> : "Entrar na plataforma"}
+        {error && <p role="alert" className="rounded-lg bg-[color:#b3261e/.08] px-3 py-2 text-sm font-semibold text-[#b3261e]">{error}</p>}
+        <button type="submit" disabled={loading} className="primary-button w-full justify-center">
+          {loading ? "Entrando..." : "Entrar"}
         </button>
       </form>
-      
-      <div className="mt-8 text-center">
-        <a href="/esqueci-senha" className="text-xs font-bold text-gray-500 transition-colors hover:text-white">
-          Esqueci minha senha
-        </a>
-      </div>
-    </div>
+      <a href="/esqueci-senha" className="mt-4 block text-center text-sm font-bold text-[var(--muted)] hover:text-[var(--carbon)]">
+        Esqueci minha senha
+      </a>
+    </>
   );
 }
 

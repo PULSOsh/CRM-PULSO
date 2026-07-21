@@ -227,6 +227,9 @@ export async function trashLead(leadId: string) {
 
 export async function deleteLeadPermanently(leadId: string) {
   await requireSession();
+
+  await db.delete(schema.activities).where(and(eq(schema.activities.entityType, "lead"), eq(schema.activities.entityId, leadId)));
+  await db.update(schema.prospectingItems).set({ leadId: null, status: "not_researched" }).where(eq(schema.prospectingItems.leadId, leadId));
   await db.delete(schema.leads).where(eq(schema.leads.id, leadId));
 
   await recordAuditEvent({

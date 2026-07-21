@@ -225,6 +225,21 @@ export async function trashLead(leadId: string) {
   redirect("/app/comercial/leads");
 }
 
+export async function deleteLeadPermanently(leadId: string) {
+  await requireSession();
+  await db.delete(schema.leads).where(eq(schema.leads.id, leadId));
+
+  await recordAuditEvent({
+    actorType: "user",
+    action: "lead.deleted_permanently",
+    entityType: "lead",
+    entityId: leadId
+  });
+
+  revalidatePath("/app/comercial/leads");
+  redirect("/app/comercial/leads");
+}
+
 export async function listLeads(params: { q?: string; status?: string; page?: number }) {
   const page = Math.max(1, params.page ?? 1);
   const pageSize = 20;

@@ -3,7 +3,8 @@ import { Badge, Card } from "@pulso/ui";
 import { and, desc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
-import { convertLeadToOpportunity, trashLead, updateLeadStatus } from "../actions";
+import { convertLeadToOpportunity, trashLead, updateLeadStatus, deleteLeadPermanently } from "../actions";
+import { Phone, Mail, Trash2 } from "lucide-react";
 
 const statusLabel: Record<string, string> = {
   new: "Novo", contacted: "Contatado", qualifying: "Qualificando",
@@ -31,6 +32,8 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
   const canConvert = lead.status !== "converted";
   const availableActions = nextActions[lead.status] ?? [];
 
+  const waUrl = lead.phone ? `https://wa.me/55${lead.phone.replace(/\D/g, "")}` : null;
+
   return (
     <>
       <PageHeader
@@ -38,7 +41,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
         title={lead.name}
         description={lead.companyName ?? undefined}
         actions={
-          <>
+          <div className="flex items-center gap-2">
             {canConvert && (
               <form action={convertLeadToOpportunity.bind(null, lead.id)}>
                 <button type="submit" className="primary-button">Converter em oportunidade</button>
@@ -47,7 +50,12 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
             <form action={trashLead.bind(null, lead.id)}>
               <button type="submit" className="secondary-button">Mover para lixeira</button>
             </form>
-          </>
+            <form action={deleteLeadPermanently.bind(null, lead.id)}>
+              <button type="submit" className="secondary-button !border-red-500/30 !text-red-400 hover:!bg-red-500/10">
+                <Trash2 className="size-4" /> Excluir
+              </button>
+            </form>
+          </div>
         }
       />
 
@@ -60,13 +68,35 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
             </Badge>
           </div>
           <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-            <div><dt className="text-xs font-bold text-[var(--muted)]">Telefone</dt><dd className="mt-1 font-semibold">{lead.phone}</dd></div>
-            <div><dt className="text-xs font-bold text-[var(--muted)]">E-mail</dt><dd className="mt-1 font-semibold">{lead.email ?? "—"}</dd></div>
+            <div>
+              <dt className="text-xs font-bold text-[var(--muted)]">Telefone / WhatsApp</dt>
+              <dd className="mt-1 font-semibold">
+                {waUrl ? (
+                  <a href={waUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[var(--signal)] hover:underline">
+                    <Phone className="size-3.5" /> {lead.phone}
+                  </a>
+                ) : (
+                  lead.phone || "—"
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs font-bold text-[var(--muted)]">E-mail</dt>
+              <dd className="mt-1 font-semibold">
+                {lead.email ? (
+                  <a href={`mailto:${lead.email}`} className="inline-flex items-center gap-1.5 text-[var(--signal)] hover:underline">
+                    <Mail className="size-3.5" /> {lead.email}
+                  </a>
+                ) : (
+                  "—"
+                )}
+              </dd>
+            </div>
             <div><dt className="text-xs font-bold text-[var(--muted)]">Serviço de interesse</dt><dd className="mt-1 font-semibold">{lead.service ?? "—"}</dd></div>
             <div><dt className="text-xs font-bold text-[var(--muted)]">Origem</dt><dd className="mt-1 font-semibold">{lead.source ?? "—"}</dd></div>
           </dl>
           {lead.message && (
-            <div className="mt-4 rounded-xl bg-[var(--soft)] p-4 text-sm leading-6">{lead.message}</div>
+            <div className="mt-4 rounded-xl bg-[var(--soft)] p-4 text-sm leading-6 whitespace-pre-wrap">{lead.message}</div>
           )}
           {lead.disqualifiedReason && (
             <div className="mt-4 rounded-xl border border-[var(--line)] p-4 text-sm">
@@ -98,15 +128,18 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
         <Card className="p-6">
           <h2 className="font-extrabold">Histórico</h2>
-          <div className="mt-4 space-y-4">
-            {activities.length === 0 && <p className="text-sm text-[var(--muted)]">Nenhuma atividade registrada.</p>}
-            {activities.map((activity) => (
-              <div key={activity.id} className="border-l-2 border-[var(--line)] pl-3">
-                <p className="text-sm font-semibold">{activity.summary}</p>
-                <p className="mt-0.5 text-xs text-[var(--muted)]">{new Date(activity.occurredAt).toLocaleString("pt-BR")}</p>
-              </div>
-            ))}
-          </div>
+          {activities.length === 0 ? (
+            <p className="mt-4 text-xs text-[var(--muted)]">Nenhuma atividade registrada ainda.</p>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {activities.map((a) => (
+                <div key={a.id} className="border-l-2 border-[var(--signal)] pl-3 text-xs">
+                  <p className="font-bold text-[var(--text)]">{a.summary || a.type}</p>
+                  <p className="text-[10px] text-[var(--muted)]">{new Date(a.occurredAt).toLocaleString("pt-BR")}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
       </div>
     </>

@@ -347,3 +347,23 @@ export async function updateProspectItemStatus(itemId: string, newStatus: any) {
   revalidatePath(`/app/comercial/prospeccao/${item.listId}`);
   return { success: true };
 }
+
+export async function deleteProspectingItem(itemId: string) {
+  await requireSession();
+  const [item] = await db.select().from(schema.prospectingItems).where(eq(schema.prospectingItems.id, itemId)).limit(1);
+  if (!item) return { error: "Item não encontrado." };
+
+  await db.delete(schema.prospectingItems).where(eq(schema.prospectingItems.id, itemId));
+  await recordAuditEvent({ actorType: "user", action: "prospecting_item.deleted", entityType: "prospecting_item", entityId: itemId });
+  revalidatePath(`/app/comercial/prospeccao/${item.listId}`);
+  return { success: true };
+}
+
+export async function deleteProspectingList(listId: string) {
+  await requireSession();
+  await db.delete(schema.prospectingItems).where(eq(schema.prospectingItems.listId, listId));
+  await db.delete(schema.prospectingLists).where(eq(schema.prospectingLists.id, listId));
+  await recordAuditEvent({ actorType: "user", action: "prospecting_list.deleted", entityType: "prospecting_list", entityId: listId });
+  revalidatePath("/app/comercial/prospeccao");
+  redirect("/app/comercial/prospeccao");
+}

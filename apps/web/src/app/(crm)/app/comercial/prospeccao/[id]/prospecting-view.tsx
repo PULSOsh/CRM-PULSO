@@ -2,9 +2,15 @@
 
 import { useState, useTransition } from "react";
 import { Badge, Card } from "@pulso/ui";
-import { LayoutList, LayoutGrid, Phone, Mail, Link as LinkIcon, UserPlus, Target, CheckCircle2, ChevronRight, Loader2, Sparkles, MapPin } from "lucide-react";
+import {
+  LayoutList, LayoutGrid, Phone, Mail, Link as LinkIcon, UserPlus, Target,
+  CheckCircle2, Loader2, MapPin, Trash2, TrendingUp, Users, Flame, ExternalLink
+} from "lucide-react";
 import type { schema } from "@pulso/database";
-import { convertProspectToLead, convertProspectToOpportunity, updateProspectItemStatus } from "../actions";
+import {
+  convertProspectToLead, convertProspectToOpportunity,
+  updateProspectItemStatus, deleteProspectingItem
+} from "../actions";
 
 type ProspectingItem = typeof schema.prospectingItems.$inferSelect;
 
@@ -22,6 +28,18 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
   const [view, setView] = useState<"list" | "kanban">("list");
   const [pendingItemId, setPendingItemId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+
+  // Metrics
+  const totalLeads = items.length;
+  const highFitCount = items.filter(
+    (i) =>
+      String((i.metadata as any)?.fit || "").toLowerCase().includes("alto") ||
+      String((i.metadata as any)?.prioridade || "").toUpperCase() === "A"
+  ).length;
+  const contactedCount = items.filter((i) =>
+    ["contacted", "waiting_reply", "replied"].includes(i.status)
+  ).length;
+  const convertedCount = items.filter((i) => i.status === "converted").length;
 
   const handleConvertToLead = (itemId: string) => {
     setPendingItemId(itemId);
@@ -49,9 +67,79 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
     });
   };
 
+  const handleDeleteItem = (itemId: string) => {
+    if (!confirm("Tem certeza que deseja excluir este lead da lista?")) return;
+    setPendingItemId(itemId);
+    startTransition(async () => {
+      await deleteProspectingItem(itemId);
+      setPendingItemId(null);
+    });
+  };
+
+  const formatLink = (url?: string | null) => {
+    if (!url) return null;
+    let href = url;
+    if (!href.startsWith("http://") && !href.startsWith("https://")) {
+      if (href.startsWith("@")) {
+        href = `https://instagram.com/${href.replace(/^@/, "")}`;
+      } else {
+        href = `https://${href}`;
+      }
+    }
+    return href;
+  };
+
   return (
-    <div>
-      <div className="mb-5 flex items-center justify-between">
+    <div className="space-y-6">
+      {/* Cards de Resumo Executivo (Painel Estilo Clientes) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="p-4 border border-[var(--line)] bg-[var(--surface)] shadow-md">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider">Total de Leads</span>
+            <div className="grid size-8 place-items-center rounded-xl bg-[var(--soft)] text-[var(--text)]">
+              <Users className="size-4" />
+            </div>
+          </div>
+          <p className="mt-2 text-2xl font-black text-[var(--text)]">{totalLeads}</p>
+          <span className="text-[11px] text-[var(--muted)]">Contatos mapeados na lista</span>
+        </Card>
+
+        <Card className="p-4 border border-[var(--line)] bg-[var(--surface)] shadow-md">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider">Fit Alto / Prio A</span>
+            <div className="grid size-8 place-items-center rounded-xl bg-emerald-500/10 text-emerald-400">
+              <Flame className="size-4" />
+            </div>
+          </div>
+          <p className="mt-2 text-2xl font-black text-emerald-400">{highFitCount}</p>
+          <span className="text-[11px] text-[var(--muted)]">Alta probabilidade de fechamento</span>
+        </Card>
+
+        <Card className="p-4 border border-[var(--line)] bg-[var(--surface)] shadow-md">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider">Contatados / Respostas</span>
+            <div className="grid size-8 place-items-center rounded-xl bg-amber-500/10 text-amber-400">
+              <TrendingUp className="size-4" />
+            </div>
+          </div>
+          <p className="mt-2 text-2xl font-black text-amber-400">{contactedCount}</p>
+          <span className="text-[11px] text-[var(--muted)]">Em cadência de comunicação</span>
+        </Card>
+
+        <Card className="p-4 border border-[var(--line)] bg-[var(--surface)] shadow-md">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider">Convertidos no CRM</span>
+            <div className="grid size-8 place-items-center rounded-xl bg-[var(--signal)]/10 text-[var(--signal)]">
+              <CheckCircle2 className="size-4" />
+            </div>
+          </div>
+          <p className="mt-2 text-2xl font-black text-[var(--signal)]">{convertedCount}</p>
+          <span className="text-[11px] text-[var(--muted)]">Viraram Lead ou Oportunidade</span>
+        </Card>
+      </div>
+
+      {/* Barra de Ferramentas e Alternador de Visão */}
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-1">
           <button
             onClick={() => setView("list")}
@@ -76,22 +164,22 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
         </div>
 
         <p className="text-xs font-bold text-[var(--muted)]">
-          Total: <span className="text-[var(--text)] font-extrabold">{items.length}</span> contatos
+          Exibindo <span className="text-[var(--text)] font-extrabold">{items.length}</span> contatos
         </p>
       </div>
 
       {view === "list" ? (
         <Card className="overflow-hidden border border-[var(--line)] bg-[var(--surface)] shadow-lg">
           <div className="overflow-x-auto scrollbar-thin">
-            <table className="w-full min-w-[950px] text-left text-xs">
+            <table className="w-full min-w-[980px] text-left text-xs">
               <thead className="border-b border-[var(--line)] bg-[var(--soft)] font-mono uppercase tracking-wider text-[var(--muted)]">
                 <tr>
                   <th className="px-4 py-3.5 font-bold">Contato / Lead</th>
                   <th className="px-4 py-3.5 font-bold">Score & Fit</th>
                   <th className="px-4 py-3.5 font-bold">Status</th>
-                  <th className="px-4 py-3.5 font-bold">Local / Situação</th>
-                  <th className="px-4 py-3.5 font-bold">Contatos</th>
-                  <th className="px-4 py-3.5 text-right font-bold">Ações de Conversão</th>
+                  <th className="px-4 py-3.5 font-bold">Local / Situação Digital</th>
+                  <th className="px-4 py-3.5 font-bold">Links & Contatos</th>
+                  <th className="px-4 py-3.5 text-right font-bold">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--line)]">
@@ -106,6 +194,8 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
                   const meta = (item.metadata as Record<string, any>) || {};
                   const isPending = pendingItemId === item.id;
                   const isConverted = item.status === "converted";
+                  const instaHref = formatLink(item.instagram);
+                  const webHref = formatLink(item.website);
 
                   return (
                     <tr key={item.id} className="group hover:bg-[var(--soft)]/50 transition-colors">
@@ -176,60 +266,97 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
                         )}
                       </td>
 
-                      <td className="px-4 py-3.5 text-[11px] text-[var(--muted)] space-y-0.5">
+                      <td className="px-4 py-3.5 text-[11px] text-[var(--muted)] space-y-1">
                         {item.phone && (
-                          <div className="flex items-center gap-1">
-                            <Phone className="size-3 text-[var(--muted)] shrink-0" /> {item.phone}
-                          </div>
+                          <a
+                            href={`https://wa.me/55${item.phone.replace(/\D/g, "")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-[var(--text)] hover:text-[var(--signal)] hover:underline font-medium"
+                          >
+                            <Phone className="size-3 text-[var(--signal)] shrink-0" /> {item.phone}
+                          </a>
                         )}
-                        {item.instagram && (
-                          <div className="flex items-center gap-1 text-[var(--signal)]">
-                            <LinkIcon className="size-3 shrink-0" /> @{item.instagram.replace(/^@/, "")}
-                          </div>
+
+                        {instaHref && (
+                          <a
+                            href={instaHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-[var(--signal)] font-semibold hover:underline"
+                          >
+                            <LinkIcon className="size-3 shrink-0" /> {item.instagram}
+                          </a>
                         )}
+
+                        {webHref && (
+                          <a
+                            href={webHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-sky-400 font-semibold hover:underline"
+                          >
+                            <ExternalLink className="size-3 shrink-0" /> Website
+                          </a>
+                        )}
+
                         {item.email && (
-                          <div className="flex items-center gap-1">
-                            <Mail className="size-3 text-[var(--muted)] shrink-0" /> {item.email}
-                          </div>
+                          <a
+                            href={`mailto:${item.email}`}
+                            className="flex items-center gap-1 text-[var(--muted)] hover:text-[var(--text)] hover:underline"
+                          >
+                            <Mail className="size-3 shrink-0" /> {item.email}
+                          </a>
                         )}
                       </td>
 
                       <td className="px-4 py-3.5 text-right">
-                        {isConverted ? (
-                          <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl">
-                            <CheckCircle2 className="size-3.5" /> Convertido
-                          </span>
-                        ) : (
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => handleConvertToLead(item.id)}
-                              disabled={isPending}
-                              title="Converter em Lead no CRM"
-                              className="inline-flex items-center gap-1 rounded-xl bg-[var(--soft)] hover:bg-[var(--signal)] hover:text-white border border-[var(--line)] px-2.5 py-1.5 font-bold text-[11px] text-[var(--text)] transition-all disabled:opacity-50"
-                            >
-                              {isPending && pendingItemId === item.id ? (
-                                <Loader2 className="size-3 animate-spin" />
-                              ) : (
-                                <UserPlus className="size-3" />
-                              )}
-                              Lead
-                            </button>
+                        <div className="flex items-center justify-end gap-2">
+                          {isConverted ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-extrabold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-xl">
+                              <CheckCircle2 className="size-3.5" /> Convertido
+                            </span>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => handleConvertToLead(item.id)}
+                                disabled={isPending}
+                                title="Converter em Lead no CRM"
+                                className="inline-flex items-center gap-1 rounded-xl bg-[var(--soft)] hover:bg-[var(--signal)] hover:text-white border border-[var(--line)] px-2 py-1 font-bold text-[11px] text-[var(--text)] transition-all disabled:opacity-50"
+                              >
+                                {isPending && pendingItemId === item.id ? (
+                                  <Loader2 className="size-3 animate-spin" />
+                                ) : (
+                                  <UserPlus className="size-3" />
+                                )}
+                                Lead
+                              </button>
 
-                            <button
-                              onClick={() => handleConvertToOpportunity(item.id)}
-                              disabled={isPending}
-                              title="Criar Oportunidade Direta no Funil"
-                              className="inline-flex items-center gap-1 rounded-xl bg-[var(--signal)] hover:bg-orange-600 font-bold text-[11px] text-white px-3 py-1.5 shadow-sm shadow-[var(--signal)]/20 transition-all disabled:opacity-50"
-                            >
-                              {isPending && pendingItemId === item.id ? (
-                                <Loader2 className="size-3 animate-spin" />
-                              ) : (
-                                <Target className="size-3" />
-                              )}
-                              Oportunidade
-                            </button>
-                          </div>
-                        )}
+                              <button
+                                onClick={() => handleConvertToOpportunity(item.id)}
+                                disabled={isPending}
+                                title="Criar Oportunidade Direta no Funil"
+                                className="inline-flex items-center gap-1 rounded-xl bg-[var(--signal)] hover:bg-orange-600 font-bold text-[11px] text-white px-2.5 py-1 shadow-sm transition-all disabled:opacity-50"
+                              >
+                                {isPending && pendingItemId === item.id ? (
+                                  <Loader2 className="size-3 animate-spin" />
+                                ) : (
+                                  <Target className="size-3" />
+                                )}
+                                Opp
+                              </button>
+                            </>
+                          )}
+
+                          <button
+                            onClick={() => handleDeleteItem(item.id)}
+                            disabled={isPending}
+                            title="Excluir este item da lista"
+                            className="p-1.5 rounded-lg text-[var(--muted)] hover:bg-red-500/10 hover:text-red-400 transition-colors"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -240,7 +367,7 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
         </Card>
       ) : (
         /* Kanban View */
-        <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-thin h-[calc(100vh-210px)] snap-x">
+        <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-thin h-[calc(100vh-250px)] snap-x">
           {STATUSES.map((status) => {
             const columnItems = items.filter((i) => i.status === status.id);
             return (
@@ -264,6 +391,8 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
                     const meta = (item.metadata as Record<string, any>) || {};
                     const isPending = pendingItemId === item.id;
                     const isConverted = item.status === "converted";
+                    const instaHref = formatLink(item.instagram);
+                    const webHref = formatLink(item.website);
 
                     return (
                       <Card
@@ -305,14 +434,41 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
                           )}
                         </div>
 
-                        {item.phone && (
-                          <div className="mt-3 pt-3 border-t border-[var(--line)] flex items-center justify-between text-xs text-[var(--muted)]">
-                            <span className="flex items-center gap-1"><Phone className="size-3" /> {item.phone}</span>
-                            {item.instagram && (
-                              <span className="text-[var(--signal)] font-semibold">@{item.instagram.replace(/^@/, "")}</span>
-                            )}
-                          </div>
-                        )}
+                        {/* Links Clicáveis */}
+                        <div className="mt-3 pt-3 border-t border-[var(--line)] flex flex-col gap-1 text-xs">
+                          {item.phone && (
+                            <a
+                              href={`https://wa.me/55${item.phone.replace(/\D/g, "")}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-[var(--muted)] hover:text-[var(--signal)] font-medium"
+                            >
+                              <Phone className="size-3 text-[var(--signal)]" /> {item.phone}
+                            </a>
+                          )}
+
+                          {instaHref && (
+                            <a
+                              href={instaHref}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-[var(--signal)] font-semibold hover:underline"
+                            >
+                              <LinkIcon className="size-3" /> {item.instagram}
+                            </a>
+                          )}
+
+                          {webHref && (
+                            <a
+                              href={webHref}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-sky-400 font-semibold hover:underline"
+                            >
+                              <ExternalLink className="size-3" /> Site próprio
+                            </a>
+                          )}
+                        </div>
 
                         <div className="mt-3 pt-3 border-t border-[var(--line)] flex items-center justify-between gap-2">
                           {isConverted ? (
@@ -333,10 +489,19 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
                                 disabled={isPending}
                                 className="flex-1 py-1 px-2 rounded-lg bg-[var(--signal)] hover:bg-orange-600 text-white text-[11px] font-bold transition-all text-center shadow-sm"
                               >
-                                + Oportunidade
+                                + Opp
                               </button>
                             </>
                           )}
+
+                          <button
+                            onClick={() => handleDeleteItem(item.id)}
+                            disabled={isPending}
+                            title="Excluir lead da lista"
+                            className="p-1 text-[var(--muted)] hover:text-red-400 transition-colors"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
                         </div>
                       </Card>
                     );

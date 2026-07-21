@@ -45,7 +45,7 @@ export async function createProspectingList(_prev: any, formData: FormData) {
 
   const year = new Date().getFullYear();
   const sequence = await nextSequence("prospecting_list", year);
-  const code = formatRecordCode("PROSP", year, sequence);
+  const code = formatRecordCode("prospectingList", year, sequence);
 
   const [list] = await db.insert(schema.prospectingLists).values({
     code,

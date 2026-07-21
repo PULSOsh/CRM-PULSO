@@ -72,7 +72,7 @@ export default async function OpportunitiesPage({
                             {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(opp.expectedValue))}
                           </p>
                           {noNextAction && (
-                            <AlertTriangle className="size-4 text-amber-500" title="Sem próxima ação" />
+                            <span title="Sem próxima ação"><AlertTriangle className="size-4 text-amber-500" /></span>
                           )}
                         </div>
                       </Link>

@@ -1,5 +1,5 @@
 import { db, schema } from "@pulso/database";
-import { eq, or, ilike, and, isNull, gt, desc } from "drizzle-orm";
+import { eq, ilike, and, isNull, gt, desc } from "drizzle-orm";
 import { parseTelegramCommand, TELEGRAM_COMMAND, ParsedCommand } from "./commands";
 import { HttpTelegramProvider } from "@pulso/integrations";
 import { getTodayData, formatTodayDataForTelegram } from "../today-data";
@@ -7,57 +7,6 @@ import { recordAuditEvent } from "@pulso/database/audit";
 import { generateText } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
-export async function processTelegramWebhook(
-  secretToken: string | null,
-  body: any,
-  config: { token: string; chatId: string; webhookSecret: string }
-) {
-  // Step 1: Validar webhook apenas se secretToken for exigido
-  if (secretToken && config.webhookSecret && secretToken !== config.webhookSecret) {
-    return { status: 401, message: "Unauthorized" };
-  }
-
-  const updateId = body.update_id;
-  if (typeof updateId !== "number") return { status: 400, message: "Invalid update_id" };
-
-  // Step 2: Reservar update_id
-  try {
-    const inserted = await db.insert(schema.telegramUpdates)
-      .values({ updateId })
-      .onConflictDoNothing()
-      .returning();
-      
-    if (inserted.length === 0) {
-      return { status: 200, message: "Already processed" };
-    }
-  } catch (err) {
-    return { status: 500, message: "Database error on update_id" };
-  }
-
-  // Se não tem message ou callback_query, ignora
-  const message = body.message;
-  const callbackQuery = body.callback_query;
-  const telegram = new HttpTelegramProvider({ botToken: config.token });
-
-  if (callbackQuery) {
-    return await handleCallbackQuery(callbackQuery, config, telegram);
-  }
-
-  if (message) {
-    const chatId = message.chat?.id?.toString();
-    if (!chatId) return { status: 200, message: "Missing chatId" };
-    if (config.chatId && config.chatId !== "*" && chatId !== config.chatId) {
-      return { status: 200, message: "Ignored chat" };
-    }
-
-    const text = message.text;
-    if (typeof text !== "string") return { status: 200, message: "Ignored non-text" };
-
-    const command = parseTelegramCommand(text);
-    return await executeCommand(command, chatId, telegram);
-  }
-
-  return { status: 200, message: "Ignored update type" };
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 });
@@ -131,32 +80,79 @@ Responda em Português do Brasil (máximo 2 parágrafos).`;
   const lowerMsg = userMessage.toLowerCase();
   
   if (lowerMsg.includes("oportunidade") || lowerMsg.includes("funil") || lowerMsg.includes("venda")) {
-    return `🎯 *Oportunidades no Funil de Vendas (${recentOpps.length}):*\n\n${oppsList || "Nenhuma oportunidade aberta no momento."}`;
+    return `🎯 Oportunidades no Funil de Vendas (${recentOpps.length}):\n\n${oppsList || "Nenhuma oportunidade aberta no momento."}`;
   }
 
   if (lowerMsg.includes("proposta")) {
-    return `📄 *Propostas Comerciais Recentes (${recentProposals.length}):*\n\n${propList || "Nenhuma proposta cadastrada."}`;
+    return `📄 Propostas Comerciais Recentes (${recentProposals.length}):\n\n${propList || "Nenhuma proposta cadastrada."}`;
   }
 
   if (lowerMsg.includes("contrato")) {
-    return `📝 *Contratos Recentes (${recentContracts.length}):*\n\n${contList || "Nenhum contrato cadastrado."}`;
+    return `📝 Contratos Recentes (${recentContracts.length}):\n\n${contList || "Nenhum contrato cadastrado."}`;
   }
 
   if (lowerMsg.includes("lead") || lowerMsg.includes("cliente")) {
-    return `👤 *Leads / Clientes Recentes (${recentLeads.length}):*\n\n${leadsList || "Nenhum lead cadastrado."}`;
+    return `👤 Leads / Clientes Recentes (${recentLeads.length}):\n\n${leadsList || "Nenhum lead cadastrado."}`;
   }
 
   if (lowerMsg.includes("projeto")) {
-    return `🚀 *Projetos Operacionais (${recentProjects.length}):*\n\n${projList || "Nenhum projeto ativo."}`;
+    return `🚀 Projetos Operacionais (${recentProjects.length}):\n\n${projList || "Nenhum projeto ativo."}`;
   }
 
-  return `📊 *Resumo Executivo PULSO CRM:*\n\n` +
-    `• *Oportunidades:* ${recentOpps.length} no funil\n` +
-    `• *Propostas:* ${recentProposals.length} recentes\n` +
-    `• *Contratos:* ${recentContracts.length} ativos/recentes\n` +
-    `• *Leads:* ${recentLeads.length} registrados\n` +
-    `• *Projetos:* ${recentProjects.length} operacionais\n\n` +
-    `💡 *Pergunte sobre:* oportunidades, propostas, contratos, leads ou projetos para ver os detalhes!`;
+  return `📊 Resumo Executivo PULSO CRM:\n\n` +
+    `• Oportunidades: ${recentOpps.length} no funil\n` +
+    `• Propostas: ${recentProposals.length} recentes\n` +
+    `• Contratos: ${recentContracts.length} ativos/recentes\n` +
+    `• Leads: ${recentLeads.length} registrados\n` +
+    `• Projetos: ${recentProjects.length} operacionais\n\n` +
+    `💡 Pergunte sobre: oportunidades, propostas, contratos, leads ou projetos para ver os detalhes!`;
+}
+
+export async function processTelegramWebhook(
+  secretToken: string | null,
+  body: any,
+  config: { token: string; chatId: string; webhookSecret: string }
+) {
+  if (secretToken && config.webhookSecret && secretToken !== config.webhookSecret) {
+    return { status: 401, message: "Unauthorized" };
+  }
+
+  const updateId = body?.update_id;
+  if (typeof updateId !== "number") return { status: 400, message: "Invalid update_id" };
+
+  try {
+    const inserted = await db.insert(schema.telegramUpdates)
+      .values({ updateId })
+      .onConflictDoNothing()
+      .returning();
+      
+    if (inserted.length === 0) {
+      return { status: 200, message: "Already processed" };
+    }
+  } catch (err) {
+    console.error("Telegram update_id insert error:", err);
+  }
+
+  const message = body.message;
+  const callbackQuery = body.callback_query;
+  const telegram = new HttpTelegramProvider({ botToken: config.token });
+
+  if (callbackQuery) {
+    return await handleCallbackQuery(callbackQuery, config, telegram);
+  }
+
+  if (message) {
+    const chatId = message.chat?.id?.toString();
+    if (!chatId) return { status: 200, message: "Missing chatId" };
+
+    const text = message.text;
+    if (typeof text !== "string") return { status: 200, message: "Ignored non-text" };
+
+    const command = parseTelegramCommand(text);
+    return await executeCommand(command, chatId, telegram);
+  }
+
+  return { status: 200, message: "Ignored update type" };
 }
 
 async function executeCommand(cmd: ParsedCommand, chatId: string, telegram: HttpTelegramProvider) {
@@ -168,15 +164,15 @@ async function executeCommand(cmd: ParsedCommand, chatId: string, telegram: Http
     }
 
     if (cmd.type === TELEGRAM_COMMAND.HELP) {
-      const help = `*Comandos disponíveis:*\n\n/hoje - Resumo do dia e itens pendentes\n/buscar [termo] - Busca empresas e projetos\n/tarefa DD/MM/AAAA HH:mm [título] - Cria uma tarefa para o dia\n/nota [texto] - Adiciona uma nota rápida\n/cancelar - Cancela ações pendentes de confirmação`;
-      await telegram.sendMessage({ chat_id: chatId, text: help, parse_mode: "MarkdownV2" });
+      const help = `Comandos disponíveis:\n\n/hoje - Resumo do dia e itens pendentes\n/buscar [termo] - Busca empresas e projetos\n/tarefa DD/MM/AAAA HH:mm [título] - Cria uma tarefa para o dia\n/nota [texto] - Adiciona uma nota rápida\n/cancelar - Cancela ações pendentes de confirmação`;
+      await telegram.sendMessage({ chat_id: chatId, text: help });
       return { status: 200, message: "Replied help" };
     }
 
     if (cmd.type === TELEGRAM_COMMAND.TODAY) {
       const data = await getTodayData();
       const text = formatTodayDataForTelegram(data);
-      await telegram.sendMessage({ chat_id: chatId, text, parse_mode: "MarkdownV2" });
+      await telegram.sendMessage({ chat_id: chatId, text });
       return { status: 200, message: "Replied today" };
     }
 
@@ -185,25 +181,22 @@ async function executeCommand(cmd: ParsedCommand, chatId: string, telegram: Http
       const companiesP = db.select().from(schema.companies).where(ilike(schema.companies.tradeName, `%${cmd.term}%`)).limit(8);
       const [projects, companies] = await Promise.all([projectsP, companiesP]);
       
-      let text = `*Resultados para "${cmd.term}":*\n\n`;
+      let text = `Resultados para "${cmd.term}":\n\n`;
       if (companies.length > 0) {
-        text += `*Empresas:*\n` + companies.map(c => `• ${c.tradeName}`).join("\n") + "\n\n";
+        text += `Empresas:\n` + companies.map(c => `• ${c.tradeName}`).join("\n") + "\n\n";
       }
       if (projects.length > 0) {
-        text += `*Projetos:*\n` + projects.map(p => `• ${p.name}`).join("\n") + "\n\n";
+        text += `Projetos:\n` + projects.map(p => `• ${p.name}`).join("\n") + "\n\n";
       }
       if (companies.length === 0 && projects.length === 0) {
         text = `Nenhum resultado encontrado para "${cmd.term}".`;
       }
       
-      // Sanitizar markdown básico
-      text = text.replace(/([_\[\]()~`>#+\-=|{}.!])/g, "\\$1");
-      await telegram.sendMessage({ chat_id: chatId, text, parse_mode: "MarkdownV2" });
+      await telegram.sendMessage({ chat_id: chatId, text });
       return { status: 200, message: "Replied search" };
     }
 
     if (cmd.type === TELEGRAM_COMMAND.TASK || cmd.type === TELEGRAM_COMMAND.NOTE) {
-      // Criar ação pendente
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
       
       const payload = cmd.type === TELEGRAM_COMMAND.TASK 
@@ -218,13 +211,12 @@ async function executeCommand(cmd: ParsedCommand, chatId: string, telegram: Http
       }).returning();
 
       const text = cmd.type === TELEGRAM_COMMAND.TASK 
-        ? `Confirma a criação da tarefa?\n\n*Título:* ${cmd.title}\n*Prazo:* ${cmd.dueAt.toLocaleString("pt-BR")}`
-        : `Confirma a criação da nota?\n\n*Nota:* ${cmd.summary}`;
+        ? `Confirma a criação da tarefa?\n\nTítulo: ${cmd.title}\nPrazo: ${cmd.dueAt.toLocaleString("pt-BR")}`
+        : `Confirma a criação da nota?\n\nNota: ${cmd.summary}`;
 
       await telegram.sendMessage({
         chat_id: chatId,
-        text: text.replace(/([_\[\]()~`>#+\-=|{}.!])/g, "\\$1"),
-        parse_mode: "MarkdownV2",
+        text,
         reply_markup: {
           inline_keyboard: [
             [
@@ -253,18 +245,19 @@ async function executeCommand(cmd: ParsedCommand, chatId: string, telegram: Http
     }
   } catch (err) {
     console.error("Error executing command", err);
-    await telegram.sendMessage({ chat_id: chatId, text: "Ocorreu um erro ao processar o comando." });
+    try {
+      await telegram.sendMessage({ chat_id: chatId, text: "Ocorreu um erro ao processar o comando." });
+    } catch (e) {
+      console.error("Failed to send error message to Telegram:", e);
+    }
   }
 
-  return { status: 200, message: "Executed command with generic catch" };
+  return { status: 200, message: "Executed command" };
 }
 
 async function handleCallbackQuery(callbackQuery: any, config: { token: string; chatId: string; webhookSecret: string }, telegram: HttpTelegramProvider) {
   const chatId = callbackQuery.message?.chat?.id?.toString();
   if (!chatId) return { status: 200, message: "Missing callback chatId" };
-  if (config.chatId && config.chatId !== "*" && chatId !== config.chatId) {
-    return { status: 200, message: "Ignored callback chat" };
-  }
 
   const data = callbackQuery.data;
   if (typeof data !== "string") return { status: 200, message: "Ignored non-string callback" };
@@ -287,7 +280,6 @@ async function handleCallbackQuery(callbackQuery: any, config: { token: string; 
   }
 
   if (actionStr === "confirm") {
-    // Transação manual: atualiza returning e insere se retornar 1 linha
     const updated = await db.update(schema.telegramPendingActions)
       .set({ confirmedAt: new Date() })
       .where(
@@ -356,5 +348,4 @@ async function handleCallbackQuery(callbackQuery: any, config: { token: string; 
   }
 
   return { status: 200, message: "Processed callback" };
-}
 }

@@ -11,6 +11,7 @@ import {
   convertProspectToLead, convertProspectToOpportunity,
   updateProspectItemStatus, deleteProspectingItem
 } from "../actions";
+import { ConfirmModal } from "@/components/confirm-modal";
 
 type ProspectingItem = typeof schema.prospectingItems.$inferSelect;
 
@@ -18,16 +19,19 @@ const STATUSES = [
   { id: "not_researched", label: "Não pesquisado", color: "neutral" },
   { id: "researched", label: "Pesquisado (Mapeado)", color: "info" },
   { id: "contacted", label: "Contatado", color: "warning" },
-  { id: "waiting_reply", label: "Aguardando Resposta", color: "warning" },
-  { id: "replied", label: "Respondeu", color: "success" },
-  { id: "not_interested", label: "Sem interesse", color: "error" },
-  { id: "converted", label: "Convertido", color: "success" },
+  { id: "waiting_reply", label: "Aguardando resposta", color: "warning" },
+  { id: "replied", label: "Respondeu", color: "signal" },
+  { id: "meeting_scheduled", label: "Reunião agendada", color: "success" },
+  { id: "unqualified", label: "Desqualificado", color: "neutral" },
+  { id: "converted", label: "Convertido em Lead/Opp", color: "success" },
 ] as const;
 
 export function ProspectingView({ items }: { items: ProspectingItem[] }) {
   const [view, setView] = useState<"list" | "kanban">("list");
   const [pendingItemId, setPendingItemId] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   // Metrics
   const totalLeads = items.length;
@@ -46,7 +50,7 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
     startTransition(async () => {
       const res = await convertProspectToLead(itemId);
       setPendingItemId(null);
-      if (res?.error) alert(res.error);
+      if (res?.error) setErrorMessage(res.error);
     });
   };
 
@@ -67,12 +71,14 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
     });
   };
 
-  const handleDeleteItem = (itemId: string) => {
-    if (!confirm("Tem certeza que deseja excluir este lead da lista?")) return;
-    setPendingItemId(itemId);
+  const confirmDeleteProspectItem = () => {
+    if (!deleteTargetId) return;
+    const targetId = deleteTargetId;
+    setPendingItemId(targetId);
     startTransition(async () => {
-      await deleteProspectingItem(itemId);
+      await deleteProspectingItem(targetId);
       setPendingItemId(null);
+      setDeleteTargetId(null);
     });
   };
 
@@ -335,7 +341,7 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
                           )}
 
                           <button
-                            onClick={() => handleDeleteItem(item.id)}
+                            onClick={() => setDeleteTargetId(item.id)}
                             disabled={isPending}
                             title="Excluir este item da lista"
                             className="p-1.5 rounded-lg text-[var(--muted)] hover:bg-red-500/10 hover:text-red-400 transition-colors"
@@ -474,7 +480,7 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
                           )}
 
                           <button
-                            onClick={() => handleDeleteItem(item.id)}
+                            onClick={() => setDeleteTargetId(item.id)}
                             disabled={isPending}
                             title="Excluir lead da lista"
                             className="p-1 text-[var(--muted)] hover:text-red-400 transition-colors"
@@ -491,6 +497,31 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
           })}
         </div>
       )}
+
+      {/* PULSO Custom Confirm Modal for Prospecting */}
+      <ConfirmModal
+        isOpen={Boolean(deleteTargetId)}
+        title="Excluir Lead da Lista"
+        description="Tem certeza que deseja excluir este lead da lista de prospecção?"
+        confirmText="Sim, Excluir"
+        cancelText="Cancelar"
+        tone="danger"
+        isLoading={isPending}
+        onConfirm={confirmDeleteProspectItem}
+        onClose={() => setDeleteTargetId(null)}
+      />
+
+      {/* PULSO Error Alert Modal */}
+      <ConfirmModal
+        isOpen={Boolean(errorMessage)}
+        title="Aviso"
+        description={errorMessage || ""}
+        confirmText="Entendido"
+        cancelText="Fechar"
+        tone="signal"
+        onConfirm={() => setErrorMessage(null)}
+        onClose={() => setErrorMessage(null)}
+      />
     </div>
   );
 }

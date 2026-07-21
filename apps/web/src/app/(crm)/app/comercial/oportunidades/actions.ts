@@ -232,6 +232,7 @@ export async function deleteOpportunity(opportunityId: string) {
     throw new Error("Não é possível excluir esta oportunidade pois ela possui um contrato associado.");
   }
 
+  await db.update(schema.leads).set({ opportunityId: null }).where(eq(schema.leads.opportunityId, opportunityId));
   await db.delete(schema.proposals).where(eq(schema.proposals.opportunityId, opportunityId));
   await db.delete(schema.briefings).where(eq(schema.briefings.opportunityId, opportunityId));
   await db.delete(schema.activities).where(and(eq(schema.activities.entityType, "opportunity"), eq(schema.activities.entityId, opportunityId)));

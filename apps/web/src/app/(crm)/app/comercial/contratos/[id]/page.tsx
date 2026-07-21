@@ -9,6 +9,7 @@ import { ClausesEditor } from "./clauses-editor";
 import { InternalSignForm } from "./sign-form";
 import { UploadSignedDocument } from "./upload-signed";
 import { LinkBox, RegenerateContractLink } from "./send-and-link";
+import { ContractDocument } from "@/components/contract-document";
 
 const statusLabel: Record<string, string> = { draft: "Rascunho", sent: "Enviado", signed: "Assinado", cancelled: "Cancelado" };
 
@@ -67,7 +68,16 @@ export default async function ContractDetailPage({
           {isDraft ? (
             <ClausesEditor contractId={contract.id} initialClauses={content.clauses} initialType={(content as any).type ?? "avulso"} />
           ) : (
-            <pre className="whitespace-pre-wrap rounded-xl bg-[var(--soft)] p-4 font-mono text-xs leading-6">{content.clauses}</pre>
+            <ContractDocument
+              code={contract.code}
+              clauses={content.clauses}
+              totalValue={content.totalValue}
+              paymentSummary={content.paymentSummary}
+              status={contract.status}
+              signatories={signatories}
+              documentHash={contract.documentHash}
+              signedAt={contract.signedAt}
+            />
           )}
 
           {contract.status === "cancelled" && contract.cancelReason && (

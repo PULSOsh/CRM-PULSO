@@ -23,27 +23,33 @@ async function requireSession() {
 type ContractContent = { clauses: string; scopeSummary: string; totalValue: number; paymentSummary: string; type?: "mrr" | "avulso" };
 
 function defaultClauses(content: ContractContent, code: string) {
-  return `CONTRATO DE PRESTAÇÃO DE SERVIÇOS — ${code}
+  return `INSTRUMENTO PARTICULAR DE PRESTAÇÃO DE SERVIÇOS — ${code}
 
-1. OBJETO
-A PULSO prestará os serviços descritos no escopo abaixo, conforme proposta comercial aceita pelo CONTRATANTE.
+### CLÁUSULA 1ª — DO OBJETO E ESCOPO TÉCNICO
+A CONTRATADA (PULSO TECNOLOGIA E ESTRATÉGIA DIGITAL) prestará ao CONTRATANTE os serviços técnicos e estratégicos descritos a seguir:
+${content.scopeSummary || "Serviços digitais conforme proposta comercial aceita."}
 
-Escopo: ${content.scopeSummary}
+### CLÁUSULA 2ª — DOS VALORES E CONDIÇÕES DE PAGAMENTO
+Pela prestação dos serviços contratados, o CONTRATANTE pagará a CONTRATADA o valor total de R$ ${content.totalValue.toFixed(2)}.
+Condições de pagamento estipuladas: ${content.paymentSummary}
 
-2. VALOR E CONDIÇÕES DE PAGAMENTO
-Valor total: R$ ${content.totalValue.toFixed(2)}
-Condição: ${content.paymentSummary}
+Em caso de inadimplemento de qualquer parcela, incidirá multa moratória de 2% (dois por cento) sobre o valor devido, acrescida de juros de mora de 1% (um por cento) ao mês.
 
-3. PRAZO
-O prazo de execução será definido em cronograma específico após a confirmação de pagamento inicial.
+### CLÁUSULA 3ª — DAS OBRIGAÇÕES DAS PARTES
+1. A CONTRATADA compromete-se a executar os serviços com rigor técnico e dentro dos padrões de mercado.
+2. O CONTRATANTE compromete-se a fornecer tempestivamente todas as informações, acessos e aprovações necessárias ao andamento do projeto.
 
-4. REVISÕES E GARANTIA
-Revisões e garantia seguem os termos descritos na proposta comercial vinculada a este contrato.
+### CLÁUSULA 4ª — DOS PRAZOS E CRONOGRAMA
+O cronograma operacional terá início após a confirmação do pagamento inicial e disponibilização integral dos insumos pelo CONTRATANTE.
 
-5. RESCISÃO
-Este contrato poderá ser rescindido por qualquer das partes mediante aviso prévio por escrito, respeitando os valores já executados.
+### CLÁUSULA 5ª — DA PROPRIEDADE INTELECTUAL
+Após a quitação integral deste contrato, todos os direitos patrimoniais sobre os entregáveis desenvolvidos serão transferidos ao CONTRATANTE. A CONTRATADA reserva-se o direito de divulgar o projeto em seu portfólio.
 
-(Revise e ajuste este texto antes de enviar para assinatura.)`;
+### CLÁUSULA 6ª — DA RESCISÃO
+Este contrato poderá ser rescindido por qualquer das partes mediante comunicação por escrito com antecedência mínima de 15 dias, respeitando o pagamento proporcional das etapas executadas.
+
+### CLÁUSULA 7ª — DO FORO DE ELEIÇÃO
+As partes elegem o Foro da Comarca de Fortaleza, Estado do Ceará, com renúncia expressa a qualquer outro.`;
 }
 
 function buildProposalFullText(versionContent: any, totalValue: number, paymentSummary: string) {

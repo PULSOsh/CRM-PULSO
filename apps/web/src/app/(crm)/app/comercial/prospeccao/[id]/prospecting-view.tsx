@@ -26,8 +26,10 @@ const STATUSES = [
   { id: "converted", label: "Convertido em Lead/Opp", color: "success" },
 ] as const;
 
-export function ProspectingView({ items }: { items: ProspectingItem[] }) {
+export function ProspectingView({ items: initialItems }: { items: ProspectingItem[] }) {
+  const [items, setItems] = useState(initialItems);
   const [view, setView] = useState<"list" | "kanban">("list");
+  const [hideConverted, setHideConverted] = useState(true);
   const [pendingItemId, setPendingItemId] = useState<string | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -45,26 +47,25 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
   ).length;
   const convertedCount = items.filter((i) => i.status === "converted").length;
 
+  const displayItems = hideConverted ? items.filter(i => i.status !== "converted") : items;
+
   const handleConvertToLead = (itemId: string) => {
     setPendingItemId(itemId);
+    // Optimistic local update
+    setItems(prev => prev.map(i => i.id === itemId ? { ...i, status: "converted" } : i));
     startTransition(async () => {
       const res = await convertProspectToLead(itemId);
       setPendingItemId(null);
-      if (res?.error) setErrorMessage(res.error);
-    });
-  };
-
-  const handleConvertToOpportunity = (itemId: string) => {
-    setPendingItemId(itemId);
-    startTransition(async () => {
-      const res = await convertProspectToOpportunity(itemId);
-      setPendingItemId(null);
-      if (res?.error) alert(res.error);
+      if (res?.error) {
+        setItems(initialItems);
+        setErrorMessage(res.error);
+      }
     });
   };
 
   const handleStatusChange = (itemId: string, newStatus: string) => {
     setPendingItemId(itemId);
+    setItems(prev => prev.map(i => i.id === itemId ? { ...i, status: newStatus as any } : i));
     startTransition(async () => {
       await updateProspectItemStatus(itemId, newStatus);
       setPendingItemId(null);
@@ -75,6 +76,7 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
     if (!deleteTargetId) return;
     const targetId = deleteTargetId;
     setPendingItemId(targetId);
+    setItems(prev => prev.filter(i => i.id !== targetId));
     startTransition(async () => {
       await deleteProspectingItem(targetId);
       setPendingItemId(null);
@@ -169,9 +171,23 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
           </button>
         </div>
 
-        <p className="text-xs font-bold text-[var(--muted)]">
-          Exibindo <span className="text-[var(--text)] font-extrabold">{items.length}</span> contatos
-        </p>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setHideConverted(!hideConverted)}
+            className={`rounded-xl border px-3 py-1.5 text-xs font-bold transition-all ${
+              hideConverted 
+                ? "border-[var(--signal)]/30 bg-[var(--signal)]/10 text-[var(--signal)]" 
+                : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--text)]"
+            }`}
+          >
+            {hideConverted ? `Ocultando Convertidos (${convertedCount})` : "Exibindo Todos (Inclui Convertidos)"}
+          </button>
+
+          <p className="text-xs font-bold text-[var(--muted)]">
+            Exibindo <span className="text-[var(--text)] font-extrabold">{displayItems.length}</span> contatos
+          </p>
+        </div>
       </div>
 
       {view === "list" ? (
@@ -189,14 +205,14 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--line)]">
-                {items.length === 0 && (
+                {displayItems.length === 0 && (
                   <tr>
                     <td colSpan={6} className="px-4 py-12 text-center text-sm text-[var(--muted)]">
-                      Nenhum contato nesta lista de prospecção.
+                      Nenhum contato pendente nesta lista de prospecção.
                     </td>
                   </tr>
                 )}
-                {items.map((item) => {
+                {displayItems.map((item) => {
                   const meta = (item.metadata as Record<string, any>) || {};
                   const isPending = pendingItemId === item.id;
                   const isConverted = item.status === "converted";
@@ -361,7 +377,7 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
         /* Kanban View */
         <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-thin h-[calc(100vh-250px)] snap-x">
           {STATUSES.map((status) => {
-            const columnItems = items.filter((i) => i.status === status.id);
+            const columnItems = displayItems.filter((i) => i.status === status.id);
             return (
               <div
                 key={status.id}

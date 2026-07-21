@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Badge, Card } from "@pulso/ui";
-import { LayoutList, LayoutGrid, Phone, Mail, Instagram } from "lucide-react";
+import { LayoutList, LayoutGrid, Phone, Mail, Link as LinkIcon } from "lucide-react";
 import type { schema } from "@pulso/database";
 
 type ProspectingItem = typeof schema.prospectingItems.$inferSelect;
@@ -67,7 +67,7 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
                     </td>
                     <td className="px-5 py-4 text-sm text-[var(--muted)]">
                       {item.phone && <div className="flex items-center gap-1"><Phone className="size-3" /> {item.phone}</div>}
-                      {item.instagram && <div className="flex items-center gap-1 mt-1"><Instagram className="size-3" /> {item.instagram}</div>}
+                      {item.instagram && <div className="flex items-center gap-1 mt-1"><LinkIcon className="size-3" /> {item.instagram}</div>}
                       {item.email && <div className="flex items-center gap-1 mt-1"><Mail className="size-3" /> {item.email}</div>}
                     </td>
                     <td className="px-5 py-4 text-sm">{item.segment || "—"}</td>
@@ -96,7 +96,7 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
                     
                     <div className="mt-3 flex gap-2">
                       {item.phone && <div className="grid size-6 place-items-center rounded bg-[var(--soft)] text-[var(--muted)]" title={item.phone}><Phone className="size-3" /></div>}
-                      {item.instagram && <div className="grid size-6 place-items-center rounded bg-[var(--soft)] text-[var(--muted)]" title={item.instagram}><Instagram className="size-3" /></div>}
+                      {item.instagram && <div className="grid size-6 place-items-center rounded bg-[var(--soft)] text-[var(--muted)]" title={item.instagram}><LinkIcon className="size-3" /></div>}
                     </div>
                   </Card>
                 ))}

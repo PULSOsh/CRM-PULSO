@@ -97,8 +97,10 @@ export async function createProposal(_prev: ProposalActionState, formData: FormD
   const { token, tokenHash } = generatePublicToken();
   const slug = generateSlug(code);
 
+  const defaultValidUntil = new Date(Date.now() + 3 * 86400 * 1000).toISOString().split("T")[0];
+
   const [proposal] = await db.insert(schema.proposals).values({
-    code, opportunityId: parsed.data.opportunityId, publicSlug: slug, publicTokenHash: tokenHash, status: "draft"
+    code, opportunityId: parsed.data.opportunityId, publicSlug: slug, publicTokenHash: tokenHash, status: "draft", validUntil: defaultValidUntil
   }).returning();
 
   let initialContent = { ...emptyContent };
@@ -179,6 +181,15 @@ export async function saveDraftVersion(proposalId: string, versionId: string, _p
   }).where(eq(schema.proposalVersions.id, versionId));
 
   if (parsed.validUntil) {
+    const [year, month, day] = parsed.validUntil.split("-").map(Number);
+    const validUntilDate = new Date(year, month - 1, day, 23, 59, 59);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (validUntilDate < today) {
+      return { error: "A data de validade não pode ser retroativa (anterior a hoje)." };
+    }
+
     await db.update(schema.proposals).set({ validUntil: parsed.validUntil, updatedAt: new Date() }).where(eq(schema.proposals.id, proposalId));
   }
 

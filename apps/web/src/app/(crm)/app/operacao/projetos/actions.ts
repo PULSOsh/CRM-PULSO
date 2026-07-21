@@ -56,6 +56,34 @@ export async function generateProjectFromContract(contractId: string): Promise<{
   return { projectId: project.id };
 }
 
+export async function createStandaloneProject(_prev: { error?: string }, formData: FormData): Promise<{ error?: string }> {
+  await requireSession();
+  
+  const name = formData.get("name") as string;
+  const description = formData.get("description") as string;
+  const budget = formData.get("budget") as string;
+
+  if (!name || name.trim().length === 0) {
+    return { error: "O nome do projeto é obrigatório." };
+  }
+
+  const year = new Date().getFullYear();
+  const sequence = await nextSequence("project", year);
+  const code = formatRecordCode("project", year, sequence);
+
+  const [project] = await db.insert(schema.projects).values({
+    code,
+    name: name.trim(),
+    description: description?.trim() || null,
+    status: "planned",
+    budget: budget ? String(Number(budget)) : "0",
+  }).returning();
+
+  await recordAuditEvent({ actorType: "user", action: "project.created", entityType: "project", entityId: project.id, after: { code, standalone: true } });
+  revalidatePath("/app/operacao/projetos");
+  redirect(`/app/operacao/projetos/${project.id}`);
+}
+
 export async function listProjects() {
   await requireSession();
   return db.select().from(schema.projects).orderBy(desc(schema.projects.createdAt));

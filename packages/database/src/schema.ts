@@ -399,6 +399,7 @@ export const projects = pgTable("projects", {
   id: uuid("id").defaultRandom().primaryKey(),
   code: varchar("code", { length: 32 }).notNull().unique(),
   name: text("name").notNull(),
+  description: text("description"),
   companyId: uuid("company_id").references(() => companies.id),
   contactId: uuid("contact_id").references(() => contacts.id),
   opportunityId: uuid("opportunity_id").references(() => opportunities.id),

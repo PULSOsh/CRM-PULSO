@@ -100,7 +100,7 @@ export async function importProspectingItems(_prev: any, formData: FormData) {
     const findHeaderRow = (rows: string[][]) => {
       for (let i = 0; i < Math.min(rows.length, 25); i++) {
         const row = rows[i];
-        if (!row) continue;
+        if (!row || row.filter(Boolean).length < 3) continue; // Real table headers have 3+ columns
         const joined = row.map(cell => String(cell || "").toLowerCase()).join(" ");
         if (joined.includes("lead") || joined.includes("nome") || joined.includes("contato") || joined.includes("empresa")) {
           return i;

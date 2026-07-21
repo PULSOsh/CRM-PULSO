@@ -18,8 +18,11 @@ export function ProposalEditor({
 }: {
   proposalId: string; versionId: string; initialContent: ProposalContent; initialValidUntil: string | null;
 }) {
+  const todayStr = new Date().toISOString().split("T")[0];
+  const defaultMin3DaysStr = new Date(Date.now() + 3 * 86400 * 1000).toISOString().split("T")[0];
+
   const [content, setContent] = useState<ProposalContent>(initialContent);
-  const [validUntil, setValidUntil] = useState(initialValidUntil ?? "");
+  const [validUntil, setValidUntil] = useState(initialValidUntil || defaultMin3DaysStr);
   const boundAction = saveDraftVersion.bind(null, proposalId, versionId);
   const [state, formAction, pending] = useActionState(boundAction, initialState);
   const [isGenerating, startTransition] = useTransition();
@@ -131,8 +134,8 @@ export function ProposalEditor({
       </div>
 
       <div>
-        <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="validUntil">Válida até</label>
-        <input id="validUntil" type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)}
+        <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]" htmlFor="validUntil">Válida até (Mínimo de 3 dias recomendados)</label>
+        <input id="validUntil" type="date" min={todayStr} value={validUntil} onChange={(e) => setValidUntil(e.target.value)}
           className="w-full max-w-xs rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2.5 text-sm outline-none focus:border-[var(--signal)]" />
       </div>
 

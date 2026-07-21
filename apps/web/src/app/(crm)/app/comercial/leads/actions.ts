@@ -256,6 +256,17 @@ export async function deleteLeadPermanently(leadId: string) {
     throw new Error("Não é possível excluir este registro permanentemente pois ele possui histórico comercial (Briefing, Proposta ou Contrato). Utilize a opção Mover para Lixeira.");
   }
 
+  // Apaga oportunidades vinculadas sem histórico comercial e o contato/cliente associado
+  if (oppIds.length > 0) {
+    const { inArray } = await import("drizzle-orm");
+    await db.delete(schema.activities).where(and(eq(schema.activities.entityType, "opportunity"), inArray(schema.activities.entityId, oppIds)));
+    await db.delete(schema.opportunities).where(inArray(schema.opportunities.id, oppIds));
+  }
+
+  if (lead.contactId) {
+    await db.delete(schema.contacts).where(eq(schema.contacts.id, lead.contactId));
+  }
+
   await db.delete(schema.activities).where(and(eq(schema.activities.entityType, "lead"), eq(schema.activities.entityId, leadId)));
   await db.update(schema.prospectingItems).set({ leadId: null, status: "not_researched" }).where(eq(schema.prospectingItems.leadId, leadId));
   await db.delete(schema.leads).where(eq(schema.leads.id, leadId));
@@ -268,6 +279,7 @@ export async function deleteLeadPermanently(leadId: string) {
   });
 
   revalidatePath("/app/comercial/leads");
+  revalidatePath("/app/comercial/oportunidades");
   redirect("/app/comercial/leads");
 }
 

@@ -45,7 +45,7 @@ export async function getBoardData(pipelineId?: string) {
 
 const opportunitySchema = z.object({
   title: z.string().trim().min(2, "Informe o título.").max(200),
-  contactId: z.string().trim().optional().or(z.literal("")),
+  contactId: z.string().trim().min(1, "É obrigatório selecionar um Cliente/Contato para criar uma oportunidade."),
   expectedValue: z.string().trim().optional().or(z.literal("")),
   nextActionAt: z.string().trim().min(1, "Toda oportunidade aberta precisa de uma próxima ação."),
   source: z.string().trim().max(80).optional().or(z.literal(""))

@@ -321,29 +321,15 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
                               <button
                                 onClick={() => handleConvertToLead(item.id)}
                                 disabled={isPending}
-                                title="Converter em Lead no CRM"
-                                className="inline-flex items-center gap-1 rounded-xl bg-[var(--soft)] hover:bg-[var(--signal)] hover:text-white border border-[var(--line)] px-2 py-1 font-bold text-[11px] text-[var(--text)] transition-all disabled:opacity-50"
+                                title="Tornar Cliente / Lead no CRM"
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--signal)] hover:bg-orange-600 font-bold text-xs text-white px-3 py-1.5 shadow-sm transition-all disabled:opacity-50"
                               >
                                 {isPending && pendingItemId === item.id ? (
-                                  <Loader2 className="size-3 animate-spin" />
+                                  <Loader2 className="size-3.5 animate-spin" />
                                 ) : (
-                                  <UserPlus className="size-3" />
+                                  <UserPlus className="size-3.5" />
                                 )}
-                                Lead
-                              </button>
-
-                              <button
-                                onClick={() => handleConvertToOpportunity(item.id)}
-                                disabled={isPending}
-                                title="Criar Oportunidade Direta no Funil"
-                                className="inline-flex items-center gap-1 rounded-xl bg-[var(--signal)] hover:bg-orange-600 font-bold text-[11px] text-white px-2.5 py-1 shadow-sm transition-all disabled:opacity-50"
-                              >
-                                {isPending && pendingItemId === item.id ? (
-                                  <Loader2 className="size-3 animate-spin" />
-                                ) : (
-                                  <Target className="size-3" />
-                                )}
-                                Opp
+                                Tornar Cliente
                               </button>
                             </>
                           )}
@@ -480,16 +466,9 @@ export function ProspectingView({ items }: { items: ProspectingItem[] }) {
                               <button
                                 onClick={() => handleConvertToLead(item.id)}
                                 disabled={isPending}
-                                className="flex-1 py-1 px-2 rounded-lg bg-[var(--soft)] hover:bg-[var(--signal)] hover:text-white text-[11px] font-bold transition-all text-center"
+                                className="flex-1 py-1.5 px-2 rounded-lg bg-[var(--signal)] hover:bg-orange-600 text-white text-[11px] font-bold transition-all text-center shadow-sm"
                               >
-                                + Lead
-                              </button>
-                              <button
-                                onClick={() => handleConvertToOpportunity(item.id)}
-                                disabled={isPending}
-                                className="flex-1 py-1 px-2 rounded-lg bg-[var(--signal)] hover:bg-orange-600 text-white text-[11px] font-bold transition-all text-center shadow-sm"
-                              >
-                                + Opp
+                                + Tornar Cliente
                               </button>
                             </>
                           )}

@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import { archiveBriefing, markBriefingAnalyzed } from "../actions";
 import { RegenerateLink } from "./regenerate-link";
+import { AIProposalButton } from "./ai-proposal-button";
 
 const statusLabel: Record<string, string> = {
   draft: "Rascunho", sent: "Enviado", started: "Iniciado", completed: "Concluído",
@@ -31,6 +32,7 @@ export default async function BriefingDetailPage({ params }: { params: Promise<{
         description={opportunity?.code}
         actions={
           <>
+            <AIProposalButton briefingId={briefing.id} />
             {briefing.status === "completed" && (
               <form action={markBriefingAnalyzed.bind(null, briefing.id)}>
                 <button type="submit" className="primary-button">Marcar como analisado</button>

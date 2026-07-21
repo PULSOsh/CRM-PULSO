@@ -6,7 +6,7 @@ import { nextSequence } from "@pulso/database/counters";
 import { createHash } from "node:crypto";
 import { eq } from "drizzle-orm";
 
-type ContractContent = { clauses: string; scopeSummary: string; totalValue: number; paymentSummary: string };
+type ContractContent = { clauses: string; scopeSummary: string; totalValue: number; paymentSummary: string; type?: "mrr" | "avulso" };
 
 /** Quando todos os signatários assinam, congela o contrato e prepara o recebível (sem cobrança automática). */
 export async function finalizeContractIfAllSigned(contractId: string) {
@@ -24,16 +24,29 @@ export async function finalizeContractIfAllSigned(contractId: string) {
   const sequence = await nextSequence("charge", year);
   const code = formatRecordCode("charge", year, sequence);
   const content = contract.content as ContractContent;
-  await db.insert(schema.financialEntries).values({
-    code, scope: "company", direction: "in", type: "receivable",
-    description: `Recebível do contrato ${contract.code}`,
-    amountExpected: String(content.totalValue),
-    competenceDate: new Date().toISOString().slice(0, 10),
-    dueDate: new Date().toISOString().slice(0, 10),
-    status: "pending",
-    provider: "manual",
-    metadata: { contractId, contractCode: contract.code }
-  });
+  
+  if (content.type === "mrr") {
+    await db.insert(schema.financialRecurrences).values({
+      scope: "company", direction: "income", type: "receivable",
+      description: `MRR do contrato ${contract.code}`,
+      amount: String(content.totalValue),
+      frequency: "monthly",
+      startDate: new Date().toISOString().slice(0, 10),
+      nextDueDate: new Date().toISOString().slice(0, 10),
+      status: "active"
+    });
+  } else {
+    await db.insert(schema.financialEntries).values({
+      code, scope: "company", direction: "in", type: "receivable",
+      description: `Recebível do contrato ${contract.code}`,
+      amountExpected: String(content.totalValue),
+      competenceDate: new Date().toISOString().slice(0, 10),
+      dueDate: new Date().toISOString().slice(0, 10),
+      status: "pending",
+      provider: "manual",
+      metadata: { contractId, contractCode: contract.code }
+    });
+  }
 
   await recordAuditEvent({ actorType: "system", action: "contract.fully_signed", entityType: "contract", entityId: contractId, after: { documentHash: hash } });
 }

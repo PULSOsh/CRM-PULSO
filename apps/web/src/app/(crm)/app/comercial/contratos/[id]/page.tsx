@@ -65,7 +65,7 @@ export default async function ContractDetailPage({
           </div>
 
           {isDraft ? (
-            <ClausesEditor contractId={contract.id} initialClauses={content.clauses} />
+            <ClausesEditor contractId={contract.id} initialClauses={content.clauses} initialType={(content as any).type ?? "avulso"} />
           ) : (
             <pre className="whitespace-pre-wrap rounded-xl bg-[var(--soft)] p-4 font-mono text-xs leading-6">{content.clauses}</pre>
           )}

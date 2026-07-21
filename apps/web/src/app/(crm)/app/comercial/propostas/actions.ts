@@ -13,6 +13,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { ProposalContent } from "@pulso/database/schema";
+import { generateProposalDraftFromBriefing } from "@/lib/ai";
 
 async function requireSession() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -215,3 +216,60 @@ export async function searchOpportunitiesForProposal(q: string) {
   return db.select({ id: schema.opportunities.id, title: schema.opportunities.title, code: schema.opportunities.code })
     .from(schema.opportunities).where(and(eq(schema.opportunities.status, "open"), ilike(schema.opportunities.title, term))).limit(8);
 }
+
+export async function generateAIProposal(briefingId: string) {
+  await requireSession();
+  
+  const [briefing] = await db.select().from(schema.briefings).where(eq(schema.briefings.id, briefingId)).limit(1);
+  if (!briefing) return { error: "Briefing não encontrado." };
+  
+  const questions = briefing.questionsSnapshot ?? [];
+  const responses = (briefing.responses as Record<string, unknown>) ?? {};
+  
+  const briefingData = questions.map((q: any) => {
+    const value = responses[q.id];
+    return `Q: ${q.label}\nR: ${Array.isArray(value) ? value.join(", ") : value || "—"}`;
+  }).join("\n\n");
+  
+  let draft;
+  try {
+    draft = await generateProposalDraftFromBriefing(briefingData);
+  } catch (error: any) {
+    console.error("AI Error:", error);
+    return { error: "Falha na comunicação com a IA." };
+  }
+
+  const year = new Date().getFullYear();
+  const sequence = await nextSequence("proposal", year);
+  const code = formatRecordCode("proposal", year, sequence);
+  const { token, tokenHash } = generatePublicToken();
+  const slug = generateSlug(code);
+
+  const [proposal] = await db.insert(schema.proposals).values({
+    code, opportunityId: briefing.opportunityId, publicSlug: slug, publicTokenHash: tokenHash, status: "draft"
+  }).returning();
+
+  const content: ProposalContent = {
+    ...emptyContent,
+    intro: draft.intro,
+    context: draft.context,
+    scopeTitle: draft.scopeTitle,
+    scopeItems: draft.scopeItems.map((item, idx) => ({
+      id: `ai-item-${idx}`,
+      label: item.name,
+      description: item.description,
+      price: item.price ?? 0
+    }))
+  };
+
+  const { subtotal, total } = computeTotals(content);
+  await db.insert(schema.proposalVersions).values({
+    proposalId: proposal.id, version: 1, content, subtotal: String(subtotal), total: String(total),
+    snapshotHash: snapshotHash(content, subtotal, total)
+  });
+
+  await recordAuditEvent({ actorType: "user", action: "proposal.created_by_ai", entityType: "proposal", entityId: proposal.id, after: { code } });
+  revalidatePath("/app/comercial/propostas");
+  return { redirect: `/app/comercial/propostas/${proposal.id}?link_token=${token}` };
+}
+

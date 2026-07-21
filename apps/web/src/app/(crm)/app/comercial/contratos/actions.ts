@@ -19,7 +19,7 @@ async function requireSession() {
   return session;
 }
 
-type ContractContent = { clauses: string; scopeSummary: string; totalValue: number; paymentSummary: string };
+type ContractContent = { clauses: string; scopeSummary: string; totalValue: number; paymentSummary: string; type?: "mrr" | "avulso" };
 
 function defaultClauses(content: ContractContent, code: string) {
   return `CONTRATO DE PRESTAÇÃO DE SERVIÇOS — ${code}
@@ -64,7 +64,8 @@ export async function createContractFromProposal(proposalId: string): Promise<{ 
     scopeSummary: version.content.scopeItems.map((i) => i.label).join("; "),
     totalValue: Number(version.total),
     paymentSummary: acceptedPayment ? `${acceptedPayment.label} (${acceptedPayment.installments}x)` : "A definir",
-    clauses: ""
+    clauses: "",
+    type: "avulso"
   };
 
   const year = new Date().getFullYear();
@@ -90,18 +91,21 @@ export async function createContractFromProposal(proposalId: string): Promise<{ 
   return { contractId: contract.id };
 }
 
-const contentSchema = z.object({ clauses: z.string().trim().min(1) });
+const contentSchema = z.object({ 
+  clauses: z.string().trim().min(1),
+  type: z.enum(["mrr", "avulso"]).optional()
+});
 
 export async function updateContractContent(contractId: string, formData: FormData) {
   await requireSession();
-  const parsed = contentSchema.safeParse({ clauses: formData.get("clauses") });
-  if (!parsed.success) throw new Error("Cláusulas não podem ficar vazias.");
+  const parsed = contentSchema.safeParse({ clauses: formData.get("clauses"), type: formData.get("type") });
+  if (!parsed.success) throw new Error("Dados inválidos.");
 
   const [contract] = await db.select().from(schema.contracts).where(eq(schema.contracts.id, contractId)).limit(1);
   if (!contract) throw new Error("Contrato não encontrado.");
   if (contract.status !== "draft") throw new Error("Só é possível editar contratos em rascunho.");
 
-  const content = { ...(contract.content as ContractContent), clauses: parsed.data.clauses };
+  const content = { ...(contract.content as ContractContent), clauses: parsed.data.clauses, type: parsed.data.type || "avulso" };
   await db.update(schema.contracts).set({ content, updatedAt: new Date() }).where(eq(schema.contracts.id, contractId));
 
   revalidatePath(`/app/comercial/contratos/${contractId}`);

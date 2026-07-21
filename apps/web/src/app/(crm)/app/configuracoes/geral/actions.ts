@@ -10,14 +10,28 @@ export async function updateGeralSettings(data: {
   address: string;
   email: string;
 }) {
-  await db.update(schema.appSettings)
-    .set({
+  const [existing] = await db.select({ id: schema.appSettings.id }).from(schema.appSettings).where(eq(schema.appSettings.id, "singleton")).limit(1);
+
+  if (existing) {
+    await db.update(schema.appSettings)
+      .set({
+        legalName: data.legalName,
+        document: data.document,
+        address: data.address,
+        email: data.email,
+        updatedAt: new Date()
+      })
+      .where(eq(schema.appSettings.id, "singleton"));
+  } else {
+    await db.insert(schema.appSettings).values({
+      id: "singleton",
       legalName: data.legalName,
       document: data.document,
       address: data.address,
       email: data.email,
-    })
-    .where(eq(schema.appSettings.id, "singleton"));
+      primaryColor: "#FF5500"
+    });
+  }
     
   revalidatePath("/app/configuracoes/geral");
 }
@@ -27,13 +41,25 @@ export async function updateIdentitySettings(data: {
   logoUrl: string;
   logoUrlLight: string;
 }) {
-  await db.update(schema.appSettings)
-    .set({
+  const [existing] = await db.select({ id: schema.appSettings.id }).from(schema.appSettings).where(eq(schema.appSettings.id, "singleton")).limit(1);
+
+  if (existing) {
+    await db.update(schema.appSettings)
+      .set({
+        primaryColor: data.primaryColor,
+        logoUrl: data.logoUrl,
+        logoUrlLight: data.logoUrlLight,
+        updatedAt: new Date()
+      })
+      .where(eq(schema.appSettings.id, "singleton"));
+  } else {
+    await db.insert(schema.appSettings).values({
+      id: "singleton",
       primaryColor: data.primaryColor,
       logoUrl: data.logoUrl,
-      logoUrlLight: data.logoUrlLight,
-    })
-    .where(eq(schema.appSettings.id, "singleton"));
+      logoUrlLight: data.logoUrlLight
+    });
+  }
     
   revalidatePath("/app/configuracoes/geral");
 }

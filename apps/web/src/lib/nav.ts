@@ -51,9 +51,9 @@ export const navigation = [
 ];
 
 export const mobileNavigation = [
-  navigation[0].items[0],
-  navigation[1].items[3],
-  navigation[2].items[0],
-  navigation[3].items[0],
-  { label: "Buscar", href: "/app/busca", icon: Search }
+  { label: "Hoje", href: "/app/hoje", icon: House },
+  { label: "Leads", href: "/app/comercial/leads", icon: UsersRound },
+  { label: "Funil", href: "/app/comercial/oportunidades", icon: ChartNoAxesCombined },
+  { label: "Chat", href: "/app/relacionamento/mensagens", icon: MessageSquareText },
+  { label: "Config", href: "/app/configuracoes/geral", icon: Settings2 }
 ];

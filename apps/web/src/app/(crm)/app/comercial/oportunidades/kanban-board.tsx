@@ -2,10 +2,10 @@
 
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import Link from "next/link";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Trash2 } from "lucide-react";
 import { Badge, Card } from "@pulso/ui";
 import { useState, useTransition } from "react";
-import { updateOpportunityStage } from "./actions";
+import { updateOpportunityStage, deleteOpportunity } from "./actions";
 import { StageSelect } from "./stage-select";
 
 type Opportunity = {
@@ -119,8 +119,25 @@ export function KanbanBoard({ initialStages }: { initialStages: StageColumn[] })
                               }}
                             >
                               <Card className={`p-4 hover:border-[var(--signal)] transition-colors shadow-sm group ${snapshot.isDragging ? 'shadow-xl border-[var(--signal)] rotate-2' : ''}`}>
+                                <div className="flex items-start justify-between gap-2 mb-1">
+                                  <Link href={`/app/comercial/oportunidades/${opp.id}`} className="font-mono text-[10px] font-bold uppercase tracking-[0.13em] text-[var(--muted)] hover:text-[var(--signal)]">
+                                    {opp.code}
+                                  </Link>
+                                  <button
+                                    onClick={async (e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      if (confirm(`Excluir a oportunidade "${opp.title}"?`)) {
+                                        await deleteOpportunity(opp.id);
+                                      }
+                                    }}
+                                    title="Excluir oportunidade"
+                                    className="text-[var(--muted)] hover:text-red-400 p-0.5 rounded transition-colors"
+                                  >
+                                    <Trash2 className="size-3.5" />
+                                  </button>
+                                </div>
                                 <Link href={`/app/comercial/oportunidades/${opp.id}`} className="block">
-                                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.13em] text-[var(--muted)] mb-1">{opp.code}</p>
                                   <p className="font-extrabold leading-tight group-hover:text-[var(--signal)] transition-colors">{opp.title}</p>
                                   
                                   <div className="mt-3 flex items-center justify-between bg-[var(--soft)] rounded-lg p-2 border border-[var(--line)]">

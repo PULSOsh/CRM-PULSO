@@ -37,20 +37,33 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
         title={opportunity.title}
         description={contact?.name}
         actions={
-          isOpen ? (
-            <>
-              <form action={markOpportunityWon.bind(null, opportunity.id)}>
-                <button type="submit" className="primary-button">Marcar como ganho</button>
-              </form>
-              <details className="inline-block">
-                <summary className="secondary-button inline-flex cursor-pointer list-none">Marcar como perdido</summary>
-                <form action={markOpportunityLost.bind(null, opportunity.id)} className="mt-2 flex gap-2">
-                  <input name="reason" placeholder="Motivo da perda" required className="rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm outline-none focus:border-[var(--signal)]" />
-                  <button type="submit" className="secondary-button">Confirmar</button>
+          <div className="flex flex-wrap items-center gap-2">
+            {isOpen && (
+              <>
+                <form action={markOpportunityWon.bind(null, opportunity.id)}>
+                  <button type="submit" className="primary-button">Marcar como ganho</button>
                 </form>
-              </details>
-            </>
-          ) : null
+                <details className="inline-block">
+                  <summary className="secondary-button inline-flex cursor-pointer list-none">Marcar como perdido</summary>
+                  <form action={markOpportunityLost.bind(null, opportunity.id)} className="mt-2 flex gap-2">
+                    <input name="reason" placeholder="Motivo da perda" required className="rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm outline-none focus:border-[var(--signal)]" />
+                    <button type="submit" className="secondary-button">Confirmar</button>
+                  </form>
+                </details>
+              </>
+            )}
+            <form action={async () => {
+              "use server";
+              const { deleteOpportunity } = await import("../actions");
+              await deleteOpportunity(opportunity.id);
+              const { redirect } = await import("next/navigation");
+              redirect("/app/comercial/oportunidades");
+            }}>
+              <button type="submit" className="rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-3 py-2 text-xs font-bold transition-all">
+                Excluir Oportunidade
+              </button>
+            </form>
+          </div>
         }
       />
 

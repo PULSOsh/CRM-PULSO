@@ -220,3 +220,29 @@ export async function updateOpportunityStage(opportunityId: string, stageId: str
   await db.update(schema.opportunities).set({ stageId }).where(eq(schema.opportunities.id, opportunityId));
   revalidatePath("/app/comercial/oportunidades");
 }
+
+export async function deleteOpportunity(opportunityId: string) {
+  await requireSession();
+
+  const [opp] = await db.select().from(schema.opportunities).where(eq(schema.opportunities.id, opportunityId)).limit(1);
+  if (!opp) return;
+
+  const [contract] = await db.select({ id: schema.contracts.id }).from(schema.contracts).where(eq(schema.contracts.opportunityId, opportunityId)).limit(1);
+  if (contract) {
+    throw new Error("Não é possível excluir esta oportunidade pois ela possui um contrato associado.");
+  }
+
+  await db.delete(schema.proposals).where(eq(schema.proposals.opportunityId, opportunityId));
+  await db.delete(schema.briefings).where(eq(schema.briefings.opportunityId, opportunityId));
+  await db.delete(schema.activities).where(and(eq(schema.activities.entityType, "opportunity"), eq(schema.activities.entityId, opportunityId)));
+  await db.delete(schema.opportunities).where(eq(schema.opportunities.id, opportunityId));
+
+  await recordAuditEvent({
+    actorType: "user",
+    action: "opportunity.deleted",
+    entityType: "opportunity",
+    entityId: opportunityId
+  });
+
+  revalidatePath("/app/comercial/oportunidades");
+}

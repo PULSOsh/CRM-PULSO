@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertTriangle, Plus, LayoutKanban, MoreHorizontal, ArrowRight } from "lucide-react";
+import { AlertTriangle, Plus, LayoutDashboard, MoreHorizontal, ArrowRight } from "lucide-react";
 import { Badge, Card } from "@pulso/ui";
 import { PageHeader } from "@/components/page-header";
 import { getBoardData } from "./actions";
@@ -99,7 +99,7 @@ export default async function OpportunitiesPage({
                 {opportunities.length === 0 && (
                   <div className="flex h-32 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/5">
                     <p className="text-xs font-bold text-gray-500 flex flex-col items-center gap-2">
-                      <LayoutKanban className="size-6 text-gray-600" />
+                      <LayoutDashboard className="size-6 text-gray-600" />
                       Nenhuma oportunidade
                     </p>
                   </div>

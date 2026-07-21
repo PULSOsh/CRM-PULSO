@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
+process.env.TZ = "America/Fortaleza";
+
 export const metadata: Metadata = {
   title: { default: "PULSO CRM", template: "%s — PULSO CRM" },
   description: "CRM operacional, comercial e financeiro da PULSO.",

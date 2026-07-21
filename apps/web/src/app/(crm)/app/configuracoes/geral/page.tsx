@@ -4,9 +4,11 @@ import { db, schema } from "@pulso/database";
 import { eq } from "drizzle-orm";
 
 export default async function ConfigGeralPage() {
-  const settings = await db.query.appSettings.findFirst({
-    where: eq(schema.appSettings.id, "singleton")
-  });
+  const [settings] = await db
+    .select()
+    .from(schema.appSettings)
+    .where(eq(schema.appSettings.id, "singleton"))
+    .limit(1);
 
   return (
     <>
@@ -15,8 +17,8 @@ export default async function ConfigGeralPage() {
         title="Geral e Identidade"
         description="Configure os dados da sua empresa para emissão de propostas e contratos."
       />
-      
-      <GeralForms settings={settings} />
+
+      <GeralForms settings={settings ?? null} />
     </>
   );
 }

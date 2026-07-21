@@ -228,6 +228,34 @@ export async function trashLead(leadId: string) {
 export async function deleteLeadPermanently(leadId: string) {
   await requireSession();
 
+  const [lead] = await db.select().from(schema.leads).where(eq(schema.leads.id, leadId)).limit(1);
+  if (!lead) return;
+
+  const linkedOpps = lead.contactId
+    ? await db.select({ id: schema.opportunities.id }).from(schema.opportunities).where(eq(schema.opportunities.contactId, lead.contactId))
+    : [];
+
+  const oppIds = linkedOpps.map((o) => o.id);
+
+  let hasBriefing = false;
+  let hasProposal = false;
+  let hasContract = false;
+
+  if (oppIds.length > 0) {
+    const { inArray } = await import("drizzle-orm");
+    const [b] = await db.select({ id: schema.briefings.id }).from(schema.briefings).where(inArray(schema.briefings.opportunityId, oppIds)).limit(1);
+    const [p] = await db.select({ id: schema.proposals.id }).from(schema.proposals).where(inArray(schema.proposals.opportunityId, oppIds)).limit(1);
+    const [c] = await db.select({ id: schema.contracts.id }).from(schema.contracts).where(inArray(schema.contracts.opportunityId, oppIds)).limit(1);
+    
+    if (b) hasBriefing = true;
+    if (p) hasProposal = true;
+    if (c) hasContract = true;
+  }
+
+  if (hasBriefing || hasProposal || hasContract) {
+    throw new Error("Não é possível excluir este registro permanentemente pois ele possui histórico comercial (Briefing, Proposta ou Contrato). Utilize a opção Mover para Lixeira.");
+  }
+
   await db.delete(schema.activities).where(and(eq(schema.activities.entityType, "lead"), eq(schema.activities.entityId, leadId)));
   await db.update(schema.prospectingItems).set({ leadId: null, status: "not_researched" }).where(eq(schema.prospectingItems.leadId, leadId));
   await db.delete(schema.leads).where(eq(schema.leads.id, leadId));

@@ -61,7 +61,10 @@ export async function createStandaloneProject(_prev: { error?: string }, formDat
   
   const name = formData.get("name") as string;
   const description = formData.get("description") as string;
+  const projectType = (formData.get("projectType") as string) || "avulso";
   const budget = formData.get("budget") as string;
+  const monthlyValue = formData.get("monthlyValue") as string;
+  const estimatedHours = formData.get("estimatedHours") as string;
 
   if (!name || name.trim().length === 0) {
     return { error: "O nome do projeto é obrigatório." };
@@ -75,11 +78,14 @@ export async function createStandaloneProject(_prev: { error?: string }, formDat
     code,
     name: name.trim(),
     description: description?.trim() || null,
+    projectType,
+    monthlyValue: monthlyValue ? String(Number(monthlyValue)) : "0",
+    budget: budget ? String(Number(budget)) : (monthlyValue ? String(Number(monthlyValue)) : "0"),
+    estimatedHours: estimatedHours ? String(Number(estimatedHours)) : "0",
     status: "planned",
-    budget: budget ? String(Number(budget)) : "0",
   }).returning();
 
-  await recordAuditEvent({ actorType: "user", action: "project.created", entityType: "project", entityId: project.id, after: { code, standalone: true } });
+  await recordAuditEvent({ actorType: "user", action: "project.created", entityType: "project", entityId: project.id, after: { code, projectType, standalone: true } });
   revalidatePath("/app/operacao/projetos");
   redirect(`/app/operacao/projetos/${project.id}`);
 }

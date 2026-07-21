@@ -410,6 +410,8 @@ export const projects = pgTable("projects", {
   dueAt: date("due_at"),
   deliveredAt: timestamp("delivered_at", { withTimezone: true }),
   warrantyEndsAt: date("warranty_ends_at"),
+  projectType: text("project_type").default("avulso").notNull(),
+  monthlyValue: numeric("monthly_value", { precision: 14, scale: 2 }).default("0"),
   estimatedHours: numeric("estimated_hours", { precision: 10, scale: 2 }).default("0").notNull(),
   budget: numeric("budget", { precision: 14, scale: 2 }).default("0").notNull(),
   ...timestamps,

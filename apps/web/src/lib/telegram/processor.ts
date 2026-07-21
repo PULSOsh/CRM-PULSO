@@ -1,9 +1,11 @@
 import { db, schema } from "@pulso/database";
-import { eq, or, ilike, and, isNull, gt } from "drizzle-orm";
+import { eq, or, ilike, and, isNull, gt, desc } from "drizzle-orm";
 import { parseTelegramCommand, TELEGRAM_COMMAND, ParsedCommand } from "./commands";
 import { HttpTelegramProvider } from "@pulso/integrations";
 import { getTodayData, formatTodayDataForTelegram } from "../today-data";
 import { recordAuditEvent } from "@pulso/database/audit";
+import { generateText } from "ai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
 export async function processTelegramWebhook(
   secretToken: string | null,
@@ -57,13 +59,63 @@ export async function processTelegramWebhook(
   }
 
   return { status: 200, message: "Ignored update type" };
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+});
+
+async function askGeminiAboutCrm(userMessage: string): Promise<string> {
+  try {
+    const [recentOpps, recentProposals, recentContracts, recentLeads, recentProjects] = await Promise.all([
+      db.select({ title: schema.opportunities.title, code: schema.opportunities.code, status: schema.opportunities.status, value: schema.opportunities.expectedValue })
+        .from(schema.opportunities).orderBy(desc(schema.opportunities.createdAt)).limit(5),
+      db.select({ code: schema.proposals.code, status: schema.proposals.status })
+        .from(schema.proposals).orderBy(desc(schema.proposals.createdAt)).limit(5),
+      db.select({ code: schema.contracts.code, status: schema.contracts.status })
+        .from(schema.contracts).orderBy(desc(schema.contracts.createdAt)).limit(5),
+      db.select({ name: schema.leads.name, status: schema.leads.status })
+        .from(schema.leads).orderBy(desc(schema.leads.createdAt)).limit(5),
+      db.select({ name: schema.projects.name, status: schema.projects.status })
+        .from(schema.projects).orderBy(desc(schema.projects.createdAt)).limit(5),
+    ]);
+
+    const contextSnapshot = `
+=== DADOS EM TEMPO REAL DO PULSO CRM ===
+[Oportunidades no Funil]: ${recentOpps.map(o => `${o.code}: ${o.title} (R$ ${o.value})`).join(", ") || "Nenhuma"}
+[Propostas Recentes]: ${recentProposals.map(p => `${p.code} (${p.status})`).join(", ") || "Nenhuma"}
+[Contratos Recentes]: ${recentContracts.map(c => `${c.code} (${c.status})`).join(", ") || "Nenhum"}
+[Leads Recentes]: ${recentLeads.map(l => `${l.name} (${l.status})`).join(", ") || "Nenhum"}
+[Projetos Ativos]: ${recentProjects.map(pr => `${pr.name} (${pr.status})`).join(", ") || "Nenhum"}
+`;
+
+    const prompt = `Você é o Assistente Virtual Oficial do PULSO CRM no Telegram.
+Responda de forma direta, clara, sem rodeios e com tom profissional da PULSO.
+
+CONTEXTO DO BANCO DE DADOS EM TEMPO REAL:
+${contextSnapshot}
+
+PERGUNTA DO USUÁRIO NO TELEGRAM:
+"${userMessage}"
+
+Responda em texto simples em Português do Brasil (máximo 2 parágrafos).`;
+
+    const { text } = await generateText({
+      model: google("gemini-flash-latest"),
+      prompt,
+    });
+
+    return text.trim();
+  } catch (error) {
+    console.error("Gemini Telegram Error:", error);
+    return "Olá! Sou o assistente de IA do PULSO CRM. Posso ajudar com informações sobre oportunidades, propostas, contratos e estatísticas. Como posso te ajudar agora?";
+  }
 }
 
 async function executeCommand(cmd: ParsedCommand, chatId: string, telegram: HttpTelegramProvider) {
   try {
     if (cmd.type === "unknown") {
-      await telegram.sendMessage({ chat_id: chatId, text: cmd.text });
-      return { status: 200, message: "Replied unknown" };
+      const geminiReply = await askGeminiAboutCrm(cmd.text);
+      await telegram.sendMessage({ chat_id: chatId, text: geminiReply });
+      return { status: 200, message: "Replied via Gemini AI" };
     }
 
     if (cmd.type === TELEGRAM_COMMAND.HELP) {
@@ -254,4 +306,5 @@ async function handleCallbackQuery(callbackQuery: any, config: { token: string; 
   }
 
   return { status: 200, message: "Processed callback" };
+}
 }

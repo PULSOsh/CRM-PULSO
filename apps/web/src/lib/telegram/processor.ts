@@ -63,50 +63,100 @@ const google = createGoogleGenerativeAI({
 });
 
 async function askGeminiAboutCrm(userMessage: string): Promise<string> {
-  try {
-    const [recentOpps, recentProposals, recentContracts, recentLeads, recentProjects] = await Promise.all([
-      db.select({ title: schema.opportunities.title, code: schema.opportunities.code, status: schema.opportunities.status, value: schema.opportunities.expectedValue })
-        .from(schema.opportunities).orderBy(desc(schema.opportunities.createdAt)).limit(5),
-      db.select({ code: schema.proposals.code, status: schema.proposals.status })
-        .from(schema.proposals).orderBy(desc(schema.proposals.createdAt)).limit(5),
-      db.select({ code: schema.contracts.code, status: schema.contracts.status })
-        .from(schema.contracts).orderBy(desc(schema.contracts.createdAt)).limit(5),
-      db.select({ name: schema.leads.name, status: schema.leads.status })
-        .from(schema.leads).orderBy(desc(schema.leads.createdAt)).limit(5),
-      db.select({ name: schema.projects.name, status: schema.projects.status })
-        .from(schema.projects).orderBy(desc(schema.projects.createdAt)).limit(5),
-    ]);
+  const [recentOpps, recentProposals, recentContracts, recentLeads, recentProjects] = await Promise.all([
+    db.select({ title: schema.opportunities.title, code: schema.opportunities.code, status: schema.opportunities.status, value: schema.opportunities.expectedValue })
+      .from(schema.opportunities).orderBy(desc(schema.opportunities.createdAt)).limit(8),
+    db.select({ code: schema.proposals.code, status: schema.proposals.status })
+      .from(schema.proposals).orderBy(desc(schema.proposals.createdAt)).limit(8),
+    db.select({ code: schema.contracts.code, status: schema.contracts.status })
+      .from(schema.contracts).orderBy(desc(schema.contracts.createdAt)).limit(8),
+    db.select({ name: schema.leads.name, status: schema.leads.status })
+      .from(schema.leads).orderBy(desc(schema.leads.createdAt)).limit(8),
+    db.select({ name: schema.projects.name, status: schema.projects.status })
+      .from(schema.projects).orderBy(desc(schema.projects.createdAt)).limit(8),
+  ]);
 
-    const contextSnapshot = `
+  const oppsList = recentOpps.map(o => `• [${o.code}] ${o.title} — R$ ${Number(o.value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (${o.status})`).join("\n");
+  const propList = recentProposals.map(p => `• Proposta ${p.code} (${p.status})`).join("\n");
+  const contList = recentContracts.map(c => `• Contrato ${c.code} (${c.status})`).join("\n");
+  const leadsList = recentLeads.map(l => `• Lead: ${l.name} (${l.status})`).join("\n");
+  const projList = recentProjects.map(pr => `• Projeto: ${pr.name} (${pr.status})`).join("\n");
+
+  const contextSnapshot = `
 === DADOS EM TEMPO REAL DO PULSO CRM ===
-[Oportunidades no Funil]: ${recentOpps.map(o => `${o.code}: ${o.title} (R$ ${o.value})`).join(", ") || "Nenhuma"}
-[Propostas Recentes]: ${recentProposals.map(p => `${p.code} (${p.status})`).join(", ") || "Nenhuma"}
-[Contratos Recentes]: ${recentContracts.map(c => `${c.code} (${c.status})`).join(", ") || "Nenhum"}
-[Leads Recentes]: ${recentLeads.map(l => `${l.name} (${l.status})`).join(", ") || "Nenhum"}
-[Projetos Ativos]: ${recentProjects.map(pr => `${pr.name} (${pr.status})`).join(", ") || "Nenhum"}
+[Oportunidades no Funil]:
+${oppsList || "Nenhuma cadastrada."}
+
+[Propostas Comerciais]:
+${propList || "Nenhuma cadastrada."}
+
+[Contratos]:
+${contList || "Nenhum cadastrado."}
+
+[Leads / Clientes]:
+${leadsList || "Nenhum cadastrado."}
+
+[Projetos Operacionais]:
+${projList || "Nenhum cadastrado."}
 `;
 
-    const prompt = `Você é o Assistente Virtual Oficial do PULSO CRM no Telegram.
-Responda de forma direta, clara, sem rodeios e com tom profissional da PULSO.
+  try {
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    if (apiKey && apiKey.startsWith("AIza")) {
+      const prompt = `Você é o Assistente Virtual Oficial do PULSO CRM no Telegram.
+Responda de forma direta, clara e profissional.
 
-CONTEXTO DO BANCO DE DADOS EM TEMPO REAL:
+CONTEXTO EM TEMPO REAL DO BANCO DE DADOS:
 ${contextSnapshot}
 
-PERGUNTA DO USUÁRIO NO TELEGRAM:
+PERGUNTA DO USUÁRIO:
 "${userMessage}"
 
-Responda em texto simples em Português do Brasil (máximo 2 parágrafos).`;
+Responda em Português do Brasil (máximo 2 parágrafos).`;
 
-    const { text } = await generateText({
-      model: google("gemini-flash-latest"),
-      prompt,
-    });
+      const { text } = await generateText({
+        model: google("gemini-flash-latest"),
+        prompt,
+      });
 
-    return text.trim();
+      if (text && text.trim().length > 0) {
+        return text.trim();
+      }
+    }
   } catch (error) {
     console.error("Gemini Telegram Error:", error);
-    return "Olá! Sou o assistente de IA do PULSO CRM. Posso ajudar com informações sobre oportunidades, propostas, contratos e estatísticas. Como posso te ajudar agora?";
   }
+
+  // Fallback Inteligente e Dinâmico em Tempo Real do Banco de Dados
+  const lowerMsg = userMessage.toLowerCase();
+  
+  if (lowerMsg.includes("oportunidade") || lowerMsg.includes("funil") || lowerMsg.includes("venda")) {
+    return `🎯 *Oportunidades no Funil de Vendas (${recentOpps.length}):*\n\n${oppsList || "Nenhuma oportunidade aberta no momento."}`;
+  }
+
+  if (lowerMsg.includes("proposta")) {
+    return `📄 *Propostas Comerciais Recentes (${recentProposals.length}):*\n\n${propList || "Nenhuma proposta cadastrada."}`;
+  }
+
+  if (lowerMsg.includes("contrato")) {
+    return `📝 *Contratos Recentes (${recentContracts.length}):*\n\n${contList || "Nenhum contrato cadastrado."}`;
+  }
+
+  if (lowerMsg.includes("lead") || lowerMsg.includes("cliente")) {
+    return `👤 *Leads / Clientes Recentes (${recentLeads.length}):*\n\n${leadsList || "Nenhum lead cadastrado."}`;
+  }
+
+  if (lowerMsg.includes("projeto")) {
+    return `🚀 *Projetos Operacionais (${recentProjects.length}):*\n\n${projList || "Nenhum projeto ativo."}`;
+  }
+
+  return `📊 *Resumo Executivo PULSO CRM:*\n\n` +
+    `• *Oportunidades:* ${recentOpps.length} no funil\n` +
+    `• *Propostas:* ${recentProposals.length} recentes\n` +
+    `• *Contratos:* ${recentContracts.length} ativos/recentes\n` +
+    `• *Leads:* ${recentLeads.length} registrados\n` +
+    `• *Projetos:* ${recentProjects.length} operacionais\n\n` +
+    `💡 *Pergunte sobre:* oportunidades, propostas, contratos, leads ou projetos para ver os detalhes!`;
 }
 
 async function executeCommand(cmd: ParsedCommand, chatId: string, telegram: HttpTelegramProvider) {

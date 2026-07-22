@@ -6,12 +6,14 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { PulsoLogo } from "./logo";
 import { MobileMenuDrawer } from "./mobile-menu-drawer";
+import { GlobalSearchModal } from "./global-search-modal";
 
 export function Topbar({ isDemo }: { isDemo?: boolean }) {
   const router = useRouter();
   const [privateMode, setPrivateMode] = useState(false);
   const [dark, setDark] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -49,8 +51,12 @@ export function Topbar({ isDemo }: { isDemo?: boolean }) {
       >
         <Menu className="size-4" />
       </button>
-      <button className="flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-left text-sm text-[var(--muted)] shadow-sm md:max-w-xl">
-        <Search className="size-4 shrink-0" /><span className="truncate">Buscar clientes, projetos, propostas...</span>
+      <button 
+        onClick={() => setSearchOpen(true)}
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-left text-sm text-[var(--muted)] shadow-sm hover:border-[var(--signal)]/50 transition-colors md:max-w-xl cursor-pointer"
+      >
+        <Search className="size-4 shrink-0 text-[var(--signal)]" />
+        <span className="truncate">Buscar clientes, projetos, propostas...</span>
         <span className="ml-auto hidden items-center gap-1 rounded-md border border-[var(--line)] px-2 py-0.5 font-mono text-[10px] md:flex"><Command className="size-3" />K</span>
       </button>
       {isDemo && (
@@ -71,6 +77,7 @@ export function Topbar({ isDemo }: { isDemo?: boolean }) {
       </button>
       
       <MobileMenuDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <GlobalSearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 }

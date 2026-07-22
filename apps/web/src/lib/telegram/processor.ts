@@ -51,19 +51,20 @@ ${projList || "Nenhum cadastrado."}
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     if (apiKey) {
       const google = createGoogleGenerativeAI({ apiKey });
-      const prompt = `Você é o Assistente Virtual Oficial do PULSO CRM no Telegram.
-Responda de forma direta, clara e profissional.
+      const prompt = `Você é o Assistente Virtual Oficial do PULSO CRM no Telegram (@PULSOCRMBOT).
+Sua função é ajudar a gerenciar vendas, clientes, propostas, contratos e projetos.
+Se o usuário apenas cumprimentar (ex: "oi", "olá", "tudo bem"), cumprimente-o de forma calorosa, amigável e direta, e pergunte como pode ajudar.
 
 CONTEXTO EM TEMPO REAL DO BANCO DE DADOS:
 ${contextSnapshot}
 
-PERGUNTA DO USUÁRIO:
+MENSAGEM DO USUÁRIO:
 "${userMessage}"
 
-Responda em Português do Brasil (máximo 2 parágrafos).`;
+Responda em Português do Brasil de forma natural e sem jargões de marketing (máximo 2 parágrafos).`;
 
       const { text } = await generateText({
-        model: google("gemini-flash-latest"),
+        model: google("gemini-1.5-flash"),
         prompt,
       });
 
@@ -76,8 +77,13 @@ Responda em Português do Brasil (máximo 2 parágrafos).`;
   }
 
   // Fallback Inteligente e Dinâmico em Tempo Real do Banco de Dados
-  const lowerMsg = userMessage.toLowerCase();
+  const lowerMsg = userMessage.toLowerCase().trim();
   
+  if (["oi", "olá", "ola", "bom dia", "boa tarde", "boa noite", "oie", "hey"].includes(lowerMsg)) {
+    return `👋 Olá! Sou o assistente oficial do **PULSO CRM**.\n\n` +
+      `Como posso te ajudar hoje? Você pode me perguntar sobre **oportunidades, propostas, contratos, clientes ou projetos**!`;
+  }
+
   if (lowerMsg.includes("oportunidade") || lowerMsg.includes("funil") || lowerMsg.includes("venda")) {
     return `🎯 Oportunidades no Funil de Vendas (${recentOpps.length}):\n\n${oppsList || "Nenhuma oportunidade aberta no momento."}`;
   }

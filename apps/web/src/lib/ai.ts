@@ -64,7 +64,7 @@ ${briefingData}`;
 
   try {
     const { text } = await generateText({
-      model: google("gemini-flash-latest"),
+      model: google("gemini-1.5-flash"),
       prompt,
     });
     
@@ -84,7 +84,7 @@ ${briefingData}`;
     console.warn("Primary Gemini model failed for proposal draft, retrying...", error);
     try {
       const { text: fallbackText } = await generateText({
-        model: google("gemini-flash-latest"),
+        model: google("gemini-1.5-flash"),
         prompt,
       });
       const cleanFallback = fallbackText.replace(/```json/g, "").replace(/```/g, "").trim();
@@ -153,7 +153,7 @@ ${proposalData}`;
 
   try {
     const { text } = await generateText({
-      model: google("gemini-flash-latest"),
+      model: google("gemini-1.5-flash"),
       prompt,
     });
     return text;

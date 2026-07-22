@@ -89,7 +89,7 @@ export async function POST(req: Request) {
     const crmContext = await fetchCrmContextSnapshot();
 
     const result = streamText({
-      model: google('gemini-flash-latest'),
+      model: google('gemini-1.5-flash'),
       system: `Você é o Copiloto da PULSO CRM. Você é um assistente estratégico especializado em vendas B2B, análise de negócios e estruturação de projetos.
 Você tem acesso aos dados reais e atualizados do sistema CRM fornecidos abaixo. Utilize esses dados sempre que o usuário perguntar sobre propostas, contratos, oportunidades, projetos ou leads.
 

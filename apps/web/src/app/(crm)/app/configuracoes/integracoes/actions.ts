@@ -99,3 +99,45 @@ export async function sendTelegramTestMessage() {
     return { success: false, error: err instanceof Error ? err.message : "Erro desconhecido" };
   }
 }
+
+export async function getIntegrationsConfig() {
+  await requireSession();
+  const { eq } = await import("drizzle-orm");
+  const { db, schema } = await import("@pulso/database");
+  const settings = await db.query.appSettings.findFirst({
+    where: eq(schema.appSettings.id, "singleton"),
+  });
+  return (settings?.integrationsConfig || {}) as Record<string, Record<string, string>>;
+}
+
+export async function saveIntegrationConfig(key: string, values: Record<string, string>) {
+  const session = await requireSession();
+  const { eq } = await import("drizzle-orm");
+  const { db, schema } = await import("@pulso/database");
+  
+  const settings = await db.query.appSettings.findFirst({
+    where: eq(schema.appSettings.id, "singleton"),
+  });
+
+  const currentConfig = (settings?.integrationsConfig || {}) as Record<string, Record<string, string>>;
+  const newConfig = { ...currentConfig, [key]: values };
+
+  await db
+    .insert(schema.appSettings)
+    .values({ id: "singleton", integrationsConfig: newConfig })
+    .onConflictDoUpdate({
+      target: schema.appSettings.id,
+      set: { integrationsConfig: newConfig, updatedAt: new Date() },
+    });
+
+  await recordAuditEvent({
+    actorType: "user",
+    actorId: session.user.id,
+    action: `integration.${key}.configured`,
+    entityType: "integration",
+    entityId: key,
+  });
+
+  revalidatePath("/app/configuracoes/integracoes");
+  return { success: true };
+}

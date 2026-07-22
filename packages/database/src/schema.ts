@@ -670,6 +670,7 @@ export const appSettings = pgTable("app_settings", {
   logoUrlLight: text("logo_url_light"),
   monthlyRevenueGoal: numeric("monthly_revenue_goal", { precision: 14, scale: 2 }),
   onboardingCompletedAt: timestamp("onboarding_completed_at", { withTimezone: true }),
+  integrationsConfig: jsonb("integrations_config").$type<Record<string, Record<string, string>>>().default({}),
   ...timestamps,
 });
 

@@ -20,6 +20,7 @@ export const navigation = [
   ]},
   { title: "Operação", items: [
     { label: "Projetos", href: "/app/operacao/projetos", icon: BriefcaseBusiness },
+    { label: "Equipe e membros", href: "/app/operacao/equipe", icon: UsersRound },
     { label: "Tarefas e calendário", href: "/app/operacao/tarefas", icon: CalendarDays },
     { label: "Aprovações", href: "/app/operacao/aprovacoes", icon: FileCheck2 },
     { label: "Arquivos", href: "/app/operacao/arquivos", icon: FolderOpen },

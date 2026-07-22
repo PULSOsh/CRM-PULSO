@@ -7,9 +7,7 @@ import { recordAuditEvent } from "@pulso/database/audit";
 import { generateText } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
-const google = createGoogleGenerativeAI({
-  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
-});
+
 
 async function askGeminiAboutCrm(userMessage: string): Promise<string> {
   const [recentOpps, recentProposals, recentContracts, recentLeads, recentProjects] = await Promise.all([
@@ -51,7 +49,8 @@ ${projList || "Nenhum cadastrado."}
 
   try {
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-    if (apiKey && apiKey.startsWith("AIza")) {
+    if (apiKey) {
+      const google = createGoogleGenerativeAI({ apiKey });
       const prompt = `Você é o Assistente Virtual Oficial do PULSO CRM no Telegram.
 Responda de forma direta, clara e profissional.
 

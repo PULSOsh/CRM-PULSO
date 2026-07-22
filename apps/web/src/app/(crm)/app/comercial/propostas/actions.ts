@@ -105,13 +105,27 @@ export async function createProposal(_prev: ProposalActionState, formData: FormD
 
   let initialContent = { ...emptyContent };
   
-  if (eligibleBriefing[0].status === "completed" || eligibleBriefing[0].status === "analyzed") {
+  if (eligibleBriefing[0].status === "completed" || eligibleBriefing[0].status === "analyzed" || eligibleBriefing[0].status === "skipped") {
     try {
       const questions = (eligibleBriefing[0].questionsSnapshot as any[]) ?? [];
       const responses = (eligibleBriefing[0].responses as Record<string, unknown>) ?? {};
       const briefingData = buildBriefingDataText(questions, responses);
       
-      const draft = await generateProposalDraftFromBriefing(briefingData);
+      const rawProducts = await db.select({
+        code: schema.products.code,
+        name: schema.products.name,
+        category: schema.products.category,
+        basePrice: schema.products.basePrice
+      }).from(schema.products).where(eq(schema.products.status, "active"));
+
+      const catalog = rawProducts.map(p => ({
+        code: p.code,
+        name: p.name,
+        category: p.category,
+        basePrice: Number(p.basePrice) || 0
+      }));
+
+      const draft = await generateProposalDraftFromBriefing(briefingData, catalog);
       
       initialContent = {
         ...initialContent,
@@ -122,7 +136,7 @@ export async function createProposal(_prev: ProposalActionState, formData: FormD
           id: `ai-item-${idx}`,
           label: item.name,
           description: item.description,
-          price: item.price ?? 0
+          price: item.price ?? 1500
         }))
       };
     } catch (e) {

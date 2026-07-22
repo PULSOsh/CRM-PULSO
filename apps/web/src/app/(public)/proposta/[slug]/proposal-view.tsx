@@ -26,6 +26,12 @@ export function ProposalView({ proposal, version, token, opportunityTitle }: {
   const total = subtotal + addonsTotal;
   const selectedPayment = content.paymentConditions.find((p) => p.id === paymentId);
 
+  const [actionModal, setActionModal] = useState<"reject" | "alternative" | null>(null);
+  const [actionReason, setActionReason] = useState("");
+  const [actionEntry, setActionEntry] = useState("");
+  const [actionInstallments, setActionInstallments] = useState(1);
+  const [actionComment, setActionComment] = useState("");
+
   function toggleAddon(id: string) {
     setSelectedAddons((prev) => prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]);
   }
@@ -43,20 +49,22 @@ export function ProposalView({ proposal, version, token, opportunityTitle }: {
     });
   }
 
-  function handleReject() {
-    const reason = window.prompt("Pode nos dizer o motivo? (opcional)") ?? "";
+  function handleRejectSubmit() {
+    setActionModal(null);
     startTransition(async () => {
-      await rejectProposal(proposal.id, token, reason);
+      await rejectProposal(proposal.id, token, actionReason);
     });
   }
 
-  function handleAlternative() {
-    const entry = window.prompt("Valor de entrada desejado (opcional, em R$):") ?? "";
-    const installments = Number(window.prompt("Em quantas parcelas?") ?? "1");
-    const comment = window.prompt("Comentário adicional (opcional):") ?? "";
-    if (!installments) return;
+  function handleAlternativeSubmit() {
+    setActionModal(null);
     startTransition(async () => {
-      await requestAlternativeCondition(proposal.id, version.id, token, { label: `Condição alternativa (${installments}x)`, entry, installments, comment });
+      await requestAlternativeCondition(proposal.id, version.id, token, {
+        label: `Condição alternativa (${actionInstallments}x)`,
+        entry: actionEntry,
+        installments: actionInstallments,
+        comment: actionComment,
+      });
       setMode("alt-requested");
     });
   }
@@ -245,8 +253,8 @@ export function ProposalView({ proposal, version, token, opportunityTitle }: {
               </button>
               
               <div className="mt-4 grid grid-cols-2 gap-2">
-                <button onClick={handleAlternative} disabled={pending} className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs font-bold text-gray-300 hover:bg-white/10 transition-colors">Solicitar outra condição</button>
-                <button onClick={handleReject} disabled={pending} className="rounded-xl border border-white/5 p-3 text-xs font-bold text-gray-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors">Recusar proposta</button>
+                <button onClick={() => setActionModal("alternative")} disabled={pending} className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs font-bold text-gray-300 hover:bg-white/10 transition-colors">Solicitar outra condição</button>
+                <button onClick={() => setActionModal("reject")} disabled={pending} className="rounded-xl border border-white/5 p-3 text-xs font-bold text-gray-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors">Recusar proposta</button>
               </div>
 
               <div className="mt-8 space-y-3 text-xs font-medium text-gray-500">
@@ -257,6 +265,54 @@ export function ProposalView({ proposal, version, token, opportunityTitle }: {
           </aside>
         </div>
       </section>
+
+      {/* Modal Customizado PULSO (Dark / Laranja Fogo) */}
+      {actionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#161616] p-6 shadow-2xl space-y-5">
+            {actionModal === "alternative" ? (
+              <>
+                <div>
+                  <h3 className="text-lg font-black text-white">Solicitar Condição Alternativa</h3>
+                  <p className="text-xs text-gray-400 mt-1">Informe a forma de pagamento que melhor atende suas necessidades.</p>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">Valor de entrada (R$)</label>
+                    <input value={actionEntry} onChange={(e) => setActionEntry(e.target.value)} placeholder="Ex: 500" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white placeholder:text-gray-500 outline-none focus:border-[var(--signal)]" />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">Número de parcelas</label>
+                    <input type="number" min="1" max="12" value={actionInstallments} onChange={(e) => setActionInstallments(Number(e.target.value))} className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white outline-none focus:border-[var(--signal)]" />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">Comentário / Observação</label>
+                    <textarea rows={3} value={actionComment} onChange={(e) => setActionComment(e.target.value)} placeholder="Detalhes sobre a proposta de pagamento..." className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white placeholder:text-gray-500 outline-none focus:border-[var(--signal)] resize-none" />
+                  </div>
+                </div>
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button type="button" onClick={() => setActionModal(null)} className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-bold text-gray-300 hover:bg-white/10">Cancelar</button>
+                  <button type="button" onClick={handleAlternativeSubmit} className="rounded-xl bg-[var(--signal)] hover:bg-orange-600 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/20">Enviar Solicitação</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <h3 className="text-lg font-black text-rose-400">Recusar Proposta</h3>
+                  <p className="text-xs text-gray-400 mt-1">Gostaria de informar o motivo da recusa? (opcional)</p>
+                </div>
+                <div>
+                  <textarea rows={4} value={actionReason} onChange={(e) => setActionReason(e.target.value)} placeholder="Motivo da recusa ou observação..." className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white placeholder:text-gray-500 outline-none focus:border-rose-500 resize-none" />
+                </div>
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button type="button" onClick={() => setActionModal(null)} className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-bold text-gray-300 hover:bg-white/10">Cancelar</button>
+                  <button type="button" onClick={handleRejectSubmit} className="rounded-xl bg-rose-600 hover:bg-rose-700 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-rose-600/20">Confirmar Recusa</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -15,6 +15,12 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+function parseMoney(v: string): number {
+  const s = String(v).trim();
+  if (/^\d+\.\d{1,2}$/.test(s)) return parseFloat(s);
+  return parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0;
+}
+
 const createSchema = z.object({
   description: z.string().trim().min(1, "Descrição é obrigatória"),
   amount: z.string().trim().min(1, "Valor é obrigatório"),
@@ -34,11 +40,11 @@ export async function createRecurrence(_prev: ActionState, formData: FormData): 
   const parsed = createSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
 
-  const amountNumber = parseFloat(parsed.data.amount.replace(/\./g, "").replace(",", "."));
+  const amountNumber = parseMoney(parsed.data.amount);
   if (isNaN(amountNumber) || amountNumber <= 0) return { error: "Valor inválido." };
 
   await db.insert(schema.financialRecurrences).values({
-    scope: "pulso", // Assuming workspace context
+    scope: "company", // Assuming workspace context
     direction: parsed.data.direction,
     type: parsed.data.type,
     description: parsed.data.description,

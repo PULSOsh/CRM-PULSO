@@ -4,8 +4,15 @@ import { EntryActions } from "../entry-actions";
 import { NewEntryForm } from "../new-entry-form";
 import { createPayable, listEntries } from "../actions";
 
+function formatDateBR(d: string | Date | null): string {
+  if (!d) return '—';
+  const s = typeof d === 'string' ? d : d.toISOString();
+  const [y, m, day] = s.slice(0, 10).split('-');
+  return `${day}/${m}/${y}`;
+}
+
 const statusLabel: Record<string, string> = { pending: "Pendente", partial: "Parcial", paid: "Pago", overdue: "Vencido", cancelled: "Cancelado", refunded: "Estornado" };
-const statusTone: Record<string, "neutral" | "signal" | "success" | "warning"> = { pending: "signal", partial: "warning", paid: "success", overdue: "neutral", cancelled: "neutral", refunded: "neutral" };
+const statusTone: Record<string, "neutral" | "signal" | "success" | "warning" | "danger"> = { pending: "signal", partial: "warning", paid: "success", overdue: "danger", cancelled: "neutral", refunded: "neutral" };
 
 export default async function PayablesPage() {
   const rows = await listEntries({ scope: "company", direction: "out" });
@@ -35,8 +42,8 @@ export default async function PayablesPage() {
                     <span className="font-bold">{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(entry.amountExpected))}</span>
                     {Number(entry.amountActual) > 0 && <span className="block text-xs text-[var(--muted)]">Pago: {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(entry.amountActual))}</span>}
                   </td>
-                  <td className="px-5 py-4 text-sm text-[var(--muted)]">{entry.dueDate ? new Date(entry.dueDate).toLocaleDateString("pt-BR") : "—"}</td>
-                  <td className="px-5 py-4"><Badge tone={statusTone[entry.status]}>{statusLabel[entry.status] ?? entry.status}</Badge></td>
+                  <td className="px-5 py-4 text-sm text-[var(--muted)]">{formatDateBR(entry.dueDate)}</td>
+                  <td className="px-5 py-4"><Badge tone={statusTone[entry.status] as any}>{statusLabel[entry.status] ?? entry.status}</Badge></td>
                   <td className="px-5 py-4"><EntryActions entryId={entry.id} canPay={entry.status === "pending" || entry.status === "partial"} /></td>
                 </tr>
               ))}

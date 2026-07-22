@@ -8,6 +8,9 @@ export async function GET(req: NextRequest) {
   if (!session?.user) {
     return new NextResponse("Unauthorized", { status: 401 });
   }
+  if ((session.user as any).role !== 'admin') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
 
   try {
     const backupJson = await createFullDatabaseBackup();

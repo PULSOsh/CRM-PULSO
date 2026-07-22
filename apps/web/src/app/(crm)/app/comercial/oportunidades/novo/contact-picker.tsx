@@ -19,7 +19,7 @@ export function ContactPicker() {
   return (
     <div>
       <input type="hidden" name="contactId" value={selected?.id ?? ""} />
-      <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]">Contato (opcional)</label>
+      <label className="mb-1.5 block text-xs font-bold text-[var(--muted-strong)]">Cliente / Contato *</label>
       {selected ? (
         <div className="flex items-center justify-between rounded-xl border border-[var(--line)] bg-[var(--soft)] px-3.5 py-2.5 text-sm">
           <span className="font-semibold">{selected.name}</span>

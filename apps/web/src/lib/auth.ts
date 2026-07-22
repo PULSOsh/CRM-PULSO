@@ -11,11 +11,13 @@ const port = process.env.PORT ?? "3000";
 // além da origem pública configurada em BETTER_AUTH_URL/APP_URL.
 const devOrigins = process.env.NODE_ENV === "production" ? [] : [`http://localhost:${port}`, `http://127.0.0.1:${port}`];
 
+if (!process.env.BETTER_AUTH_SECRET) throw new Error('BETTER_AUTH_SECRET env is required');
+
 export const auth = betterAuth({
   appName: "PULSO CRM",
   baseURL: process.env.BETTER_AUTH_URL ?? process.env.APP_URL ?? "http://localhost:3000",
   trustedOrigins: [process.env.BETTER_AUTH_URL ?? process.env.APP_URL ?? "http://localhost:3000", ...devOrigins],
-  secret: process.env.BETTER_AUTH_SECRET ?? "development-only-secret-change-before-production-000000",
+  secret: process.env.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {

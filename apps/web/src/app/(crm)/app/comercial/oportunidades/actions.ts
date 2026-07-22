@@ -225,11 +225,11 @@ export async function deleteOpportunity(opportunityId: string) {
   await requireSession();
 
   const [opp] = await db.select().from(schema.opportunities).where(eq(schema.opportunities.id, opportunityId)).limit(1);
-  if (!opp) return;
+  if (!opp) return { error: "Oportunidade não encontrada." };
 
   const [contract] = await db.select({ id: schema.contracts.id }).from(schema.contracts).where(eq(schema.contracts.opportunityId, opportunityId)).limit(1);
   if (contract) {
-    throw new Error("Não é possível excluir esta oportunidade pois ela possui um contrato associado.");
+    return { error: "Não é possível excluir esta oportunidade pois ela possui um contrato associado." };
   }
 
   await db.update(schema.leads).set({ opportunityId: null }).where(eq(schema.leads.opportunityId, opportunityId));

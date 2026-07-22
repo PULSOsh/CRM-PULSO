@@ -6,6 +6,13 @@ import { eq, desc } from "drizzle-orm";
 import { NewRecurrenceForm } from "./new-recurrence-form";
 import { createRecurrence } from "./actions";
 
+function formatDateBR(d: string | Date | null): string {
+  if (!d) return '—';
+  const s = typeof d === 'string' ? d : d.toISOString();
+  const [y, m, day] = s.slice(0, 10).split('-');
+  return `${day}/${m}/${y}`;
+}
+
 const statusLabel: Record<string, string> = { active: "Ativo", paused: "Pausado", canceled: "Cancelado" };
 const statusTone: Record<string, "neutral" | "signal" | "success" | "warning"> = { active: "success", paused: "warning", canceled: "neutral" };
 const directionLabel: Record<string, string> = { income: "Receita", expense: "Despesa" };
@@ -15,7 +22,7 @@ const frequencyLabel: Record<string, string> = { monthly: "Mensal", weekly: "Sem
 export default async function RecurrencesPage() {
   const rows = await db.select()
     .from(schema.financialRecurrences)
-    .where(eq(schema.financialRecurrences.scope, "pulso")) // Adjust if using proper scope logic
+    .where(eq(schema.financialRecurrences.scope, "company")) // Adjust if using proper scope logic
     .orderBy(desc(schema.financialRecurrences.createdAt));
 
   return (
@@ -52,7 +59,7 @@ export default async function RecurrencesPage() {
                   </td>
                   <td className="px-5 py-4"><Badge tone={directionTone[entry.direction]}>{directionLabel[entry.direction]}</Badge></td>
                   <td className="px-5 py-4 text-sm text-[var(--muted)]">{frequencyLabel[entry.frequency]}</td>
-                  <td className="px-5 py-4 text-sm text-[var(--muted)]">{new Date(entry.nextDueDate).toLocaleDateString("pt-BR")}</td>
+                  <td className="px-5 py-4 text-sm text-[var(--muted)]">{formatDateBR(entry.nextDueDate)}</td>
                   <td className="px-5 py-4"><Badge tone={statusTone[entry.status]}>{statusLabel[entry.status]}</Badge></td>
                 </tr>
               ))}

@@ -37,8 +37,10 @@ export async function getRecurrencesSummary(scope: string) {
   return { monthlyIncome, monthlyExpense, balance: monthlyIncome - monthlyExpense, activeCount: rows.filter(r => r.status === "active").length };
 }
 
-function parseMoney(value: string) {
-  return value.replace(/\./g, "").replace(",", ".");
+function parseMoney(v: string): number {
+  const s = String(v).trim();
+  if (/^\d+\.\d{1,2}$/.test(s)) return parseFloat(s);
+  return parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0;
 }
 
 const entrySchema = z.object({
@@ -88,7 +90,7 @@ async function createEntry(scope: "company" | "personal", direction: "in" | "out
       type: direction === "in" ? "receivable" : "payable",
       description: parsed.data.description + descSuffix,
       category: parsed.data.category || null,
-      amountExpected: parseMoney(parsed.data.amountExpected),
+      amountExpected: String(parseMoney(parsed.data.amountExpected)),
       competenceDate: competence.toISOString().slice(0, 10),
       dueDate: due,
       status: "pending"
@@ -191,19 +193,39 @@ export async function getFinancialSummary(scope: "company" | "personal") {
   const rows = await db.select({
     direction: schema.financialEntries.direction,
     status: schema.financialEntries.status,
-    amountExpected: sql<number>`sum(${schema.financialEntries.amountExpected})::float`,
-    amountActual: sql<number>`sum(${schema.financialEntries.amountActual})::float`,
-    count: sql<number>`count(*)::int`
-  }).from(schema.financialEntries).where(eq(schema.financialEntries.scope, scope))
-    .groupBy(schema.financialEntries.direction, schema.financialEntries.status);
+    amountExpected: schema.financialEntries.amountExpected,
+    amountActual: schema.financialEntries.amountActual,
+    dueDate: schema.financialEntries.dueDate,
+    competenceDate: schema.financialEntries.competenceDate
+  }).from(schema.financialEntries).where(eq(schema.financialEntries.scope, scope));
 
   let receivablePending = 0, payablePending = 0, paidIn = 0, paidOut = 0, overdueCount = 0;
+  const today = new Date().toISOString().slice(0, 10);
+  const currentMonth = today.slice(0, 7);
+
   for (const row of rows) {
-    if (row.direction === "in" && (row.status === "pending" || row.status === "partial")) receivablePending += row.amountExpected - row.amountActual;
-    if (row.direction === "out" && (row.status === "pending" || row.status === "partial")) payablePending += row.amountExpected - row.amountActual;
-    if (row.direction === "in") paidIn += row.amountActual;
-    if (row.direction === "out") paidOut += row.amountActual;
-    if (row.status === "overdue") overdueCount += row.count;
+    const amountExp = Number(row.amountExpected) || 0;
+    const amountAct = Number(row.amountActual) || 0;
+    
+    if (row.direction === "in" && (row.status === "pending" || row.status === "partial")) {
+      if (row.competenceDate && row.competenceDate.startsWith(currentMonth)) {
+        receivablePending += amountExp - amountAct;
+      }
+    }
+    if (row.direction === "out" && (row.status === "pending" || row.status === "partial")) {
+      if (row.competenceDate && row.competenceDate.startsWith(currentMonth)) {
+        payablePending += amountExp - amountAct;
+      }
+    }
+    
+    if (row.direction === "in") paidIn += amountAct;
+    if (row.direction === "out") paidOut += amountAct;
+    
+    if (row.status === "pending" && row.dueDate && row.dueDate < today) {
+      overdueCount += 1;
+    } else if (row.status === "overdue") {
+      overdueCount += 1;
+    }
   }
 
   return { receivablePending, payablePending, balance: paidIn - paidOut, overdueCount };

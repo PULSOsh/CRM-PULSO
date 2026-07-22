@@ -12,9 +12,27 @@ export function Topbar({ isDemo }: { isDemo?: boolean }) {
   const [privateMode, setPrivateMode] = useState(false);
   const [dark, setDark] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { document.documentElement.dataset.theme = dark ? "dark" : "light"; }, [dark]);
-  useEffect(() => { document.documentElement.dataset.private = privateMode ? "true" : "false"; }, [privateMode]);
+  useEffect(() => {
+    setMounted(true);
+    const storedDark = localStorage.getItem("pulso-theme-dark");
+    if (storedDark) setDark(storedDark === "true");
+    const storedPrivate = localStorage.getItem("pulso-theme-private");
+    if (storedPrivate) setPrivateMode(storedPrivate === "true");
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+    localStorage.setItem("pulso-theme-dark", String(dark));
+  }, [dark, mounted]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    document.documentElement.dataset.private = privateMode ? "true" : "false";
+    localStorage.setItem("pulso-theme-private", String(privateMode));
+  }, [privateMode, mounted]);
 
   async function handleLogout() {
     await authClient.signOut();

@@ -209,7 +209,12 @@ export async function saveDraftVersion(proposalId: string, versionId: string, _p
 
   if (formData.get("action") === "publish") {
     if (content.scopeItems.length === 0) return { error: "Adicione pelo menos um item de escopo antes de publicar." };
-    await publishVersion(proposalId, versionId, false); // Pass false or handle revalidation differently if needed
+    try {
+      const pubResult = await publishVersion(proposalId, versionId, false);
+      if (pubResult?.error) return pubResult;
+    } catch (e: any) {
+      return { error: e.message || "Erro inesperado ao publicar." };
+    }
   } else {
     revalidatePath(`/app/comercial/propostas/${proposalId}`);
   }
@@ -221,9 +226,9 @@ export async function publishVersion(proposalId: string, versionId: string, shou
   await requireSession();
 
   const [version] = await db.select().from(schema.proposalVersions).where(eq(schema.proposalVersions.id, versionId)).limit(1);
-  if (!version) throw new Error("Versão não encontrada.");
-  if (version.publishedAt) throw new Error("Esta versão já está publicada.");
-  if (version.content.scopeItems.length === 0) throw new Error("Adicione pelo menos um item de escopo antes de publicar.");
+  if (!version) return { error: "Versão não encontrada." };
+  if (version.publishedAt) return { error: "Esta versão já está publicada." };
+  if (version.content.scopeItems.length === 0) return { error: "Adicione pelo menos um item de escopo antes de publicar." };
 
   const { subtotal, total } = computeTotals(version.content);
   const hash = snapshotHash(version.content, subtotal, total);
@@ -253,6 +258,8 @@ export async function publishVersion(proposalId: string, versionId: string, shou
     revalidatePath("/app/comercial/propostas");
     revalidatePath(`/app/comercial/propostas/${proposalId}`);
   }
+
+  return {};
 }
 
 export async function createNewVersion(proposalId: string) {
